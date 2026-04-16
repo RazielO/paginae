@@ -1,0 +1,19 @@
+(ns paginae.main
+  (:require ["package:flutter/material.dart" :as material]
+            [cljd.flutter :as flutter]))
+
+(defn main []
+  (flutter/run
+   (material/MaterialApp
+    .title "Welcome to Flutter"
+    .theme (material/ThemeData .primarySwatch material.Colors/pink))
+   .home
+   (material/Scaffold
+    .appBar (material/AppBar
+             .title (material/Text "Welcome to ClojureDart")))
+   .body
+   material/Center
+   (material/Text "Let's get coding!"
+                  .style (material/TextStyle
+                          .color material.Colors/red
+                          .fontSize 32.0))))
