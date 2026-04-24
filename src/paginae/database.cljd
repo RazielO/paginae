@@ -1,0 +1,65 @@
+(ns paginae.database
+  (:require [paginae.types.book :as book]
+            [clojure.string :as str]
+            ["dart:async" :as async]
+            ["package:sqflite/sqflite.dart" :as sqlite]
+            ["package:flutter/services.dart" :as services]
+            ["package:path/path.dart" :as path]))
+
+(defn run-schema [^sqlite/Database db sql]
+  (doseq [stmt (remove str/blank?
+                       (str/split sql #";"))]
+    (.execute db stmt)))
+
+(defn ^async/Future load-schema []
+  (.loadString services/rootBundle "assets/sql/schema.sql"))
+
+(defn ^async/Future init-db
+  "Initialize the database"
+  []
+  (.then
+   (sqlite/getDatabasesPath)
+   (fn [db-path]
+     (let [path (path/join db-path "paginae.db")]
+       (sqlite/openDatabase
+        path
+        .version 1
+        .onCreate
+        (fn [^sqlite/Database db _version]
+          (.then
+           (load-schema)
+           (fn [^String sql]
+             (run-schema db sql)))))))
+   )
+  )
+
+(defonce ^async/Future db-instance
+  (delay (init-db)))
+
+(defn ^async/Future get-db
+  "Return the database instance, if not initialized, initialize it first"
+  []
+  (force db-instance))
+
+(defn insert-book
+  "Insert a book into the database"
+  [^book/Book book]
+  (.then
+   (get-db)
+   (fn [^sqlite/Database db]
+     (.insert db
+              "books"
+              (book/to-db-map book)))))
+
+
+(defn keywordize [row]
+  (into {} (map (fn [[k v]] [(keyword k) v]) row)))
+
+(defn get-all-books []
+  (.then
+   (get-db)
+   (fn [^sqlite/Database db]
+     (.then
+      (.query db "books")
+      (fn [rows]
+        (map book/from-db-entry rows))))))

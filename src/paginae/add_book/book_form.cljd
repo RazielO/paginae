@@ -1,0 +1,68 @@
+(ns paginae.add-book.book-form
+  (:require [cljd.flutter :as flutter]
+            ["package:flutter/material.dart" :as material]
+            ["../l10n/app_localizations.dart" :as app-l10n]))
+
+(defn- input-field
+  "Input field for the book data"
+  [{:keys [label hint controller]}]
+
+  (flutter/widget
+   :get {{{:flds [labelLarge]} .-textTheme} material/Theme
+         {{:flds [surface]} .-colorScheme} material/Theme}
+
+   (material/Column
+    .crossAxisAlignment material/CrossAxisAlignment.start
+
+    .children
+    [(material/Text label
+                    .style
+                    (.copyWith labelLarge
+                               .letterSpacing 1
+                               .fontWeight material/FontWeight.bold))
+
+     (material/TextField
+      .controller controller
+
+      .decoration
+      (material/InputDecoration
+       .hintText hint
+       .filled true
+       .fillColor surface
+
+       .border
+       (material/OutlineInputBorder
+        .borderRadius (material/BorderRadius.circular 12)
+        .borderSide material/BorderSide.none)))])))
+
+(defn form-card
+  "Card that holds the form for the book info"
+  [title-controller
+   author-controller
+   pages-controller]
+
+  (flutter/widget
+   :get {{{:flds [background]} .-colorScheme} material/Theme}
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+
+   (material/Card
+    .color background
+    .child
+    (material/Container
+     .padding (material/EdgeInsets.all 24)
+     .child
+     (material/Column
+      .spacing 16
+      .children
+      [(input-field {:label (.-bookTitle locales)
+                     :hint (.-bookTitle locales)
+                     :controller title-controller})
+
+       (input-field {:label (.-bookAuthor locales)
+                     :hint (.-bookAuthor locales)
+                     :controller author-controller})
+
+       (input-field {:label (.-totalPages locales)
+                     :hint "0"
+                     :controller pages-controller})])))))

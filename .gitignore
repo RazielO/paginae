@@ -2,13 +2,16 @@
 .cpcache/
 .nrepl*
 .idea/
+.clj-kondo/
+.lsp/
+REPL.lock
+lib/cljd-out/
 
 ### Clojure ###
 pom.xml
 pom.xml.asc
 *.jar
 *.class
-/lib/
 /classes/
 /target/
 /checkouts/

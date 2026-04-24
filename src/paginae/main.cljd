@@ -1,19 +1,158 @@
 (ns paginae.main
-  (:require ["package:flutter/material.dart" :as material]
-            [cljd.flutter :as flutter]))
+  (:require [cljd.flutter :as flutter]
+            ["package:flutter/material.dart" :as material]
+            [paginae.theme :as theme]
+            [paginae.book-search :as book-search]
+            [paginae.database :as db]
+            [paginae.image.utils :as img-utils]
+            ["../l10n/app_localizations.dart" :as app-l10n]))
 
-(defn main []
+(defn main-widget []
+  (flutter/widget 
+   
+   (material/Center
+    .child
+    (material/FutureBuilder
+     .future (db/get-all-books)
+     .builder
+     (fn [_ontext snapshot]
+       (if (.-hasData snapshot)
+         (let [books (.-data snapshot)]
+           (material/ListView.builder
+            .itemCount (count books)
+            .itemBuilder
+            (fn [_context idx]
+              (let [book (nth books idx)]
+                (book-search/book-list-card book) 
+                ))))
+         (material/CircularProgressIndicator))))
+    )))
+
+(defn bottom-sheet-btn
+  [title icon active? onPressed]
+  (flutter/widget
+   :get {{{:flds [onSurface primary onPrimary]} .-colorScheme} material/Theme
+         {{:flds [labelMedium]} .-textTheme} material/Theme}
+   (material/InkWell
+    .onTap onPressed
+    .borderRadius (material/BorderRadius.circular 25.0)
+    .child
+    (material/Container
+     .margin (material/EdgeInsets.all 5)
+     .padding (material/EdgeInsets.all 2.5)
+     .decoration (material/BoxDecoration
+                  .color (when active? primary)
+                  .borderRadius (material/BorderRadius.circular 20.0))
+     .child (material/Column
+             .mainAxisSize material/MainAxisSize.min
+             .mainAxisAlignment material/MainAxisAlignment.center
+             .children [
+                        (material/Icon icon
+                                       .color (if active?
+                                                onPrimary
+                                                onSurface))
+                        (material/Text  (.toUpperCase ^String title)
+                                        .style
+                                        (.copyWith labelMedium
+                                                   .color (if active?
+                                                            onPrimary
+                                                            onSurface)))])))))
+
+(defn bottom-sheet
+  [current-tab change-tab]
+  (flutter/widget
+   :get {{{:flds [surface]} .-colorScheme} material/Theme}
+   :context context
+   (let [locales (app-l10n/AppLocalizations.of context)]
+    (material/Container
+     .color surface
+     .padding (material/EdgeInsets.only .top 10.0)
+     .child
+     (material/Row
+      .mainAxisAlignment material/MainAxisAlignment.spaceAround
+      .children
+      [(material/Expanded
+        .child
+        (bottom-sheet-btn
+         (.-reading locales)
+         material/Icons.menu_book
+         (= 0 current-tab)
+         #(change-tab 0)))
+       (material/Expanded
+        .child 
+        (bottom-sheet-btn
+         (.-stats locales)
+         material/Icons.bar_chart
+         (= 1 current-tab)
+         #(change-tab 1)))
+       (material/Expanded
+        .child
+        (bottom-sheet-btn
+         (.-library locales)
+         material/Icons.library_books
+         (= 2 current-tab)
+         #(change-tab 2)))
+       (material/Expanded
+        .child
+        (bottom-sheet-btn
+         (.-add locales)
+         material/Icons.add
+         (= 3 current-tab)
+         #(change-tab 3)))])))))
+
+(defn app-bar []
+  (material/AppBar
+   .title
+   (material/Builder
+    .builder
+    (fn [context]
+      (let [theme (material/Theme.of context)]
+        (material/Text
+         (.-appName (app-l10n/AppLocalizations.of context))
+         .style
+         (.copyWith (.-headlineSmall (.-textTheme theme))
+                    .fontWeight material/FontWeight.bold
+                    .color (.-primary (.-colorScheme theme)))
+         ))))))
+
+(defn main-screen
+  []
+  (let [current-tab (atom 3)]
+    (img-utils/init-image-directory)
+
+    (flutter/widget
+     :watch [tab current-tab]
+     (material/MaterialApp
+      .title "Paginae"
+
+      .localizationsDelegates app-l10n/AppLocalizations.localizationsDelegates
+      .supportedLocales app-l10n/AppLocalizations.supportedLocales
+
+      .theme theme/light-theme
+      .darkTheme theme/dark-theme
+      .themeMode material/ThemeMode.dark
+
+      .home
+      (material/Scaffold
+
+       .appBar
+       (app-bar)
+
+       .body
+       (material/Container
+        .margin (material/EdgeInsets.only .top 10 .left 20 .right 20)
+        .child
+        (cond
+          (= tab 3) (book-search/book-search-widget)
+          :else (main-widget)))
+
+       .bottomNavigationBar
+       (material/SafeArea
+        .child
+        (bottom-sheet
+         tab
+         (fn [i] (reset! current-tab i)))))))))
+
+(defn main [] 
   (flutter/run
-   (material/MaterialApp
-    .title "Welcome to Flutter"
-    .theme (material/ThemeData .primarySwatch material.Colors/pink))
-   .home
-   (material/Scaffold
-    .appBar (material/AppBar
-             .title (material/Text "Welcome to ClojureDart")))
-   .body
-   material/Center
-   (material/Text "Let's get coding!"
-                  .style (material/TextStyle
-                          .color material.Colors/red
-                          .fontSize 32.0))))
+    (main-screen)))

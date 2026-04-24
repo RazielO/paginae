@@ -1,0 +1,243 @@
+(ns paginae.book-search
+  (:require [cljd.flutter :as flutter]
+            [clojure.string :as str]
+            [paginae.theme :as theme]
+            [paginae.add-book.add-book :as add-book]
+            [paginae.types.book :as book]
+            [paginae.image.widget :as image]
+            ["package:flutter/material.dart" :as material]
+            ["package:http/http.dart" :as http]
+            ["dart:convert" :as convert]
+            ["package:mobile_scanner/mobile_scanner.dart" :as scanner]
+            ["package:material_symbols_icons/symbols.dart" :as symbols]
+            ["../l10n/app_localizations.dart" :as app-l10n]))
+
+(defrecord QueryResult
+    [total start data])
+
+(defn search-books
+  "Query the Open Library to search for books"
+  [query offset unknown-str] 
+  (let [uri (Uri/https
+             "openlibrary.org"
+             "/search.json"
+             {"q" (str "title: \"" query "\" OR author_name: \"" query "\" OR isbn: \"" query "\"")
+              "fields" "author_name,title,cover_i,first_publish_year,key,cover_edition_key,number_of_pages_median"
+              "limit" "20"
+              "offset" (str offset)})
+        response (await (http/get uri))]
+    
+    (if (= (.-statusCode response) 200)
+      (let [json (convert/jsonDecode (.-body response))]
+       (map->QueryResult
+        {:total (get json "num_found")
+         :start (get json "start")
+         :data (map #(book/book-from-query-result % unknown-str)
+                    (filter (fn [m]
+                              (let [t (get m "title")]
+                                (and
+                                 (contains? m "key")
+                                 (some? t)
+                                 (not (str/blank? t))
+                                 )))
+                            (get json "docs" [])))}))
+      (throw (Exception. "Request failed")))))
+
+(defn book-list-card
+  "Card that displays a result book after a search"
+  [book]
+  (flutter/widget
+   :get {{{:flds [titleLarge]} .-textTheme} material/Theme}
+   :get [material/Navigator]
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+
+   (material/InkWell
+    .onTap #((fn []
+               (.push
+                navigator
+                (#/(material/MaterialPageRoute Object)
+                 .builder
+                 (flutter/build (add-book/add-book-screen book))))
+               nil))
+
+    .child
+    (material/Card
+     .margin (material/EdgeInsets.only .bottom 20)
+     .child
+     (material/Container
+      .padding (material/EdgeInsets.all 10)
+      .child
+      (material/Row
+       .spacing 30
+       .children
+       [(image/cover-image {:book book
+                            :placeholder-text (.-noCover locales)
+                            :bordered? false
+                            :clickable? false
+                            :on-click nil})
+
+        (material/Expanded
+         .child
+         (material/Column
+          .crossAxisAlignment material/CrossAxisAlignment.start
+          .spacing 5
+          .children
+          [(material/Text (:title book)
+                          .style titleLarge
+                          .softWrap true)
+
+           (material/Text (.toUpperCase ^String (:author book))
+                          .style (material/TextStyle
+                                  .color (:60 theme/neutral)
+                                  .fontSize 16
+                                  .fontWeight material/FontWeight.bold))
+           (material/Text (str (.-firstPublished locales) ":" (:first-published book))
+                          .style (material/TextStyle
+                                  .color (:50 theme/neutral)
+                                  .fontSize 14))]))
+        ]))))))
+
+(defn book-list-widget
+  "List to display search book results"
+  [query]
+  (flutter/widget
+   :get {{{:flds [titleLarge]} .-textTheme} material/Theme
+         {{:flds [onBackground]} .-colorScheme} material/Theme}
+   :context context
+   :watch [results (search-books query 0 (.-unknown (app-l10n/AppLocalizations.of context)))]
+   
+   (cond
+     (nil? results) (material/CircularProgressIndicator)
+     (= 0 (:total results)) (material/Expanded
+                             .child
+                             (material/Text (.-noResults (app-l10n/AppLocalizations.of context))
+                                            .style (.copyWith titleLarge
+                                                              .fontWeight material/FontWeight.bold
+                                                              .fontFamily "Manrope"
+                                                              .color onBackground)))
+     :else (material/Expanded
+            .child
+            ;; (material/Text (str results))
+            (material/ListView
+             .children (map #(book-list-card %) (:data results)))
+            ))))
+
+
+(defn book-search-widget []
+  (let [query (atom "")
+        scanning (atom false)]
+    (flutter/widget
+     :get {{{:flds [background onPrimary primary onSecondary secondary]} .-colorScheme} material/Theme}
+     :get [material/Navigator]
+     :watch [q query
+             scanning? scanning]
+     :context context
+     
+     (let [locales (app-l10n/AppLocalizations.of context)]
+       (material/Container
+        .decoration
+        (material/BoxDecoration
+         .color background)
+        .child
+        (material/Column
+         .crossAxisAlignment material/CrossAxisAlignment.center
+         .spacing 10
+         .children
+         [(material/Text (.-addNewBook locales)
+                         .style (material/TextStyle
+                                 .fontFamily "NotoSerif"
+                                 .fontWeight material/FontWeight.bold
+                                 .fontSize 32))
+          
+          (material/Container
+           .padding (material/EdgeInsets.symmetric .horizontal 20 .vertical 5)
+           .decoration
+           (material/BoxDecoration
+            .color (:80 theme/neutral)
+            .borderRadius (material/BorderRadiusGeometry.circular 10))
+           .child
+           (material/Row
+            .mainAxisSize material/MainAxisSize.min
+            .spacing 20
+            .children
+            [(material/Icon material/Icons.search
+                            .color (:60 theme/primary))
+             
+             (material/Expanded
+              .child
+              (material/TextField
+               .onSubmitted
+               (fn [text]
+                 (reset! query text))
+               .style
+               (material/TextStyle
+                .color (:10 theme/neutral))
+               .decoration
+               (material/InputDecoration
+                .hintText (.-bookSearchHint locales)
+                .border material/InputBorder.none
+                .enabledBorder material/InputBorder.none
+                .focusedBorder material/InputBorder.none
+                .hintStyle (material/TextStyle
+                            .color (:60 theme/neutral)))))]))
+
+          (material/ElevatedButton
+           .onPressed #(reset! scanning true)
+           .style (material/ButtonStyle
+                   .backgroundColor (material/WidgetStatePropertyAll primary)
+                   .padding (material/WidgetStatePropertyAll
+                             (material/EdgeInsets.symmetric .horizontal 0 .vertical 10)))
+           .child
+           (material/Row
+            .mainAxisAlignment material/MainAxisAlignment.center
+            .spacing 20
+            .children
+            [(material/Icon symbols/Symbols.barcode_scanner
+                            .color onPrimary)
+             (material/Text (.-scanBarcode locales)
+                            .style (material/TextStyle
+                                    .color onPrimary
+                                    .fontSize 16))
+             ]))
+
+          (material/ElevatedButton
+           .onPressed (fn []
+                        (.push
+                         navigator
+                         (#/(material/MaterialPageRoute Object)
+                          .builder
+                          (flutter/build (add-book/add-book-screen (book/empty-book)))))
+                        nil)
+           .style (material/ButtonStyle
+                   .backgroundColor (material/WidgetStatePropertyAll secondary)
+                   .padding (material/WidgetStatePropertyAll
+                             (material/EdgeInsets.symmetric .horizontal 0 .vertical 10)))
+           .child
+           (material/Row
+            .mainAxisAlignment material/MainAxisAlignment.center
+            .spacing 20
+            .children
+            [(material/Icon symbols/Symbols.edit_note
+                            .color onSecondary)
+             (material/Text (.-manualEntry locales)
+                            .style (material/TextStyle
+                                    .color onSecondary
+                                    .fontSize 16))
+             ]))
+
+          
+          (cond
+            scanning? (material/Expanded
+                       .child
+                       (scanner/MobileScanner
+                        .onDetect
+                        (fn [capture]
+                          (let [barcodes (.-barcodes ^scanner/BarcodeCapture capture)
+                                barcode (first barcodes)]
+                            (when barcode
+                              (reset! query (.-rawValue ^scanner/Barcode barcode))
+                              (reset! scanning false))))))
+            (not-empty q) (book-list-widget q)
+            :else (material/Container))
+          ]))))))

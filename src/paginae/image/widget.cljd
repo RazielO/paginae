@@ -1,0 +1,115 @@
+(ns paginae.image.widget
+  (:require [cljd.flutter :as flutter]
+            ["package:flutter/material.dart" :as material]
+            [paginae.image.utils :as img-utils]
+            ["package:dotted_border/dotted_border.dart" :as dotted]
+            ["dart:io" :as io]))
+
+(defn cover-placeholder
+  "Widget used for when there is no cover image"
+  [text]
+  (flutter/widget
+   :get {{{:flds [surface onSurface]} .-colorScheme} material/Theme}
+   (material/ClipRRect
+    .borderRadius (material/BorderRadiusGeometry.circular 16)
+    .child
+    (material/Container
+     .width 140
+     .height 200
+     .color surface
+     .child
+     (material/Column
+      .mainAxisAlignment material/MainAxisAlignment.center
+      .children
+      [(material/Icon material/Icons.image_outlined
+                      .size 40
+                      .color (.withOpacity onSurface 0.5))
+       (material/SizedBox
+        .height 8)
+       (material/Text text
+                      .style (material/TextStyle
+                              .color (.withOpacity onSurface 0.7)))])))))
+
+(defn- bordered-wrapper
+  "Wrapper widget for dotted border"
+  [child]
+
+  (flutter/widget
+   :get {{{:flds [onSurface]} .-colorScheme} material/Theme}
+
+   (dotted/DottedBorder
+    .options
+    (dotted/RoundedRectDottedBorderOptions
+     .radius (material/Radius.circular 16)
+     .color onSurface
+     .dashPattern [10.0 5.0]
+     .strokeWidth 2.0)
+    .child
+    child)))
+
+(defn- clickable-wrapper
+  "Wrapper for when the cover is clickable"
+  [on-click child]
+  (flutter/widget
+   (material/InkWell
+    .onTap on-click
+    .child child)))
+
+(defn cover-image
+  "Widget that shows the cover image of a book"
+  [{:keys [book
+           placeholder-text
+           bordered?
+           clickable?
+           on-click]}]
+  
+  (flutter/widget
+   :let [local-path (if (nil? (:cover-uri book))
+                      (img-utils/cover-path (:id book))
+                      (:cover-uri book))
+
+         placeholder
+         (cover-placeholder placeholder-text)
+
+         image-widget
+         (cond
+           (and
+            local-path
+            (not-empty local-path)
+            (.existsSync (io/File. local-path)))
+           (material/Image.file (io/File. local-path)
+                                .width 140
+                                .height 200
+                                .fit material/BoxFit.cover)
+
+           (not (:local-cover? book))
+           (material/Image.network
+            (:cover-uri book)
+            .width 140
+            .height 200
+            .fit material/BoxFit.cover
+            .loadingBuilder
+            (fn [_context child progress]
+              (if (nil? progress)
+                child
+                (cover-placeholder "Loading")))
+            .errorBuilder
+            (fn [_context _error _stack-trace]
+              (cover-placeholder placeholder-text))) 
+
+           :else
+           (if bordered?
+             (bordered-wrapper placeholder)
+             placeholder))
+
+         clipped
+         (material/ClipRRect
+          .borderRadius (material/BorderRadiusGeometry.circular 16)
+          .child image-widget)
+
+         clickable
+         (if clickable?
+           (clickable-wrapper on-click clipped)
+           clipped)]
+
+   clickable))

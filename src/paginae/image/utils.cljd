@@ -1,0 +1,71 @@
+(ns paginae.image.utils
+  (:require ["package:path_provider/path_provider.dart" :as path-provider]
+            ["package:path/path.dart" :as path]
+            ["package:image/image.dart" :as img]
+            ["dart:io" :as io]
+            ["package:flutter/foundation.dart" :as foundation]
+            ["dart:async" :as async]))
+
+(defonce image-directory-path (atom nil))
+
+(defn init-image-directory []
+  (.then
+   (path-provider/getApplicationDocumentsDirectory)
+   (fn [^io/Directory dir]
+     (reset! image-directory-path (.-path dir)))))
+
+(defn cover-path
+  "Return the cover image path based on the id"
+  [id]
+  (path/join @image-directory-path (str id ".jpg")))
+
+(def IMAGE-MAX-WIDTH
+  "Maximum width in pixels for a saved image"
+  300)
+
+(defn- resize-and-save-image
+  "Resize an image to a set width and save it to disk"
+  [input-bytes output-path]
+  (let [decoded (img/decodeImage input-bytes)]
+    (when decoded
+      (let [resized (img/copyResize decoded .width IMAGE-MAX-WIDTH)
+            jpg (img/encodeJpg resized)]
+        (.writeAsBytes (io/File. output-path) jpg)))))
+
+(defn- ^async/Future download-image-bytes
+  "Download an image from the internet"
+  [url]
+  (let [client (io/HttpClient.)]
+    (.then
+     (.getUrl client (Uri/parse url))
+     (fn [^io/HttpClientRequest request]
+       (.then
+        (.close request)
+        (fn [response]
+          (foundation/consolidateHttpClientResponseBytes response)))))))
+
+(defn- ^async/Future read-local-image-bytes
+  "Read the bytes of a local image"
+  [path]
+  (.readAsBytes (io/File. path)))
+
+(defn save-book-cover
+  "Save cover to memory"
+  [book]
+  (when-not (or (nil? (:cover-uri book))
+                (empty? (:cover-uri book)))
+    (let [image-dest (cover-path (:id book))]
+      (if (:local-cover? book)
+
+        ;; local image
+        (.then
+         (read-local-image-bytes (:cover-uri book))
+         (fn [bytes]
+           (resize-and-save-image bytes image-dest)))
+
+        ;; remote image
+        (.then
+         (download-image-bytes (:cover-uri book))
+         (fn [bytes]
+           (resize-and-save-image bytes image-dest)))))))
+

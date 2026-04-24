@@ -1,0 +1,107 @@
+(ns paginae.types.book
+  (:require ["package:uuid/uuid.dart" :as uuid]))
+
+(defrecord Book
+    [id title author first-published pages status format cover-uri local-cover?])
+
+(defn empty-book
+  "Create an empty book"
+  []
+  (map->Book
+   {:id (uuid/.v4 (uuid/Uuid))
+    :title ""
+    :author ""
+    :first-published ""
+    :pages 0
+    :status :to-read
+    :format :hardcover
+    :cover-uri ""
+    :local-cover? true}))
+
+(defn book-from-query-result
+  "Construct a book from a JSON from a query result"
+  [json unknown-str]
+  (let [has-cover? (not= (get json "cover_edition_key" ::not-found) ::not-found)]
+    (map->Book
+     {:id (uuid/.v4 (uuid/Uuid)) 
+      :title (get json "title")
+      :author (first (get json "author_name" [unknown-str]))
+      :first-published (get json "first_publish_year" unknown-str)
+      :pages (let [val (get json "number_of_pages_median" 0)]
+               (if (string? val)
+                 (int/parse val)
+                 val))
+      :status :to-read
+      :format :hardcover
+      :cover-uri (when has-cover?
+                   (str "https://covers.openlibrary.org/b/olid/" (get json "cover_edition_key") "-M.jpg"))
+      :local-cover? (not has-cover?)})))
+
+(defn to-db-map
+  "Convert a book to a map to store on the database"
+  [book]
+  {"id" (:id book)
+   "title" (:title book)
+   "author" (:author book)
+   "pages" (:pages book)
+   "status" (name (:status book))
+   "format" (name (:format book))})
+
+(defn from-db-entry
+  "Convert a db entry into a Book"
+  [entry]
+  (map->Book
+   {:id (get entry "id") 
+    :title (get entry "title")
+    :author (get entry "author")
+    :first-published ""
+    :pages (get entry "pages")
+    :status (keyword (get entry "status"))
+    :format (keyword (get entry "format"))
+    :cover-uri nil
+    :local-cover? true}))
+
+(defn update-title
+  "Return a new Book with title set to new-title."
+  [^Book book new-title]
+  (assoc book :title new-title))
+
+(defn update-cover
+  "Return a new Book with cover-uri set to new-cover-uri and local-cover? to local?
+   Use nil for new-cover-uri to remove the cover."
+  [^Book book new-cover-uri local?]
+  (assoc book :cover-uri new-cover-uri
+         :local-cover? (boolean local?)))
+
+(defn update-local-cover
+  "Return a new Book with cover-uri set to new-cover-uri and local-cover? to local?
+   Use nil for new-cover-uri to remove the cover."
+  [^Book book new-cover-uri]
+  (assoc book :cover-uri new-cover-uri
+         :local-cover? true))
+
+
+(defn update-author
+  "Return a new Book with author set to new-author (string or collection)."
+  [^Book book new-author]
+  (assoc book :author new-author))
+
+(defn update-pages
+  "Return a new Book with pages set to new-pages (integer)."
+  [^Book book new-pages]
+  (assoc book :pages new-pages))
+
+(defn update-status
+  "Return a new Book with status set to new-status (keyword)."
+  [^Book book new-status]
+  (assoc book :status new-status))
+
+(defn update-format
+  "Return a new Book with format set to new-format (keyword)."
+  [^Book book new-format]
+  (assoc book :format new-format))
+
+(defn update-saved-cover
+  "Return a new Book with saved-cover? set to new-value (boolean)."
+  [^Book book new-value]
+  (assoc book :saved-cover? new-value))

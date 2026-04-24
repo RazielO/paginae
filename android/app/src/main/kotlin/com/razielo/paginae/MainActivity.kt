@@ -1,4 +1,4 @@
-package com.example.cljd_paginae
+package com.razielo.paginae
 
 import io.flutter.embedding.android.FlutterActivity
 

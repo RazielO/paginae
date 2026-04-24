@@ -1,0 +1,104 @@
+(ns paginae.add-book.book-format
+  (:require [cljd.flutter :as flutter]
+            ["package:flutter/material.dart" :as material]
+            ["../l10n/app_localizations.dart" :as app-l10n]
+            [paginae.types.book :as book]))
+
+(defn- group-button
+  "Button for selecting format"
+  [text onPressed selected?]
+  (flutter/widget
+   :get {{{:flds [primary onPrimary surface onSurface]} .-colorScheme} material/Theme}
+
+   (material/ElevatedButton
+    .onPressed onPressed
+
+    .style
+    (material/ButtonStyle
+     .backgroundColor (material/WidgetStatePropertyAll
+                       ^material/Color
+                       (if selected?
+                         primary
+                         surface))
+
+     .foregroundColor (material/WidgetStatePropertyAll
+                       ^material/Color
+                       (if selected?
+                         onPrimary
+                         onSurface))
+
+     .shape (material/WidgetStatePropertyAll
+             (material/RoundedRectangleBorder
+              .borderRadius (material/BorderRadius.circular 16))))
+
+    .child
+    (material/Container
+     .padding (material/EdgeInsets.all 16)
+
+     .child
+     (material/Text text
+                    .textAlign material/TextAlign.center
+                    .overflow material/TextOverflow.clip)))))
+
+(defn format-card
+  "Card that holds possible formats for a book"
+  [book-atom]
+
+  (flutter/widget
+   :get {{{:flds [background]} .-colorScheme} material/Theme
+         {{:flds [bodyLarge]} .-textTheme} material/Theme}
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+
+   (material/Card
+    .color background
+
+    .child
+    (material/Container
+     .padding (material/EdgeInsets.all 24)
+
+     .child
+     (material/Column
+      .spacing 8
+      .crossAxisAlignment material/CrossAxisAlignment.start
+      
+      .children
+      [(material/Text (.-format locales)
+                      .style (.copyWith bodyLarge
+                                        .fontWeight material/FontWeight.bold))
+
+       (material/IntrinsicHeight
+        .child
+        (material/Row
+         .crossAxisAlignment material/CrossAxisAlignment.stretch
+         .spacing 8
+         .children
+         [(material/Expanded
+           .child
+           (group-button (.-hardcover locales)
+                         #(swap! book-atom book/update-format :hardcover)
+                         (= (:format @book-atom) :hardcover)))
+
+          (material/Expanded
+           .child
+           (group-button (.-paperback locales)
+                         #(swap! book-atom book/update-format :paperback)
+                         (= (:format @book-atom) :paperback)))]))
+
+       (material/IntrinsicHeight
+        .child
+        (material/Row
+         .crossAxisAlignment material/CrossAxisAlignment.stretch
+         .spacing 8
+         .children
+         [(material/Expanded
+           .child
+           (group-button (.-ebook locales)
+                         #(swap! book-atom book/update-format :ebook)
+                         (= (:format @book-atom) :ebook)))
+
+          (material/Expanded
+           .child
+           (group-button (.-audiobook locales)
+                         #(swap! book-atom book/update-format :audiobook)
+                         (= (:format @book-atom) :audiobook)))]))])))))

@@ -1,0 +1,150 @@
+(ns paginae.add-book.add-book
+  (:require [cljd.flutter :as flutter]
+            ["package:flutter/material.dart" :as material]
+            [paginae.types.book :as book]
+            [paginae.image.utils :as img-utils]
+            [paginae.image.widget :as image]
+            [paginae.database :as db]
+            [paginae.add-book.reading-status :as reading-status] 
+            [paginae.add-book.book-format :as book-format]
+            [paginae.add-book.book-form :as book-form]
+            ["../l10n/app_localizations.dart" :as app-l10n]
+            ["package:image_picker/image_picker.dart" :as image-picker]))
+
+(defn- add-cover
+  "Pick an image to use as cover"
+  []
+  
+  (let [picker (image-picker/ImagePicker.)]
+    (.then
+     (.pickImage picker .source image-picker/ImageSource.gallery
+                 .maxWidth 800
+                 .maxHeight 800
+                 .imageQuality 85)
+     (fn [^image-picker/XFile? picked-file]
+       (when picked-file
+         (.-path picked-file))))))
+
+(defn- ^material/PreferredSizeWidget app-bar
+  "App bar"
+  [{:keys [^app-l10n/AppLocalizations locales 
+           on-cancel 
+           on-save 
+           ^material/ColorScheme color-scheme]}]
+
+  (material/AppBar
+   .centerTitle true
+   
+   .leading
+   (material/IconButton
+    .icon (material/Icon material/Icons.close)
+    .onPressed on-cancel
+    .tooltip (.-cancel locales))
+   
+   .actions
+   [(material/FilledButton
+     .onPressed on-save
+     
+     .child (material/Text (.-save locales)
+                           .style
+                           (material/TextStyle
+                            .fontSize 16
+                            .color (.-onSurface color-scheme)))
+     
+     .style (material/ButtonStyle
+             .backgroundColor (material/WidgetStatePropertyAll (.-surface color-scheme))
+
+             .foregroundColor (material/WidgetStatePropertyAll (.-onBackground color-scheme))
+
+             .padding (material/WidgetStatePropertyAll
+                       (material/EdgeInsets.all 15))))]
+   
+   .title
+   (material/Builder
+    .builder
+    (fn [context]
+      (let [theme (material/Theme.of context)]
+        (material/Text
+         (.-appName (app-l10n/AppLocalizations.of context))
+         .style
+         (.copyWith (.-headlineSmall (.-textTheme theme))
+                    .color (.-primary (.-colorScheme theme)))))))))
+
+(defn add-book-widget
+  "Body widget on the add book screen"
+  [book-atom]
+  
+  (flutter/widget
+   :get {{{:flds [background]} .-colorScheme
+          {:flds [headlineMedium]} .-textTheme} material/Theme}
+   :context context
+   :managed [title-controller (material/TextEditingController
+                               .text (:title @book-atom))
+             
+             author-controller (material/TextEditingController
+                                .text (:author @book-atom))
+             
+             pages-controller (material/TextEditingController
+                               .text (str (:pages @book-atom)))]
+   
+   (let [locales (app-l10n/AppLocalizations.of context)]
+     (material/Container
+      .margin
+      (material/EdgeInsets.symmetric .horizontal 12 .vertical 0)
+      
+      .decoration
+      (material/BoxDecoration
+       .color background)
+      
+      .child
+      (material/Center
+       .child
+       (material/SingleChildScrollView
+        .child
+        (material/Column
+         .crossAxisAlignment material/CrossAxisAlignment.center
+         .spacing 20
+         .children
+         [;; Title
+          (material/Text (.-addToLibrary locales)
+                         .style headlineMedium
+                         .textAlign material/TextAlign.center)
+
+          (material/SizedBox
+           .height 10)
+
+          ;; Cover image
+          (image/cover-image {:book @book-atom
+                              :placeholder-text (.-addCover (app-l10n/AppLocalizations.of context))
+                              :bordered? true
+                              :clickable? true
+                              :on-click (fn []
+                                          (let [cover (await (add-cover))]
+                                            (swap! book-atom book/update-local-cover cover)))})
+
+          ;; Form
+          (book-form/form-card title-controller author-controller pages-controller)
+
+          ;; Reading status
+          (reading-status/status-card book-atom)
+
+          ;; Book formats
+          (book-format/format-card book-atom)])))))))
+
+(defn add-book-screen
+  [^book/Book book]
+
+  (flutter/widget 
+   :watch [book-val (atom book) :as book-atom]
+   :get [material/Navigator]
+   :context context
+   
+   (material/Scaffold
+    .appBar (app-bar {:on-cancel #(.pop navigator)
+                      :on-save (fn []
+                                 (db/insert-book book-val)
+                                 (img-utils/save-book-cover book-val)
+                                 (.pop navigator))
+                      :locales (app-l10n/AppLocalizations.of context)
+                      :color-scheme (.-colorScheme (material/Theme.of context))})
+    .body (add-book-widget book-atom))))
