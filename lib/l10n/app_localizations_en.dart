@@ -12,16 +12,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appName => 'Paginae';
 
   @override
-  String get reading => 'Reading';
+  String get bottomHome => 'Home';
 
   @override
-  String get stats => 'Stats';
+  String get bottomJournal => 'Journal';
 
   @override
-  String get library => 'Library';
+  String get bottomLibrary => 'Library';
 
   @override
-  String get add => 'Add';
+  String get bottomAdd => 'Add';
+
+  @override
+  String get searchTitle => 'Add New Book';
+
+  @override
+  String get searchScanBarcode => 'Scan Barcode';
+
+  @override
+  String get searchManualEntry => 'Manual Entry';
+
+  @override
+  String get searchNoResults => 'No results found';
+
+  @override
+  String get searchBookHint => 'Search by title, author or ISBN';
+
+  @override
+  String get searchCancelScanning => 'Cancel scanning';
 
   @override
   String get save => 'Save';
@@ -30,28 +48,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
-  String get firstPublished => 'First Published';
+  String firstPublished(String year) {
+    return 'First Published: $year';
+  }
 
   @override
   String get unknown => 'Unknown';
 
   @override
-  String get addNewBook => 'Add New Book';
-
-  @override
-  String get scanBarcode => 'Scan Barcode';
-
-  @override
-  String get manualEntry => 'Manual Entry';
-
-  @override
-  String get noResults => 'No results found';
-
-  @override
-  String get bookSearchHint => 'Search by title, author or ISBN';
-
-  @override
-  String get addToLibrary => 'Add To Library';
+  String get addBookTitle => 'Add To Library';
 
   @override
   String get addCover => 'Add Cover';
@@ -94,4 +99,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noCover => 'No Cover';
+
+  @override
+  String get loading => 'Loading';
+
+  @override
+  String get homeTitle => 'Your Study';
+
+  @override
+  String booksInProgress(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count books',
+      one: '1 book',
+      zero: 'No books',
+    );
+    return '$_temp0 in progress';
+  }
 }

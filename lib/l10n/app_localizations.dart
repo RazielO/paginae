@@ -98,179 +98,203 @@ abstract class AppLocalizations {
     Locale('es'),
   ];
 
-  /// No description provided for @appName.
+  /// Name of the app
   ///
   /// In en, this message translates to:
   /// **'Paginae'**
   String get appName;
 
-  /// No description provided for @reading.
+  /// Bottom bar home tab name
   ///
   /// In en, this message translates to:
-  /// **'Reading'**
-  String get reading;
+  /// **'Home'**
+  String get bottomHome;
 
-  /// No description provided for @stats.
+  /// Bottom bar journal tab name
   ///
   /// In en, this message translates to:
-  /// **'Stats'**
-  String get stats;
+  /// **'Journal'**
+  String get bottomJournal;
 
-  /// No description provided for @library.
+  /// Bottom bar library tab name
   ///
   /// In en, this message translates to:
   /// **'Library'**
-  String get library;
+  String get bottomLibrary;
 
-  /// No description provided for @add.
+  /// Bottom bar add tab name
   ///
   /// In en, this message translates to:
   /// **'Add'**
-  String get add;
+  String get bottomAdd;
 
-  /// No description provided for @save.
+  /// Search book screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Book'**
+  String get searchTitle;
+
+  /// Search book screen action to scan a book's barcode
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Barcode'**
+  String get searchScanBarcode;
+
+  /// Search book screen action to manually enter a book
+  ///
+  /// In en, this message translates to:
+  /// **'Manual Entry'**
+  String get searchManualEntry;
+
+  /// Search book screen label for when no books were found
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get searchNoResults;
+
+  /// No description provided for @searchBookHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by title, author or ISBN'**
+  String get searchBookHint;
+
+  /// Search book screen action to cancel barcode scanning
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel scanning'**
+  String get searchCancelScanning;
+
+  /// Label for save button
   ///
   /// In en, this message translates to:
   /// **'Save'**
   String get save;
 
-  /// No description provided for @cancel.
+  /// Label for cancel button
   ///
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancel;
 
-  /// No description provided for @firstPublished.
+  /// Label for when a book was first published
   ///
   /// In en, this message translates to:
-  /// **'First Published'**
-  String get firstPublished;
+  /// **'First Published: {year}'**
+  String firstPublished(String year);
 
-  /// No description provided for @unknown.
+  /// Label for unknown book data
   ///
   /// In en, this message translates to:
   /// **'Unknown'**
   String get unknown;
 
-  /// No description provided for @addNewBook.
-  ///
-  /// In en, this message translates to:
-  /// **'Add New Book'**
-  String get addNewBook;
-
-  /// No description provided for @scanBarcode.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan Barcode'**
-  String get scanBarcode;
-
-  /// No description provided for @manualEntry.
-  ///
-  /// In en, this message translates to:
-  /// **'Manual Entry'**
-  String get manualEntry;
-
-  /// No description provided for @noResults.
-  ///
-  /// In en, this message translates to:
-  /// **'No results found'**
-  String get noResults;
-
-  /// No description provided for @bookSearchHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Search by title, author or ISBN'**
-  String get bookSearchHint;
-
-  /// No description provided for @addToLibrary.
+  /// Add book screen title
   ///
   /// In en, this message translates to:
   /// **'Add To Library'**
-  String get addToLibrary;
+  String get addBookTitle;
 
-  /// No description provided for @addCover.
+  /// Add book screen action to add a local cover
   ///
   /// In en, this message translates to:
   /// **'Add Cover'**
   String get addCover;
 
-  /// No description provided for @bookTitle.
+  /// Label for title of the book while adding one
   ///
   /// In en, this message translates to:
   /// **'Book Title'**
   String get bookTitle;
 
-  /// No description provided for @bookAuthor.
+  /// Label for author of the book while adding one
   ///
   /// In en, this message translates to:
   /// **'Author'**
   String get bookAuthor;
 
-  /// No description provided for @totalPages.
+  /// Label for total pages of the book while adding one
   ///
   /// In en, this message translates to:
   /// **'Total Pages'**
   String get totalPages;
 
-  /// No description provided for @format.
+  /// Label for format of the book while adding one
   ///
   /// In en, this message translates to:
   /// **'Format'**
   String get format;
 
-  /// No description provided for @ebook.
+  /// Label for e-book format
   ///
   /// In en, this message translates to:
   /// **'E-Book'**
   String get ebook;
 
-  /// No description provided for @hardcover.
+  /// Label for hardcover format
   ///
   /// In en, this message translates to:
   /// **'Hardcover'**
   String get hardcover;
 
-  /// No description provided for @paperback.
+  /// Label for paperback format
   ///
   /// In en, this message translates to:
   /// **'Paperback'**
   String get paperback;
 
-  /// No description provided for @audiobook.
+  /// Label for audiobook format
   ///
   /// In en, this message translates to:
   /// **'Audiobook'**
   String get audiobook;
 
-  /// No description provided for @currentStatus.
+  /// Label for current book status
   ///
   /// In en, this message translates to:
   /// **'Current Status'**
   String get currentStatus;
 
-  /// No description provided for @currentlyReading.
+  /// Status of 'currently reading' for book
   ///
   /// In en, this message translates to:
   /// **'Currently Reading'**
   String get currentlyReading;
 
-  /// No description provided for @toRead.
+  /// Status of 'to read' for book
   ///
   /// In en, this message translates to:
   /// **'To Read'**
   String get toRead;
 
-  /// No description provided for @completed.
+  /// Status of 'completed' for book
   ///
   /// In en, this message translates to:
   /// **'Completed'**
   String get completed;
 
-  /// No description provided for @noCover.
+  /// Text for when the book has no cover
   ///
   /// In en, this message translates to:
   /// **'No Cover'**
   String get noCover;
+
+  /// Text for loading
+  ///
+  /// In en, this message translates to:
+  /// **'Loading'**
+  String get loading;
+
+  /// Title for home screen
+  ///
+  /// In en, this message translates to:
+  /// **'Your Study'**
+  String get homeTitle;
+
+  /// Current books in progress
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No books} =1{1 book} other{{count} books}} in progress'**
+  String booksInProgress(int count);
 }
 
 class _AppLocalizationsDelegate

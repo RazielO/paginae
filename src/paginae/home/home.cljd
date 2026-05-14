@@ -1,0 +1,144 @@
+(ns paginae.home.home
+  (:require [cljd.flutter :as flutter]
+            ["package:flutter/material.dart" :as material]
+            ["package:flutter/widgets.dart" :as widgets]
+            ["package:flutter/src/widgets/binding.dart" :as bindings]
+            ["package:flutter/rendering.dart" :as rendering] 
+            [paginae.book-search.book-search :as book-search]
+            [paginae.database :as db]
+            [paginae.image.utils :as img-utils]
+            [paginae.image.widget :as image]
+            ["../l10n/app_localizations.dart" :as app-l10n]))
+
+(defn- reading-book-card
+  "Card to display currently reading book"
+  [book]
+
+  (flutter/widget
+   :get {{{:flds [titleLarge bodyMedium]} .-textTheme} material/Theme}
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+
+   (material/Card
+    
+    .child
+    (material/Container
+     
+     .padding
+     (material/EdgeInsets.all 10)
+     
+     .child
+     (material/Column
+      .crossAxisAlignment material/CrossAxisAlignment.start
+
+      .children
+      [(image/cover-image {:book book
+                           :placeholder-text (.-noCover locales)
+                           :bordered? false
+                           :clickable? false
+                           :on-click nil
+                           :width 175})
+
+       (material/Text (:title book)
+                      .style (.copyWith titleLarge
+                                        .fontWeight material/FontWeight.bold)
+                      .overflow material/TextOverflow.ellipsis)
+
+       (material/Text (:author book)
+                      .style bodyMedium
+                      .overflow material/TextOverflow.ellipsis)
+
+       (material/Expanded 
+
+        .child
+        (material/Row
+
+         .mainAxisAlignment material/MainAxisAlignment.spaceBetween
+
+         .children
+         [(material/Text (.toUpperCase "68% complete"))
+          (material/Text (.toUpperCase "page 192"))]))
+       
+       (material/LinearProgressIndicator
+        .value 0.68)
+
+       ])))))
+
+(defn reading-widget
+  []
+
+  (flutter/widget
+   :get {{{:flds [headlineMedium bodyMedium titleLarge]} .-textTheme
+          {:flds [primary]} .-colorScheme} material/Theme}
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+
+
+    ;;  (bindings/WidgetsBinding.instance
+   ;;   .addPostFrameCallback
+   ;;   (fn [_]
+   ;;     (let [ctx ^widgets/BuildContext (.-currentContext ^widgets/GlobalKey card-key)
+   ;;           render-box  ^rendering/RenderBox (.findRenderObject ctx)
+   ;;           size (.-size render-box)]
+   ;;       (dart:core/print (str "Height: " (.-height size))))))
+   
+   (material/Center
+    .child
+
+    (material/FutureBuilder
+     .future
+     (db/get-reading-books)
+
+     .builder
+     (fn [_context ^widgets/AsyncSnapshot snapshot]
+       (if (.-hasData snapshot)
+         (let [books (.-data snapshot)]
+
+           (material/Column
+
+            .spacing 10
+
+            .children
+            [(material/Text (.-homeTitle locales)
+                            .style (.copyWith headlineMedium
+                                              .fontWeight material/FontWeight.bold))
+
+             (material/Row
+              .mainAxisAlignment material/MainAxisAlignment.spaceBetween
+
+              .children
+              [(material/Expanded
+                .child
+                (material/Text (.-currentlyReading locales)
+                               .softWrap true
+                               .maxLines 2
+                               .style titleLarge))
+
+               (material/Text (.toUpperCase ^String ((.-booksInProgress locales) (count books))) 
+                              .softWrap true
+                              .maxLines 2
+                              .style (.copyWith bodyMedium
+                                                .fontWeight material/FontWeight.bold
+                                                .color primary))])
+
+
+             
+             (material/SizedBox
+              .height 400
+              .child
+              (material/PageView.builder
+               .itemCount
+               (count books)
+               
+               .itemBuilder
+               (fn [_context idx]
+                 (let [book (nth books idx)]
+                   (material/Padding
+                    .padding
+                    (material/EdgeInsets.symmetric
+                     .horizontal 4)
+
+                    .child
+                    (reading-book-card book))))))]))
+
+         (material/CircularProgressIndicator)))))))

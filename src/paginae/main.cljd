@@ -2,157 +2,195 @@
   (:require [cljd.flutter :as flutter]
             ["package:flutter/material.dart" :as material]
             [paginae.theme :as theme]
-            [paginae.book-search :as book-search]
-            [paginae.database :as db]
+            [paginae.book-search.book-search :as book-search] 
             [paginae.image.utils :as img-utils]
-            ["../l10n/app_localizations.dart" :as app-l10n]))
+            [paginae.home.home :as reading]
+            ["../l10n/app_localizations.dart" :as app-l10n]
+            ["package:material_symbols_icons/symbols.dart" :as symbols]))
 
 (defn main-widget []
-  (flutter/widget 
-   
+  (flutter/widget
    (material/Center
     .child
-    (material/FutureBuilder
-     .future (db/get-all-books)
-     .builder
-     (fn [_ontext snapshot]
-       (if (.-hasData snapshot)
-         (let [books (.-data snapshot)]
-           (material/ListView.builder
-            .itemCount (count books)
-            .itemBuilder
-            (fn [_context idx]
-              (let [book (nth books idx)]
-                (book-search/book-list-card book) 
-                ))))
-         (material/CircularProgressIndicator))))
-    )))
+
+    (material/Text "Hello"))))
 
 (defn bottom-sheet-btn
-  [title icon active? onPressed]
+  "Icon button for the bottom sheet"
+  [{:keys [title icon active? on-pressed]}]
+
   (flutter/widget
    :get {{{:flds [onSurface primary onPrimary]} .-colorScheme} material/Theme
          {{:flds [labelMedium]} .-textTheme} material/Theme}
+
    (material/InkWell
-    .onTap onPressed
+    .onTap
+    on-pressed
+
     .borderRadius (material/BorderRadius.circular 25.0)
+
     .child
     (material/Container
-     .margin (material/EdgeInsets.all 5)
-     .padding (material/EdgeInsets.all 2.5)
-     .decoration (material/BoxDecoration
-                  .color (when active? primary)
-                  .borderRadius (material/BorderRadius.circular 20.0))
-     .child (material/Column
-             .mainAxisSize material/MainAxisSize.min
-             .mainAxisAlignment material/MainAxisAlignment.center
-             .children [
-                        (material/Icon icon
-                                       .color (if active?
-                                                onPrimary
-                                                onSurface))
-                        (material/Text  (.toUpperCase ^String title)
-                                        .style
-                                        (.copyWith labelMedium
-                                                   .color (if active?
-                                                            onPrimary
-                                                            onSurface)))])))))
+     .margin
+     (material/EdgeInsets.all 5)
+
+     .padding
+     (material/EdgeInsets.all 2.5)
+
+     .decoration
+     (material/BoxDecoration
+      .color (when active? primary)
+      .borderRadius (material/BorderRadius.circular 20.0))
+
+     .child
+     (material/Column
+      .mainAxisSize
+      material/MainAxisSize.min
+
+      .mainAxisAlignment
+      material/MainAxisAlignment.center
+
+      .children
+      [(material/Icon icon
+                      .color (if active?
+                               onPrimary
+                               onSurface))
+
+       (material/Text  (.toUpperCase ^String title)
+                       .style
+                       (.copyWith labelMedium
+                                  .color (if active?
+                                           onPrimary
+                                           onSurface)))])))))
 
 (defn bottom-sheet
+  "Bottom navigation bar"
   [current-tab change-tab]
+
   (flutter/widget
    :get {{{:flds [surface]} .-colorScheme} material/Theme}
    :context context
-   (let [locales (app-l10n/AppLocalizations.of context)]
+   :let [locales (app-l10n/AppLocalizations.of context)]
+
+   (material/SafeArea
+    .child
     (material/Container
-     .color surface
-     .padding (material/EdgeInsets.only .top 10.0)
+     .color
+     surface
+
+     .padding
+     (material/EdgeInsets.only .top 10.0)
+
      .child
      (material/Row
-      .mainAxisAlignment material/MainAxisAlignment.spaceAround
+      .mainAxisAlignment
+      material/MainAxisAlignment.spaceAround
+
       .children
       [(material/Expanded
         .child
-        (bottom-sheet-btn
-         (.-reading locales)
-         material/Icons.menu_book
-         (= 0 current-tab)
-         #(change-tab 0)))
-       (material/Expanded
-        .child 
-        (bottom-sheet-btn
-         (.-stats locales)
-         material/Icons.bar_chart
-         (= 1 current-tab)
-         #(change-tab 1)))
-       (material/Expanded
-        .child
-        (bottom-sheet-btn
-         (.-library locales)
-         material/Icons.library_books
-         (= 2 current-tab)
-         #(change-tab 2)))
-       (material/Expanded
-        .child
-        (bottom-sheet-btn
-         (.-add locales)
-         material/Icons.add
-         (= 3 current-tab)
-         #(change-tab 3)))])))))
 
-(defn app-bar []
+        (bottom-sheet-btn
+         {:title (.-bottomHome locales)
+          :icon symbols/Symbols.home
+          :active? (= 0 current-tab)
+          :on-pressed #(change-tab 0)}))
+
+       (material/Expanded
+        .child
+
+        (bottom-sheet-btn
+         {:title (.-bottomJournal locales)
+          :icon symbols/Symbols.book_ribbon
+          :active? (= 1 current-tab)
+          :on-pressed #(change-tab 1)}))
+
+       (material/Expanded
+        .child
+
+        (bottom-sheet-btn
+         {:title (.-bottomLibrary locales)
+          :icon symbols/Symbols.library_books
+          :active? (= 2 current-tab)
+          :on-pressed #(change-tab 2)}))
+
+       (material/Expanded
+        .child
+
+        (bottom-sheet-btn
+         {:title (.-bottomAdd locales)
+          :icon symbols/Symbols.add
+          :active? (= 3 current-tab)
+          :on-pressed #(change-tab 3)}))])))))
+
+(defn main-app-bar
+  "Scaffold App Bar"
+  [tab]
   (material/AppBar
    .title
    (material/Builder
     .builder
     (fn [context]
-      (let [theme (material/Theme.of context)]
+      (let [theme (material/Theme.of context)
+            locales (app-l10n/AppLocalizations.of context)]
         (material/Text
-         (.-appName (app-l10n/AppLocalizations.of context))
+         (case tab
+           0 (.-appName locales)
+           1 (.-appName locales)
+           2 (.-appName locales)
+           3 (.-searchTitle locales))
+
          .style
-         (.copyWith (.-headlineSmall (.-textTheme theme))
-                    .fontWeight material/FontWeight.bold
-                    .color (.-primary (.-colorScheme theme)))
-         ))))))
+         (.copyWith
+          (.-headlineSmall (.-textTheme theme))
+
+          .fontWeight
+          material/FontWeight.bold
+
+          .color
+          (.-primary (.-colorScheme theme)))))))))
 
 (defn main-screen
   []
-  (let [current-tab (atom 3)]
-    (img-utils/init-image-directory)
 
-    (flutter/widget
-     :watch [tab current-tab]
-     (material/MaterialApp
-      .title "Paginae"
+  (flutter/widget
+   :watch [tab (atom 3) :as current-tab]
+   
+   (material/MaterialApp
+    .title "Paginae"
 
-      .localizationsDelegates app-l10n/AppLocalizations.localizationsDelegates
-      .supportedLocales app-l10n/AppLocalizations.supportedLocales
+    .localizationsDelegates app-l10n/AppLocalizations.localizationsDelegates
+    .supportedLocales app-l10n/AppLocalizations.supportedLocales
 
-      .theme theme/light-theme
-      .darkTheme theme/dark-theme
-      .themeMode material/ThemeMode.dark
+    .theme theme/light-theme
+    .darkTheme theme/dark-theme
+    .themeMode material/ThemeMode.dark
 
-      .home
-      (material/Scaffold
+    .home
+    (material/Scaffold
 
-       .appBar
-       (app-bar)
+     .body
+     (material/Container
+      .margin
+      (material/EdgeInsets.only .top 10 .left 20 .right 20)
 
-       .body
-       (material/Container
-        .margin (material/EdgeInsets.only .top 10 .left 20 .right 20)
-        .child
-        (cond
-          (= tab 3) (book-search/book-search-widget)
-          :else (main-widget)))
+      .child
+      (case tab
+        0 (reading/reading-widget)
+        1 (main-widget) ;; TODO: Change to stats widget
+        2 (main-widget) ;; TODO: Change to my library widget
+        3 (book-search/book-search-widget)))
 
-       .bottomNavigationBar
-       (material/SafeArea
-        .child
-        (bottom-sheet
-         tab
-         (fn [i] (reset! current-tab i)))))))))
+     .bottomNavigationBar
+     (bottom-sheet
+      tab
+      (fn [i]
+        (reset! current-tab i)))))))
 
-(defn main [] 
+(defn main
+  []
+
+  (img-utils/init-image-directory)
+
   (flutter/run
     (main-screen)))

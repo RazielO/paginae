@@ -9,19 +9,37 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
-  String get appName => 'Paginae';
+  String get appName => 'paginae';
 
   @override
-  String get reading => 'Leyendo';
+  String get bottomHome => 'Inicio';
 
   @override
-  String get stats => 'Stats';
+  String get bottomJournal => 'Diario';
 
   @override
-  String get library => 'Mis libros';
+  String get bottomLibrary => 'Mis Libros';
 
   @override
-  String get add => 'Añadir';
+  String get bottomAdd => 'Añadir';
+
+  @override
+  String get searchTitle => 'Añadir Libro';
+
+  @override
+  String get searchScanBarcode => 'Escanear código de barras';
+
+  @override
+  String get searchManualEntry => 'Añadir manualmente';
+
+  @override
+  String get searchNoResults => 'No se encontraron resultados';
+
+  @override
+  String get searchBookHint => 'Busca por título, autor o ISBN';
+
+  @override
+  String get searchCancelScanning => 'Cancelar escaneo';
 
   @override
   String get save => 'Guardar';
@@ -30,34 +48,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cancel => 'Cancelar';
 
   @override
-  String get firstPublished => 'Primera publicación';
+  String firstPublished(String year) {
+    return 'Primera publicación';
+  }
 
   @override
   String get unknown => 'Desconocido';
 
   @override
-  String get addNewBook => 'Añade Un Libro';
-
-  @override
-  String get scanBarcode => 'Escanea el código de barras';
-
-  @override
-  String get manualEntry => 'Entrada manual';
-
-  @override
-  String get noResults => 'No se encontraron resultados';
-
-  @override
-  String get bookSearchHint => 'Busca por título, autor o ISBN';
-
-  @override
-  String get addToLibrary => 'Añadir a Biblioteca';
+  String get addBookTitle => 'Añadir a Biblioteca';
 
   @override
   String get addCover => 'Añadir Portada';
 
   @override
-  String get bookTitle => 'Título del Libro';
+  String get bookTitle => 'Título';
 
   @override
   String get bookAuthor => 'Autor';
@@ -72,13 +77,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get ebook => 'E-Book';
 
   @override
-  String get hardcover => 'Tapa dura';
+  String get hardcover => 'Tapa Dura';
 
   @override
-  String get paperback => 'Tapa blanda';
+  String get paperback => 'Tapa Blanda';
 
   @override
-  String get audiobook => 'Audio libro';
+  String get audiobook => 'Audiolibro';
 
   @override
   String get currentStatus => 'Estatus';
@@ -87,11 +92,29 @@ class AppLocalizationsEs extends AppLocalizations {
   String get currentlyReading => 'Leyendo';
 
   @override
-  String get toRead => 'Leer más tarde';
+  String get toRead => 'Leer Después';
 
   @override
-  String get completed => 'Completado';
+  String get completed => 'Terminado';
 
   @override
   String get noCover => 'Sin Portada';
+
+  @override
+  String get loading => 'Cargando';
+
+  @override
+  String get homeTitle => 'Mis Libros';
+
+  @override
+  String booksInProgress(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Leyendo $count libros',
+      one: 'Leyendo 1 libro',
+      zero: 'Sin libros',
+    );
+    return '$_temp0';
+  }
 }

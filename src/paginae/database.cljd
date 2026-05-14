@@ -17,21 +17,21 @@
 (defn ^async/Future init-db
   "Initialize the database"
   []
-  (.then
+  (->
    (sqlite/getDatabasesPath)
-   (fn [db-path]
-     (let [path (path/join db-path "paginae.db")]
-       (sqlite/openDatabase
-        path
-        .version 1
-        .onCreate
-        (fn [^sqlite/Database db _version]
-          (.then
-           (load-schema)
-           (fn [^String sql]
-             (run-schema db sql)))))))
-   )
-  )
+   (.then
+    (fn [db-path]
+      (let [path (path/join db-path "paginae.db")]
+        (sqlite/openDatabase
+         path
+         .version 1
+         .onCreate
+         (fn [^sqlite/Database db _version]
+           (->
+            (load-schema)
+            (.then
+             (fn [^String sql]
+               (run-schema db sql)))))))))))
 
 (defonce ^async/Future db-instance
   (delay (init-db)))
@@ -44,22 +44,53 @@
 (defn insert-book
   "Insert a book into the database"
   [^book/Book book]
-  (.then
+  (->
    (get-db)
-   (fn [^sqlite/Database db]
-     (.insert db
-              "books"
-              (book/to-db-map book)))))
+   (.then
+    (fn [^sqlite/Database db]
+      (.insert db
+               "books"
+               (book/to-db-map book))))))
 
-
-(defn keywordize [row]
-  (into {} (map (fn [[k v]] [(keyword k) v]) row)))
-
-(defn get-all-books []
-  (.then
+(defn get-all-books 
+  "Query all books"
+  []
+  (->
    (get-db)
-   (fn [^sqlite/Database db]
-     (.then
-      (.query db "books")
-      (fn [rows]
-        (map book/from-db-entry rows))))))
+   (.then 
+    (fn [^sqlite/Database db]
+      (.then
+       (.query db "books")
+       (fn [rows]
+         (map book/from-db-entry rows)))))))
+
+(defn get-reading-books
+  "Query reading books"
+  []
+  (->
+   (get-db)
+   (.then 
+    (fn [^sqlite/Database db]
+      (->
+       (.query db
+               "books"
+               .where "status = \"reading\"")
+       (.then
+        #(map book/from-db-entry %)))))))
+
+(defn get-book [id]
+  "Query for a book by id"
+  (-> 
+   (get-db)
+   (.then 
+    (fn [^sqlite/Database db]
+      (->
+       (.query db
+               "books"
+               .where "id = ?"
+               .whereArgs [id]
+               .limit 1)
+       (.then
+        (fn [rows]
+          (when (> (count rows) 0)
+            (book/from-db-entry (first rows))))))))))

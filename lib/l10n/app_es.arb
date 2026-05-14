@@ -1,31 +1,78 @@
 {
-    "appName": "Paginae",
-    "reading": "Leyendo",
-    "stats": "Stats",
-    "library": "Mis libros",
-    "add": "Añadir",
-    "save": "Guardar",
-    "cancel": "Cancelar",
-    "firstPublished": "Primera publicación",
-    "unknown": "Desconocido",
-    "addNewBook": "Añade Un Libro",
-    "scanBarcode": "Escanea el código de barras",
-    "manualEntry": "Entrada manual",
-    "noResults": "No se encontraron resultados",
-    "bookSearchHint": "Busca por título, autor o ISBN",
-    "addToLibrary": "Añadir a Biblioteca",
+    "@@locale": "es",
+    "@@author": "localizify.com",
+    "addBookTitle": "Añadir a Biblioteca",
+    "@addBookTitle": {
+        "description": "Add book screen title"
+    },
     "addCover": "Añadir Portada",
-    "bookTitle": "Título del Libro",
+    "addToLibrary": "Añadir A Biblioteca",
+    "appName": "paginae",
+    "@appName": {
+        "description": "Name of the app"
+    },
+    "audiobook": "Audiolibro",
     "bookAuthor": "Autor",
-    "totalPages": "Páginas totales",
-    "format": "Formato",
-    "ebook": "E-Book",
-    "hardcover": "Tapa dura",
-    "paperback": "Tapa blanda",
-    "audiobook": "Audio libro",
+    "bookSearchHint": "Busca por título, autor o ISBN",
+    "bookTitle": "Título",
+    "booksInProgress": "{count, plural, =0{Sin libros} =1{Leyendo 1 libro} other{Leyendo {count} libros}}",
+    "bottomAdd": "Añadir",
+    "@bottomAdd": {
+        "description": "Bottom bar add tab name"
+    },
+    "bottomHome": "Inicio",
+    "@bottomHome": {
+        "description": "Bottom bar home tab name"
+    },
+    "bottomJournal": "Diario",
+    "@bottomJournal": {
+        "description": "Bottom bar journal tab name"
+    },
+    "bottomLibrary": "Mis Libros",
+    "@bottomLibrary": {
+        "description": "Bottom bar library tab name"
+    },
+    "cancel": "Cancelar",
+    "completed": "Terminado",
     "currentStatus": "Estatus",
     "currentlyReading": "Leyendo",
-    "toRead": "Leer más tarde",
-    "completed": "Completado",
-    "noCover": "Sin Portada"
+    "ebook": "E-Book",
+    "firstPublished": "Primera publicación",
+    "format": "Formato",
+    "hardcover": "Tapa Dura",
+    "homeTitle": "Mis Libros",
+    "@homeTitle": {
+        "description": "Title for home screen"
+    },
+    "loading": "Cargando",
+    "noCover": "Sin Portada",
+    "noResults": "No se encontraron resultados",
+    "paperback": "Tapa Blanda",
+    "reading": "Leyendo",
+    "save": "Guardar",
+    "searchBookHint": "Busca por título, autor o ISBN",
+    "searchCancelScanning": "Cancelar escaneo",
+    "@searchCancelScanning": {
+        "description": "Search book screen action to cancel barcode scanning"
+    },
+    "searchManualEntry": "Añadir manualmente",
+    "@searchManualEntry": {
+        "description": "Search book screen action to manually enter a book"
+    },
+    "searchNoResults": "No se encontraron resultados",
+    "@searchNoResults": {
+        "description": "Search book screen label for when no books were found"
+    },
+    "searchScanBarcode": "Escanear código de barras",
+    "@searchScanBarcode": {
+        "description": "Search book screen action to scan a book's barcode"
+    },
+    "searchTitle": "Añadir Libro",
+    "@searchTitle": {
+        "description": "Search book screen title"
+    },
+    "toRead": "Leer Después",
+    "totalPages": "Páginas totales",
+    "unknown": "Desconocido",
+    "yourStudy": "Mis Libros"
 }

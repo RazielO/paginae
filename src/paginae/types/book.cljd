@@ -2,7 +2,15 @@
   (:require ["package:uuid/uuid.dart" :as uuid]))
 
 (defrecord Book
-    [id title author first-published pages status format cover-uri local-cover?])
+           [id
+            title
+            author
+            first-published
+            pages
+            status
+            format
+            cover-uri
+            local-cover?])
 
 (defn empty-book
   "Create an empty book"
@@ -18,19 +26,23 @@
     :cover-uri ""
     :local-cover? true}))
 
+(defn- maybe-string-to-int
+  "Parse a value into an int, it might be string or int"
+  [value]
+  (if (string? value)
+    (int/parse value)
+    value))
+
 (defn book-from-query-result
   "Construct a book from a JSON from a query result"
   [json unknown-str]
   (let [has-cover? (not= (get json "cover_edition_key" ::not-found) ::not-found)]
     (map->Book
-     {:id (uuid/.v4 (uuid/Uuid)) 
+     {:id (uuid/.v4 (uuid/Uuid))
       :title (get json "title")
       :author (first (get json "author_name" [unknown-str]))
-      :first-published (get json "first_publish_year" unknown-str)
-      :pages (let [val (get json "number_of_pages_median" 0)]
-               (if (string? val)
-                 (int/parse val)
-                 val))
+      :first-published (str (get json "first_publish_year" unknown-str))
+      :pages (maybe-string-to-int (get json "number_of_pages_median" 0))
       :status :to-read
       :format :hardcover
       :cover-uri (when has-cover?
@@ -51,7 +63,7 @@
   "Convert a db entry into a Book"
   [entry]
   (map->Book
-   {:id (get entry "id") 
+   {:id (get entry "id")
     :title (get entry "title")
     :author (get entry "author")
     :first-published ""

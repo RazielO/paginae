@@ -1,31 +1,144 @@
 {
     "appName": "Paginae",
-    "reading": "Reading",
-    "stats": "Stats",
-    "library": "Library",
-    "add": "Add",
+    "@appName": {
+        "description": "Name of the app"
+    },
+    "bottomHome": "Home",
+    "@bottomHome": {
+        "description": "Bottom bar home tab name"
+    },
+    "bottomJournal": "Journal",
+    "@bottomJournal": {
+        "description": "Bottom bar journal tab name"
+    },
+    "bottomLibrary": "Library",
+    "@bottomLibrary": {
+        "description": "Bottom bar library tab name"
+    },
+    "bottomAdd": "Add",
+    "@bottomAdd": {
+        "description": "Bottom bar add tab name"
+    },
+    "searchTitle": "Add New Book",
+    "@searchTitle": {
+        "description": "Search book screen title"
+    },
+    "searchScanBarcode": "Scan Barcode",
+    "@searchScanBarcode": {
+        "description": "Search book screen action to scan a book's barcode"
+    },
+    "searchManualEntry": "Manual Entry",
+    "@searchManualEntry": {
+        "description": "Search book screen action to manually enter a book"
+    },
+    "searchNoResults": "No results found",
+    "@searchNoResults": {
+        "description": "Search book screen label for when no books were found"
+    },
+    "searchBookHint": "Search by title, author or ISBN",
+    "@searchBookHing": {
+        "description": "Search book screen hint for input text field"
+    },
+    "searchCancelScanning": "Cancel scanning",
+    "@searchCancelScanning": {
+        "description": "Search book screen action to cancel barcode scanning"
+    },
     "save": "Save",
+    "@save": {
+        "description": "Label for save button"
+    },
     "cancel": "Cancel",
-    "firstPublished": "First Published",
+    "@cancel": {
+        "description": "Label for cancel button"
+    },
+    "firstPublished": "First Published: {year}",
+    "@firstPublished": {
+        "description": "Label for when a book was first published",
+        "placeholders": {
+            "year": {
+                "type": "String"
+            }
+        }
+    },
     "unknown": "Unknown",
-    "addNewBook": "Add New Book",
-    "scanBarcode": "Scan Barcode",
-    "manualEntry": "Manual Entry",
-    "noResults": "No results found",
-    "bookSearchHint": "Search by title, author or ISBN",
-    "addToLibrary": "Add To Library",
+    "@unknown": {
+        "description": "Label for unknown book data"
+    },
+    "addBookTitle": "Add To Library",
+    "@addBookTitle": {
+        "description": "Add book screen title"
+    },
     "addCover": "Add Cover",
+    "@addCover": {
+        "description": "Add book screen action to add a local cover"
+    },
     "bookTitle": "Book Title",
+    "@bookTitle": {
+        "description": "Label for title of the book while adding one"
+    },
     "bookAuthor": "Author",
+    "@bookAuthor": {
+        "description": "Label for author of the book while adding one"
+    },
     "totalPages": "Total Pages",
+    "@totalPages": {
+        "description": "Label for total pages of the book while adding one"
+    },
     "format": "Format",
+    "@format": {
+        "description": "Label for format of the book while adding one"
+    },
     "ebook": "E-Book",
+    "@ebook": {
+        "description": "Label for e-book format"
+    },
     "hardcover": "Hardcover",
+    "@hardcover": {
+        "description": "Label for hardcover format"
+    },
     "paperback": "Paperback",
+    "@paperback": {
+        "description": "Label for paperback format"
+    },
     "audiobook": "Audiobook",
+    "@audiobook": {
+        "description": "Label for audiobook format"
+    },
     "currentStatus": "Current Status",
+    "@currentStatus":{
+        "description": "Label for current book status"
+    },
     "currentlyReading": "Currently Reading",
+    "@currentlyReading": {
+        "description": "Status of 'currently reading' for book"
+    },
     "toRead": "To Read",
+    "@toRead": {
+        "description": "Status of 'to read' for book"
+    },
     "completed": "Completed",
-    "noCover": "No Cover"
+    "@completed": {
+        "description": "Status of 'completed' for book"
+    },
+    "noCover": "No Cover",
+    "@noCover": {
+        "description": "Text for when the book has no cover"
+    },
+    "loading": "Loading",
+    "@loading": {
+        "description": "Text for loading"
+    },
+    "homeTitle": "Your Study",
+    "@homeTitle": {
+        "description": "Title for home screen"
+    },
+    "booksInProgress": "{count, plural, =0{No books} =1{1 book} other{{count} books}} in progress",
+    "@booksInProgress": {
+        "description": "Current books in progress",
+        "placeholders":{
+            "count": {
+                "type": "int"
+            }
+        }
+    }
 }
