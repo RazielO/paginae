@@ -4,7 +4,7 @@
             [paginae.theme :as theme]
             [paginae.book-search.book-search :as book-search] 
             [paginae.image.utils :as img-utils]
-            [paginae.home.home :as reading]
+            [paginae.home.home :as home]
             ["../l10n/app_localizations.dart" :as app-l10n]
             ["package:material_symbols_icons/symbols.dart" :as symbols]))
 
@@ -154,7 +154,7 @@
   []
 
   (flutter/widget
-   :watch [tab (atom 3) :as current-tab]
+   :watch [tab (atom 0) :as current-tab]
    
    (material/MaterialApp
     .title "Paginae"
@@ -176,7 +176,7 @@
 
       .child
       (case tab
-        0 (reading/reading-widget)
+        0 (home/reading-widget)
         1 (main-widget) ;; TODO: Change to stats widget
         2 (main-widget) ;; TODO: Change to my library widget
         3 (book-search/book-search-widget)))

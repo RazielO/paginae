@@ -128,6 +128,12 @@ abstract class AppLocalizations {
   /// **'Add'**
   String get bottomAdd;
 
+  ///
+  ///
+  /// In en, this message translates to:
+  /// **'Add To Library'**
+  String get addToLibrary;
+
   /// Search book screen title
   ///
   /// In en, this message translates to:

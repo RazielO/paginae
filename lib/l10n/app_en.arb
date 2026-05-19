@@ -19,6 +19,10 @@
     "@bottomAdd": {
         "description": "Bottom bar add tab name"
     },
+    "addToLibrary": "Add To Library",
+    "@addToLibrary": {
+      "description": ""  
+    },
     "searchTitle": "Add New Book",
     "@searchTitle": {
         "description": "Search book screen title"

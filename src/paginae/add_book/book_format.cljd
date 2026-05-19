@@ -6,12 +6,12 @@
 
 (defn- group-button
   "Button for selecting format"
-  [text onPressed selected?]
+  [text on-pressed selected?]
   (flutter/widget
    :get {{{:flds [primary onPrimary surface onSurface]} .-colorScheme} material/Theme}
 
    (material/ElevatedButton
-    .onPressed onPressed
+    .onPressed on-pressed
 
     .style
     (material/ButtonStyle
@@ -33,12 +33,14 @@
 
     .child
     (material/Container
-     .padding (material/EdgeInsets.all 16)
+     .padding
+     (material/EdgeInsets.all 16)
 
      .child
-     (material/Text text
-                    .textAlign material/TextAlign.center
-                    .overflow material/TextOverflow.clip)))))
+     (material/Text
+      text
+      .textAlign material/TextAlign.center
+      .overflow material/TextOverflow.clip)))))
 
 (defn format-card
   "Card that holds possible formats for a book"
@@ -51,27 +53,35 @@
    :let [locales (app-l10n/AppLocalizations.of context)]
 
    (material/Card
-    .color background
+    .color
+    background
 
     .child
     (material/Container
-     .padding (material/EdgeInsets.all 24)
+     .padding
+     (material/EdgeInsets.all 24)
 
      .child
      (material/Column
       .spacing 8
-      .crossAxisAlignment material/CrossAxisAlignment.start
-      
+
+      .crossAxisAlignment 
+      material/CrossAxisAlignment.start
+
       .children
-      [(material/Text (.-format locales)
-                      .style (.copyWith bodyLarge
-                                        .fontWeight material/FontWeight.bold))
+      [(material/Text
+        (.-format locales)
+        .style (.copyWith bodyLarge
+                          .fontWeight material/FontWeight.bold))
 
        (material/IntrinsicHeight
         .child
         (material/Row
-         .crossAxisAlignment material/CrossAxisAlignment.stretch
+         .crossAxisAlignment 
+         material/CrossAxisAlignment.stretch
+
          .spacing 8
+
          .children
          [(material/Expanded
            .child
@@ -88,8 +98,11 @@
        (material/IntrinsicHeight
         .child
         (material/Row
-         .crossAxisAlignment material/CrossAxisAlignment.stretch
+         .crossAxisAlignment 
+         material/CrossAxisAlignment.stretch
+
          .spacing 8
+         
          .children
          [(material/Expanded
            .child

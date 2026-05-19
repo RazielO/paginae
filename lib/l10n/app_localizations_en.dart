@@ -24,6 +24,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bottomAdd => 'Add';
 
   @override
+  String get addToLibrary => 'Add To Library';
+
+  @override
   String get searchTitle => 'Add New Book';
 
   @override

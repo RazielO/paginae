@@ -12,14 +12,17 @@
          {{:flds [surface]} .-colorScheme} material/Theme}
 
    (material/Column
-    .crossAxisAlignment material/CrossAxisAlignment.start
+    .crossAxisAlignment
+    material/CrossAxisAlignment.start
 
     .children
-    [(material/Text label
-                    .style
-                    (.copyWith labelLarge
-                               .letterSpacing 1
-                               .fontWeight material/FontWeight.bold))
+    [(material/Text
+      label
+
+      .style
+      (.copyWith labelLarge
+                 .letterSpacing 1
+                 .fontWeight material/FontWeight.bold))
 
      (material/TextField
       .controller controller
@@ -32,8 +35,11 @@
 
        .border
        (material/OutlineInputBorder
-        .borderRadius (material/BorderRadius.circular 12)
-        .borderSide material/BorderSide.none)))])))
+        .borderRadius
+        (material/BorderRadius.circular 12)
+
+        .borderSide
+        material/BorderSide.none)))])))
 
 (defn form-card
   "Card that holds the form for the book info"
@@ -47,13 +53,18 @@
    :let [locales (app-l10n/AppLocalizations.of context)]
 
    (material/Card
-    .color background
+    .color
+    background
+
     .child
     (material/Container
-     .padding (material/EdgeInsets.all 24)
+     .padding
+     (material/EdgeInsets.all 24)
+
      .child
      (material/Column
       .spacing 16
+      
       .children
       [(input-field {:label (.-bookTitle locales)
                      :hint (.-bookTitle locales)

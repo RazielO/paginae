@@ -14,8 +14,9 @@
    ;; Outer circle is painted `primary`
    (material/Container
     .width 20
+
     .height 20
-    
+
     .decoration
     (material/BoxDecoration
      .shape
@@ -27,67 +28,78 @@
       (if selected?
         primary
         (.withOpacity onSurface 0.3))
-      
+
       .width 2)
 
      .color (if selected?
               primary
               material/Colors.transparent))
-    
+
     .child
     (material/Center
-     
+
      ;; Inner circle is painted `surface`
      .child
      (material/Container
       .height 8
+
       .width 8
 
       .decoration
       (material/BoxDecoration
-       .shape material/BoxShape.circle
+       .shape
+       material/BoxShape.circle
+
        .color (if selected?
                 surface
                 material/Colors.transparent)))))))
 
 (defn- status-option
   "Radio-button-style status element"
-  [{:keys [label icon color selected? onTap]}]
+  [{:keys [label icon color selected? on-tap]}]
 
   (flutter/widget
    :get {{{:flds [surface onSurface]} .-colorScheme} material/Theme}
 
    (material/InkWell
-    .onTap onTap
+    .onTap on-tap
 
     .child
     (material/Container
-     .padding (material/EdgeInsets.symmetric
-               .horizontal 16
-               .vertical 14)
+     .padding
+     (material/EdgeInsets.symmetric
+      .horizontal 16
+      .vertical 14)
 
      .decoration
      (material/BoxDecoration
-      .color surface
-      .borderRadius (material/BorderRadius.circular 12))
+      .color
+      surface
+
+      .borderRadius
+      (material/BorderRadius.circular 12))
 
      .child
      (material/Row
       .spacing 12
+      
       .children
       [(selection-circle selected?)
-       
+
        ;; icon
-       (material/Icon icon
-                      .color color
-                      .size 24)
+       (material/Icon
+        icon
+        .color color
+        .size 24)
 
        ;; label
-       (material/Text label
-                      .style
-                      (material/TextStyle
-                       .fontSize 16
-                       .color onSurface))])))))
+       (material/Text
+        label
+
+        .style
+        (material/TextStyle
+         .fontSize 16
+         .color onSurface))])))))
 
 (defn status-card
   "Card that holds all possible statuses"
@@ -100,18 +112,26 @@
    :let [locales (app-l10n/AppLocalizations.of context)]
 
    (material/Card
-    .color background
+    .color
+    background
+
     .child
     (material/Container
-     .padding (material/EdgeInsets.all 24)
+     .padding
+     (material/EdgeInsets.all 24)
+
      .child
      (material/Column
       .spacing 8
-      .crossAxisAlignment material/CrossAxisAlignment.start
+
+      .crossAxisAlignment
+      material/CrossAxisAlignment.start
+
       .children
-      [(material/Text (.-currentStatus locales)
-                      .style (.copyWith bodyLarge
-                                        .fontWeight material/FontWeight.bold))
+      [(material/Text
+        (.-currentStatus locales)
+        .style (.copyWith bodyLarge
+                          .fontWeight material/FontWeight.bold))
 
        (status-option
         {:label (.-toRead locales)
