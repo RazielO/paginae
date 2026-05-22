@@ -52,12 +52,12 @@
                "books"
                (book/to-db-map book))))))
 
-(defn get-all-books 
+(defn get-all-books
   "Query all books"
   []
   (->
    (get-db)
-   (.then 
+   (.then
     (fn [^sqlite/Database db]
       (.then
        (.query db "books")
@@ -69,7 +69,7 @@
   []
   (->
    (get-db)
-   (.then 
+   (.then
     (fn [^sqlite/Database db]
       (->
        (.query db
@@ -78,11 +78,51 @@
        (.then
         #(map book/from-db-entry %)))))))
 
+(defn get-book-counts
+  "Query the book counts by status"
+  []
+  (->
+   (get-db)
+   (.then
+    (fn [^sqlite/Database db]
+        (->
+         (.rawQuery db
+                    "SELECT status, COUNT(*) as count
+                       FROM books
+                       GROUP BY status")
+         (.then
+          (fn [data]
+            (->>
+             data
+             (map #(into {} %))
+             (map (fn [row]
+                    [(keyword (get row "status")) (get row "count")]))
+             (into {})
+             (merge
+              {:to-read 0
+               :reading 0
+               :done 0})))))))))
+
+(defn get-recent-activity
+  "Query the last n activity items"
+  [n]
+  (->
+   (get-db)
+   (.then
+    (fn [^sqlite/Database db]
+      (.then
+       (.query db
+               "activity"
+               .orderBy "date"
+               .limit n)
+       (fn [result]
+         result))))))
+
 (defn get-book [id]
   "Query for a book by id"
-  (-> 
+  (->
    (get-db)
-   (.then 
+   (.then
     (fn [^sqlite/Database db]
       (->
        (.query db

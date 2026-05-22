@@ -176,7 +176,8 @@
 
       .child
       (case tab
-        0 (home/reading-widget)
+        0 (home/home-widget {:go-to-add #(reset! current-tab 3)
+                             :go-to-journal #(reset! current-tab 1)})
         1 (main-widget) ;; TODO: Change to stats widget
         2 (main-widget) ;; TODO: Change to my library widget
         3 (book-search/book-search-widget)))

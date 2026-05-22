@@ -120,4 +120,43 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get myShelves => 'Mis Estanterías';
+
+  @override
+  String get shelfReadTitle => 'Leídos';
+
+  @override
+  String get shelfReadSubtitle => 'Libros terminados';
+
+  @override
+  String get shelfToReadTitle => 'Para leer';
+
+  @override
+  String get shelfToReadSubtitle => 'Libros pendientes';
+
+  @override
+  String get shelfFavoritesTitle => 'Favoritos';
+
+  @override
+  String get shelfFavoritesSubtitle => 'Salón de la fama';
+
+  @override
+  String get shelfReadingTitle => 'Leyendo';
+
+  @override
+  String get shelfReadingSubtitle => 'Mis Libros';
+
+  @override
+  String get recentActivity => 'Actividad Reciente';
+
+  @override
+  String get viewJournal => 'Ver Diario';
+
+  @override
+  String get noBooks => 'No estás leyendo ningún libro';
+
+  @override
+  String get addNewBook => 'Añade un libro';
 }

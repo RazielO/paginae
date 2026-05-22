@@ -120,4 +120,43 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0 in progress';
   }
+
+  @override
+  String get myShelves => 'My Shelves';
+
+  @override
+  String get shelfReadTitle => 'Read';
+
+  @override
+  String get shelfReadSubtitle => 'Completed books';
+
+  @override
+  String get shelfToReadTitle => 'To Read';
+
+  @override
+  String get shelfToReadSubtitle => 'The backlog';
+
+  @override
+  String get shelfFavoritesTitle => 'Favorites';
+
+  @override
+  String get shelfFavoritesSubtitle => 'Hall of fame';
+
+  @override
+  String get shelfReadingTitle => 'Reading';
+
+  @override
+  String get shelfReadingSubtitle => 'My Books';
+
+  @override
+  String get recentActivity => 'Recent Activity';
+
+  @override
+  String get viewJournal => 'View Journal';
+
+  @override
+  String get noBooks => 'You are not reading any books';
+
+  @override
+  String get addNewBook => 'Add new book';
 }

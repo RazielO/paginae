@@ -74,5 +74,57 @@
     "toRead": "Leer Después",
     "totalPages": "Páginas totales",
     "unknown": "Desconocido",
-    "yourStudy": "Mis Libros"
+    "yourStudy": "Mis Libros",
+    "myShelves": "Mis Estanterías",
+    "@myShelves": {
+        "description": "Subtitle for a home section"
+    },
+    "shelfReadTitle": "Leídos",
+    "@shelfReadTitle": {
+        "description": "Title for the 'read' shelf"
+    },
+    "shelfReadSubtitle": "Libros terminados",
+    "@shelfReaSubtitle": {
+        "description": "Subtitle for the 'read' shelf"
+    },
+    "shelfToReadTitle": "Para leer",
+    "@shelfToReadTitle": {
+        "description": "Title for the 'to read' shelf"
+    },
+    "shelfToReadSubtitle": "Libros pendientes",
+    "@shelfToReaSubtitle": {
+        "description": "Subtitle for the 'to read' shelf"
+    },
+    "shelfFavoritesTitle": "Favoritos",
+    "@shelfFavoritesTitle": {
+        "description": "Title for the 'favorites' shelf"
+    },
+    "shelfFavoritesSubtitle": "Salón de la fama",
+    "@shelfFavoritesSubtitle": {
+        "description": "Subtitle for the 'favorites' shelf"
+    },
+    "shelfReadingTitle": "Leyendo",
+    "@shelfReadingTitle": {
+        "description": "Title for the 'reading' shelf"
+    },
+    "shelfReadingSubtitle": "Mis Libros",
+    "@shelfReadingSubtitle": {
+        "description": "Subtitle for the 'reading' shelf"
+    },
+    "recentActivity": "Actividad Reciente",
+    "@recentActivity": {
+        "description": "Title for the 'recent activity' section"
+    },
+    "viewJournal": "Ver Diario",
+    "@viewJournal": {
+        "description": "Action to go to journal"
+    },
+    "noBooks": "No estás leyendo ningún libro",
+    "@noBooks": {
+        "description": "Text to show when there are no books being read"
+    },
+    "addNewBook": "Añade un libro",
+    "@addNewBook": {
+        "description": "Button to go to the add book screen"
+    }
 }

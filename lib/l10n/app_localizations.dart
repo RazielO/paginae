@@ -301,6 +301,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0{No books} =1{1 book} other{{count} books}} in progress'**
   String booksInProgress(int count);
+
+  /// Subtitle for a home section
+  ///
+  /// In en, this message translates to:
+  /// **'My Shelves'**
+  String get myShelves;
+
+  /// Title for the 'read' shelf
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get shelfReadTitle;
+
+  /// No description provided for @shelfReadSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed books'**
+  String get shelfReadSubtitle;
+
+  /// Title for the 'to read' shelf
+  ///
+  /// In en, this message translates to:
+  /// **'To Read'**
+  String get shelfToReadTitle;
+
+  /// No description provided for @shelfToReadSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The backlog'**
+  String get shelfToReadSubtitle;
+
+  /// Title for the 'favorites' shelf
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get shelfFavoritesTitle;
+
+  /// Subtitle for the 'favorites' shelf
+  ///
+  /// In en, this message translates to:
+  /// **'Hall of fame'**
+  String get shelfFavoritesSubtitle;
+
+  /// Title for the 'reading' shelf
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get shelfReadingTitle;
+
+  /// Subtitle for the 'reading' shelf
+  ///
+  /// In en, this message translates to:
+  /// **'My Books'**
+  String get shelfReadingSubtitle;
+
+  /// Title for the 'recent activity' section
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Activity'**
+  String get recentActivity;
+
+  /// Action to go to journal
+  ///
+  /// In en, this message translates to:
+  /// **'View Journal'**
+  String get viewJournal;
+
+  /// Text to show when there are no books being read
+  ///
+  /// In en, this message translates to:
+  /// **'You are not reading any books'**
+  String get noBooks;
+
+  /// Button to go to the add book screen
+  ///
+  /// In en, this message translates to:
+  /// **'Add new book'**
+  String get addNewBook;
 }
 
 class _AppLocalizationsDelegate

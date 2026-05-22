@@ -144,5 +144,57 @@
                 "type": "int"
             }
         }
+    },
+    "myShelves": "My Shelves",
+    "@myShelves": {
+        "description": "Subtitle for a home section"
+    },
+    "shelfReadTitle": "Read",
+    "@shelfReadTitle": {
+        "description": "Title for the 'read' shelf"
+    },
+    "shelfReadSubtitle": "Completed books",
+    "@shelfReaSubtitle": {
+        "description": "Subtitle for the 'read' shelf"
+    },
+    "shelfToReadTitle": "To Read",
+    "@shelfToReadTitle": {
+        "description": "Title for the 'to read' shelf"
+    },
+    "shelfToReadSubtitle": "The backlog",
+    "@shelfToReaSubtitle": {
+        "description": "Subtitle for the 'to read' shelf"
+    },
+    "shelfFavoritesTitle": "Favorites",
+    "@shelfFavoritesTitle": {
+        "description": "Title for the 'favorites' shelf"
+    },
+    "shelfFavoritesSubtitle": "Hall of fame",
+    "@shelfFavoritesSubtitle": {
+        "description": "Subtitle for the 'favorites' shelf"
+    },
+    "shelfReadingTitle": "Reading",
+    "@shelfReadingTitle": {
+        "description": "Title for the 'reading' shelf"
+    },
+    "shelfReadingSubtitle": "My Books",
+    "@shelfReadingSubtitle": {
+        "description": "Subtitle for the 'reading' shelf"
+    },
+    "recentActivity": "Recent Activity",
+    "@recentActivity": {
+        "description": "Title for the 'recent activity' section"
+    },
+    "viewJournal": "View Journal",
+    "@viewJournal": {
+        "description": "Action to go to journal"
+    },
+    "noBooks": "You are not reading any books",
+    "@noBooks": {
+        "description": "Text to show when there are no books being read"
+    },
+    "addNewBook": "Add new book",
+    "@addNewBook": {
+        "description": "Button to go to the add book screen"
     }
 }

@@ -138,18 +138,18 @@
          :icon material/Icons.bookmark
          :color primary
          :selected? (= (:status @book-atom) :to-read)
-         :onTap #(swap! book-atom book/update-status :to-read)})
+         :on-tap #(swap! book-atom book/update-status :to-read)})
 
        (status-option
         {:label (.-currentlyReading locales)
          :icon material/Icons.menu_book
          :color secondary
          :selected? (= (:status @book-atom) :reading)
-         :onTap #(swap! book-atom book/update-status :reading)})
+         :on-tap #(swap! book-atom book/update-status :reading)})
 
        (status-option
         {:label (.-completed locales)
          :icon material/Icons.check_circle
          :color tertiary
          :selected? (= (:status @book-atom) :done)
-         :onTap #(swap! book-atom book/update-status :done)})])))))
+         :on-tap #(swap! book-atom book/update-status :done)})])))))

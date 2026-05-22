@@ -138,29 +138,49 @@
                         (inc (count books))
                         (count books))] 
 
-       (material/SliverGrid.builder
-        .itemCount item-count
+       (if as-list?
+         (material/SliverList.builder
+          .itemCount item-count
 
-        .gridDelegate
-        (material/SliverGridDelegateWithFixedCrossAxisCount
-         .crossAxisCount (if as-list? 1 2)
-         .crossAxisSpacing 10
-         .mainAxisSpacing 5
-         .childAspectRatio (/ 16 9))
+          .itemBuilder
+          (fn [_context index]
+            (if (and loading-more?
+                     (= index (dec item-count)))
+          
+              (material/Padding
+               .padding
+               (material/EdgeInsets.symmetric .horizontal 0
+                                              .vertical 20)
+          
+               .child
+               (material/LinearProgressIndicator))
+          
+              (book-card (nth books index)))))
 
-        .itemBuilder (fn [_context index]
-                       (if (and loading-more?
-                                (= index (dec item-count)))
+         (material/SliverGrid.builder
+          .itemCount item-count
 
-                         (material/Padding
-                          .padding
-                          (material/EdgeInsets.symmetric .horizontal 0
-                                                         .vertical 20)
+          .gridDelegate
+          (material/SliverGridDelegateWithFixedCrossAxisCount
+           .crossAxisCount 2
+           .crossAxisSpacing 10
+           .mainAxisSpacing 5
+           .childAspectRatio (/ 16 9))
 
-                          .child
-                          (material/LinearProgressIndicator))
+          .itemBuilder
+          (fn [_context index]
+            (if (and loading-more?
+                     (= index (dec item-count)))
 
-                         (book-card (nth books index)))))))))
+              (material/Padding
+               .padding
+               (material/EdgeInsets.symmetric .horizontal 0
+                                              .vertical 20)
+
+               .child
+               (material/LinearProgressIndicator))
+
+              (book-card (nth books index))))))))))
 
 (defn- pill-button
   "Button for adding actions"
@@ -393,14 +413,14 @@
          scroll-controller (material/ScrollController)
          unknown-str (.-unknown locales)]
 
-   (letfn [(load-books []
+   (letfn [(load-books [text]
                        (when (not loading-more?)
                          (reset! loading-more true)
 
                          (->
-                          (query/query-books query offset unknown-str)
+                          ^Future (query/query-books text offset unknown-str)
                           (.then
-                           (fn [result]
+                           (fn [result] 
                              (swap! books-atom into (:data result))
                              (reset! total-atom (:total result))
                              (swap! offset-atom + 20)
@@ -421,7 +441,7 @@
                       (not loading-more?)
                       (> pixels (- max-scroll 300)))
                  (dart:core/print "Load more")
-                 (load-books))
+                 (load-books query))
 
                (cond
                  (and (> 300 offset) show-fab?)
@@ -491,75 +511,8 @@
                                              (reset! books-atom [])
                                              (reset! offset-atom 0)
                                              (reset! total-atom 0)
-                                             (load-books))
-                             :scanning scanning})))
-
-          ;; Book result list/grid
-          ;; (if (and (not scanning?) (not (empty? query)))
-          ;;   (cond
-          ;;     ;; Results are loading
-          ;;     (empty? books)
-          ;;     (material/SliverToBoxAdapter
-          ;;      .child
-          ;;      (material/Padding
-          ;;       .padding
-          ;;       (material/EdgeInsets.only .top 20)
-
-          ;;       .child
-          ;;       (material/Center
-          ;;        .child
-          ;;        (material/SizedBox
-          ;;         .height 80
-
-          ;;         .width 80
-
-          ;;         .child
-          ;;         (material/CircularProgressIndicator)))))
-
-          ;;     ;; No results
-          ;;     (= 0 total-books)
-          ;;     (material/SliverToBoxAdapter
-          ;;      .child
-          ;;      (material/Padding
-          ;;       .padding
-          ;;       (material/EdgeInsets.only .top 20)
-
-          ;;       .child
-          ;;       (material/Text
-          ;;        (.-searchNoResults (app-l10n/AppLocalizations.of context))
-
-          ;;        .textAlign material/TextAlign.center
-
-          ;;        .style (.copyWith titleLarge
-          ;;                          .fontWeight material/FontWeight.bold
-          ;;                          .fontFamily "Manrope"
-          ;;                          .color onBackground))))
-
-          ;;     ;; Display results
-          ;;     :else
-          ;;     (let [item-count (count books)]
-          ;;       (if portrait?
-          ;;         (material/SliverList.builder
-          ;;          .itemCount item-count
-
-          ;;          .itemBuilder (fn [_context index]
-          ;;                         (book-card (nth books index))))
-
-          ;;         (material/SliverGrid.builder
-          ;;          .itemCount item-count
-
-          ;;          .gridDelegate
-          ;;          (material/SliverGridDelegateWithFixedCrossAxisCount
-          ;;           .crossAxisCount 2
-          ;;           .crossAxisSpacing 10
-          ;;           .mainAxisSpacing 10
-          ;;           .childAspectRatio 2)
-
-          ;;          .itemBuilder (fn [_context index]
-          ;;                         (book-card (nth books index)))))))
-          ;;   (material/SliverToBoxAdapter
-          ;;    .child
-          ;;    (material/Container)))
+                                             (load-books text))
+                             :scanning scanning}))) 
 
           (if (and (not scanning?) (not (empty? query)))
             (book-list {:books books

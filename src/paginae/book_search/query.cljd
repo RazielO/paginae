@@ -26,30 +26,31 @@
               "offset" (str offset)})]
 
     (letfn [(handle-error [error]
-              (dart:core/print (str "Error: " error))
-              (map->QueryResult
-               {:total 0
-                :offset 0
-                :data []}))
+                          (dart:core/print (str "Error: " error))
+                          (map->QueryResult
+                           {:total 0
+                            :offset 0
+                            :data []}))
 
             (filter-fn [book]
-              (let [title (get book "title")]
-                (and
-                 (contains? book "key")
-                 (some? title)
-                 (not (str/blank? title)))))
+                       (let [title (get book "title")]
+                         (and
+                          (contains? book "key")
+                          (some? title)
+                          (not (str/blank? title)))))
 
-            (handle-response [^http/Response response]
-              (if (= (.-statusCode response) 200)
-                (let [json (convert/jsonDecode (.-body response))]
-                  (map->QueryResult
-                   {:total (get json "num_found")
-                    :offset (get json "offset")
-                    :data (map #(book/book-from-query-result % unknown-str)
-                               (filter filter-fn
-                                       (get json "docs" [])))}))
-                (handle-error "No response from server")))]
+            (handle-response [^http/Response response] 
+                             (if (= (.-statusCode response) 200) 
+                               (let [json (convert/jsonDecode (.-body response))]
+                                 (map->QueryResult
+                                  {:total (get json "num_found")
+                                   :offset (get json "offset")
+                                   :data (map #(book/book-from-query-result % unknown-str)
+                                              (filter filter-fn
+                                                      (get json "docs" [])))}))
+                               (handle-error "No response from server")))]
 
       (-> (http/get uri)
+          (.timeout (Duration .seconds 3))
           (.then handle-response)
           (.catchError handle-error)))))
