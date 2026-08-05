@@ -30,7 +30,7 @@
                           (map->QueryResult
                            {:total 0
                             :offset 0
-                            :data []}))
+                            :data []})) ;; TODO: Send a message to the user, especially on timeout
 
             (filter-fn [book]
                        (let [title (get book "title")]
@@ -51,6 +51,6 @@
                                (handle-error "No response from server")))]
 
       (-> (http/get uri)
-          (.timeout (Duration .seconds 3))
+          (.timeout (Duration .seconds 10))
           (.then handle-response)
           (.catchError handle-error)))))

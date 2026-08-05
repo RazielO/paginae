@@ -128,7 +128,7 @@ abstract class AppLocalizations {
   /// **'Add'**
   String get bottomAdd;
 
-  ///
+  /// Label for the button that adds a book to the library
   ///
   /// In en, this message translates to:
   /// **'Add To Library'**
@@ -158,7 +158,7 @@ abstract class AppLocalizations {
   /// **'No results found'**
   String get searchNoResults;
 
-  /// No description provided for @searchBookHint.
+  /// Search book screen hint for input text field
   ///
   /// In en, this message translates to:
   /// **'Search by title, author or ISBN'**
@@ -314,7 +314,7 @@ abstract class AppLocalizations {
   /// **'Read'**
   String get shelfReadTitle;
 
-  /// No description provided for @shelfReadSubtitle.
+  /// Subtitle for the 'read' shelf
   ///
   /// In en, this message translates to:
   /// **'Completed books'**
@@ -326,7 +326,7 @@ abstract class AppLocalizations {
   /// **'To Read'**
   String get shelfToReadTitle;
 
-  /// No description provided for @shelfToReadSubtitle.
+  /// Subtitle for the 'to read' shelf
   ///
   /// In en, this message translates to:
   /// **'The backlog'**
@@ -379,6 +379,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add new book'**
   String get addNewBook;
+
+  /// Temporary placeholder text
+  ///
+  /// In en, this message translates to:
+  /// **'Hello'**
+  String get hello;
+
+  /// Confirmation dialog title shown before deleting a book
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to delete the book \"{title}\"?'**
+  String deleteBookTitle(String title);
+
+  /// Label for the delete button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// Title of the filter popup menu in the library screen
+  ///
+  /// In en, this message translates to:
+  /// **'Filter By'**
+  String get filterBy;
+
+  /// Filter option to show finished books
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get filterFinished;
+
+  /// Filter option to show books to read
+  ///
+  /// In en, this message translates to:
+  /// **'To-Read'**
+  String get filterToRead;
+
+  /// Filter option to show favorite books
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get filterFavorites;
+
+  /// Filter option to show currently reading books
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get filterReading;
+
+  /// Action to clear the active book filter
+  ///
+  /// In en, this message translates to:
+  /// **'Reset filter'**
+  String get resetFilter;
+
+  /// Title of the library screen showing all the user's books
+  ///
+  /// In en, this message translates to:
+  /// **'All My Books'**
+  String get allMyBooks;
 }
 
 class _AppLocalizationsDelegate

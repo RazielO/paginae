@@ -1,0 +1,62 @@
+(ns paginae.home.badges
+  (:require
+   ["package:flutter/material.dart" :as material]
+   ["package:material_symbols_icons/symbols.dart" :as symbols]
+   [paginae.theme :as theme]))
+
+(defn- badge
+  "Book status badge"
+  [{:keys [bg-color icon color fill]}]
+  (material/Container
+   .decoration
+   (material/BoxDecoration
+    .color bg-color
+
+    .borderRadius (material/BorderRadiusGeometry.circular 10))
+
+   .child
+   (material/Padding
+
+    .padding (material/EdgeInsets.all 20)
+
+    .child
+    (material/Icon
+     icon
+
+     .fill fill
+
+     .color color
+
+     .fontWeight material/FontWeight.bold))))
+
+(defn read-badge
+  "Badge for read books"
+  []
+  (badge {:icon symbols/Symbols.check_circle
+          :color (:10 theme/primary)
+          :bg-color (:70 theme/primary)
+          :fill 0}))
+
+(defn to-read-badge
+  "Badge for books not yet read"
+  []
+  (badge {:icon symbols/Symbols.bookmark
+          :color (:10 theme/secondary)
+          :bg-color (:70 theme/secondary)
+          :fill 1.0}))
+
+(defn favorite-badge
+  "Badge for favorite books"
+  []
+  (badge {:icon symbols/Symbols.favorite
+          :color (:10 theme/tertiary)
+          :bg-color (:70 theme/tertiary)
+          :fill 1.0}))
+
+(defn reading-badge
+  "Badge for reading books"
+  []
+  (badge {:icon symbols/Symbols.book_ribbon
+          :color (:10 theme/neutral)
+          :bg-color (:70 theme/neutral)
+          :fill 0.0}))

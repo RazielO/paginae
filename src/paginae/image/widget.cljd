@@ -11,28 +11,37 @@
   [{:keys [text width height]}]
   (flutter/widget
    :get {{{:flds [surfaceVariant onSurfaceVariant]} .-colorScheme} material/Theme}
+
    (material/ClipRRect
     .borderRadius (material/BorderRadiusGeometry.circular 16)
+
     .child
     (material/Container
      .width width
      .height height
      .color surfaceVariant
+
      .child
      (material/Column
       .mainAxisAlignment material/MainAxisAlignment.center
+
       .children
-      [(material/Icon material/Icons.image_outlined
-                      .size 40
-                      .color (.withOpacity onSurfaceVariant 0.5))
+      [;; No image icon
+       (material/Icon
+        material/Icons.image_outlined
+        .size 40
+        .color (.withOpacity onSurfaceVariant 0.5))
 
        (material/SizedBox
         .height 8)
 
-       (material/Text text
-                      .style
-                      (material/TextStyle
-                       .color (.withOpacity onSurfaceVariant 0.7)))])))))
+       ;; Placeholder text
+       (material/Text
+        text
+
+        .style
+        (material/TextStyle
+         .color (.withOpacity onSurfaceVariant 0.7)))])))))
 
 (defn- bordered-wrapper
   "Wrapper widget for dotted border"
@@ -67,11 +76,11 @@
            clickable?
            on-click
            width]}]
-  
+
   (flutter/widget
-   :context context 
+   :context context
    :let [locales (app-l10n/AppLocalizations.of context)
-         
+
          img-width (or width 140)
          img-height (* img-width (/ 10 7))
 
@@ -102,7 +111,7 @@
             .height img-height
             .fit material/BoxFit.cover
             .loadingBuilder
-            (fn [_context child progress] 
+            (fn [_context child progress]
               (if (nil? progress)
                 child
                 (cover-placeholder {:text (.-loading locales)

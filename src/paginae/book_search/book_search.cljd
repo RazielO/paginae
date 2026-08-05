@@ -136,7 +136,7 @@
      :else
      (let [item-count (if loading-more?
                         (inc (count books))
-                        (count books))] 
+                        (count books))]
 
        (if as-list?
          (material/SliverList.builder
@@ -146,15 +146,15 @@
           (fn [_context index]
             (if (and loading-more?
                      (= index (dec item-count)))
-          
+
               (material/Padding
                .padding
                (material/EdgeInsets.symmetric .horizontal 0
                                               .vertical 20)
-          
+
                .child
                (material/LinearProgressIndicator))
-          
+
               (book-card (nth books index)))))
 
          (material/SliverGrid.builder
@@ -362,6 +362,8 @@
        (material/Row
         .mainAxisAlignment material/MainAxisAlignment.center
 
+        .spacing 10
+
         .children
         [(material/Icon symbols/Symbols.cancel
                         .color onSecondary)
@@ -414,114 +416,113 @@
          unknown-str (.-unknown locales)]
 
    (letfn [(load-books [text]
-                       (when (not loading-more?)
-                         (reset! loading-more true)
+             (when (not loading-more?)
+               (reset! loading-more true)
 
-                         (->
-                          ^Future (query/query-books text offset unknown-str)
-                          (.then
-                           (fn [result] 
-                             (swap! books-atom into (:data result))
-                             (reset! total-atom (:total result))
-                             (swap! offset-atom + 20)
-                             (reset! loading-more false)
-                             (reset! has-more (= total-books (count books))))))))]
+               (->
+                ^Future (query/query-books text offset unknown-str)
+                (.then
+                 (fn [result]
+                   (swap! books-atom into (:data result))
+                   (reset! total-atom (:total result))
+                   (swap! offset-atom + 20)
+                   (reset! loading-more false)
+                   (reset! has-more (= total-books (count books))))))))]
 
-    (do
-      (-> scroll-controller
-          (.addListener
-           (fn []
-             (let [offset (.-offset scroll-controller)
-                   position (.-position scroll-controller)
-                   pixels (.-pixels position)
-                   max-scroll (.-maxScrollExtent position)]
+     (do
+       (-> scroll-controller
+           (.addListener
+            (fn []
+              (let [offset (.-offset scroll-controller)
+                    position (.-position scroll-controller)
+                    pixels (.-pixels position)
+                    max-scroll (.-maxScrollExtent position)]
 
-               (when (and
-                      has-more?
-                      (not loading-more?)
-                      (> pixels (- max-scroll 300)))
-                 (dart:core/print "Load more")
-                 (load-books query))
+                (when (and
+                       has-more?
+                       (not loading-more?)
+                       (> pixels (- max-scroll 300)))
+                  (dart:core/print "Load more")
+                  (load-books query))
 
-               (cond
-                 (and (> 300 offset) show-fab?)
-                 (reset! show-fab false)
+                (cond
+                  (and (> 300 offset) show-fab?)
+                  (reset! show-fab false)
 
-                 (and (<= 300 offset) (not show-fab?))
-                 (reset! show-fab true))))))
+                  (and (<= 300 offset) (not show-fab?))
+                  (reset! show-fab true))))))
 
-      (material/Scaffold
-       .floatingActionButton
-       (when show-fab?
-         (material/FloatingActionButton
+       (material/Scaffold
+        .floatingActionButton
+        (when show-fab?
+          (material/FloatingActionButton
 
-          .onPressed (fn []
-                       (-> scroll-controller
-                           (.animateTo 0
-                                       .duration (dart:core/Duration
-                                                  .milliseconds 400)
-                                       .curve animation/Curves.easeInOut))
-                       ())
+           .onPressed (fn []
+                        (-> scroll-controller
+                            (.animateTo 0
+                                        .duration (dart:core/Duration
+                                                   .milliseconds 400)
+                                        .curve animation/Curves.easeInOut))
+                        ())
 
-          .child
-          (material/Icon symbols/Symbols.keyboard_double_arrow_up)))
-
-       .body
-       (material/Container
-
-        .decoration
-        (material/BoxDecoration
-         .color background)
-
-        .child
-        (material/CustomScrollView
-         .controller scroll-controller
-
-         .slivers
-         [;; App bar
-          (material/SliverAppBar
-           .pinned portrait?
-
-           .floating true
-
-           .flexibleSpace
-           (material/Center
-            .child
-            (material/Text
-             (.-searchTitle locales)
-
-             .textAlign
-             material/TextAlign.center
-
-             .style
-             (.copyWith
-              headlineSmall
-
-              .fontWeight
-              material/FontWeight.bold))))
-
-          ;; Either search or barcode scanner
-          (material/SliverToBoxAdapter
            .child
-           (if scanning?
-             (barcode-scanner scanning query-atom)
+           (material/Icon symbols/Symbols.keyboard_double_arrow_up)))
 
-             (search-widget {:on-submitted (fn [text]
-                                             (reset! query-atom text)
-                                             (reset! books-atom [])
-                                             (reset! offset-atom 0)
-                                             (reset! total-atom 0)
-                                             (load-books text))
-                             :scanning scanning}))) 
+        .body
+        (material/Container
 
-          (if (and (not scanning?) (not (empty? query)))
-            (book-list {:books books
-                        :total-books total-books
-                        :loading? (empty? books)
-                        :as-list? portrait?
-                        :loading-more? loading-more?})
-            (material/SliverToBoxAdapter
+         .decoration
+         (material/BoxDecoration
+          .color background)
+
+         .child
+         (material/CustomScrollView
+          .controller scroll-controller
+
+          .slivers
+          [;; App bar
+           (material/SliverAppBar
+            .pinned portrait?
+
+            .floating true
+
+            .flexibleSpace
+            (material/Center
              .child
-             (material/Container)))
-          ])))))))
+             (material/Text
+              (.-searchTitle locales)
+
+              .textAlign
+              material/TextAlign.center
+
+              .style
+              (.copyWith
+               headlineSmall
+
+               .fontWeight
+               material/FontWeight.bold))))
+
+           ;; Either search or barcode scanner
+           (material/SliverToBoxAdapter
+            .child
+            (if scanning?
+              (barcode-scanner scanning query-atom)
+
+              (search-widget {:on-submitted (fn [text]
+                                              (reset! query-atom text)
+                                              (reset! books-atom [])
+                                              (reset! offset-atom 0)
+                                              (reset! total-atom 0)
+                                              (load-books text))
+                              :scanning scanning})))
+
+           (if (and (not scanning?) (not (empty? query)))
+             (book-list {:books books
+                         :total-books total-books
+                         :loading? (empty? books)
+                         :as-list? portrait?
+                         :loading-more? loading-more?})
+             (material/SliverToBoxAdapter
+              .child
+              (material/Container)))])))))))
 

@@ -1,11 +1,11 @@
 (ns paginae.home.home
   (:require [cljd.flutter :as flutter]
             ["package:flutter/material.dart" :as material]
-            ["package:flutter/widgets.dart" :as widgets] 
-            [paginae.database :as db] 
+            ["package:flutter/widgets.dart" :as widgets]
+            [paginae.database :as db]
             [paginae.image.widget :as image]
+            [paginae.home.badges :as badges]
             ["../l10n/app_localizations.dart" :as app-l10n]
-            ["package:material_symbols_icons/symbols.dart" :as symbols]
             [paginae.theme :as theme]))
 
 (defn- reading-book-card
@@ -18,13 +18,13 @@
    :let [locales (app-l10n/AppLocalizations.of context)]
 
    (material/Card
-    
+
     .child
     (material/Container
-     
+
      .padding
      (material/EdgeInsets.all 10)
-     
+
      .child
      (material/Column
       .crossAxisAlignment material/CrossAxisAlignment.start
@@ -77,7 +77,7 @@
           {:flds [primary onPrimary]} .-colorScheme} material/Theme}
    :context context
    :let [locales (app-l10n/AppLocalizations.of context)]
-   
+
    (material/SliverToBoxAdapter
     .child
 
@@ -86,7 +86,7 @@
 
      (material/FutureBuilder
       .future
-      (db/get-reading-books)
+      (db/get-books-by-status :reading)
 
       .builder
       (fn [_context ^widgets/AsyncSnapshot snapshot]
@@ -95,13 +95,13 @@
 
             (if (empty? books)
               (material/Column
-               
+
                .spacing 10
-               
+
                .children
                [(material/Text
                  (.-noBooks locales)
-                 
+
                  .style (.copyWith titleLarge
                                    .fontFamily "Manrope"))
 
@@ -112,7 +112,7 @@
                  .child
                  (material/Text
                   (.toUpperCase (.-addNewBook locales))
-                  
+
                   .style (.copyWith titleMedium
                                     .color onPrimary
                                     .fontFamily "Manrope"
@@ -167,81 +167,70 @@
 
 (defn- shelf-card
   "Card that represents a 'bookshelf' (group of books)"
-  [{:keys [title subtitle icon bg-color color number]}]
+  [{:keys [title subtitle bg-color number badge on-tap]}]
   (flutter/widget
    :get {{{:flds [headlineLarge titleLarge labelMedium]} .-textTheme
           {:flds [onSurfaceVariant]} .-colorScheme} material/Theme}
-   
-   (material/Card ;; TODO: Move to screen when clicked
-    
+
+   (material/InkWell
+    .onTap on-tap
+
     .child
-    (material/Padding
-     
-     .padding
-     (material/EdgeInsets.symmetric .vertical 20 .horizontal 20)
-     
+    (material/Card
+
      .child
-     (material/Column
-      
-      .crossAxisAlignment material/CrossAxisAlignment.start 
+     (material/Padding
 
-      .children
-      [;; Icon and count
-       (material/Row
+      .padding
+      (material/EdgeInsets.symmetric .vertical 20 .horizontal 20)
 
-        .mainAxisAlignment
-        material/MainAxisAlignment.spaceBetween
+      .child
+      (material/Column
 
-        .children
-        [;; Icon
-         (material/Container
-          .decoration
-          (material/BoxDecoration
-           .color bg-color
+       .crossAxisAlignment material/CrossAxisAlignment.start
 
-           .borderRadius (material/BorderRadiusGeometry.circular 10))
+       .children
+       [;; Icon and count
+        (material/Row
 
-          .child
-          (material/Padding
+         .mainAxisAlignment
+         material/MainAxisAlignment.spaceBetween
 
-           .padding (material/EdgeInsets.all 20)
+         .children
+         [;; Icon
+          badge
 
-           .child
-           (material/Icon
-            icon
+          ;; Count
+          (material/Text
+           (str number)
 
-            .color color
+           .style
+           (.copyWith headlineLarge
+                      .fontWeight material/FontWeight.w700
+                      .color bg-color))])
 
-            .fontWeight material/FontWeight.bold)))
+        (material/SizedBox
+         .height 20)
 
-         ;; Count
-         (material/Text
-          (str number)
+        ;; Title
+        (material/Text
+         title
 
-          .style
-          (.copyWith headlineLarge
-                     .fontWeight material/FontWeight.w700
-                     .color bg-color))])
+         .style titleLarge)
 
-       (material/SizedBox
-        .height 20)
+        ;; Subtitle
+        (material/Text
+         (.toUpperCase ^String subtitle)
 
-       ;; Title
-       (material/Text
-        title
+         .style (.copyWith labelMedium
+                           .color (.withOpacity onSurfaceVariant 0.75)))]))))))
 
-        .style titleLarge)
-
-       ;; Subtitle
-       (material/Text
-        (.toUpperCase ^String subtitle)
-
-        .style (.copyWith labelMedium
-                          .color (.withOpacity onSurfaceVariant 0.75)))])))))
-
-(defn- shelves 
+(defn- shelves
   "Widget that contains cards with book groups"
-  []
+  [{:keys [go-to-to-read-shelf
+           go-to-reading-shelf
+           go-to-favorite-shelf
+           go-to-done-shelf]}]
   (flutter/widget
    :get {{{:flds [headlineSmall]} .-textTheme} material/Theme}
    :context context
@@ -251,16 +240,16 @@
    (material/FutureBuilder
     .future
     (db/get-book-counts)
-    
+
     .builder
     (fn [_context ^widgets/AsyncSnapshot snapshot]
       (if (.-hasData snapshot)
         (let [counts (.-data snapshot)]
           (material/SliverMainAxisGroup
-           
+
            .slivers
            [(material/SliverToBoxAdapter
-             
+
              .child
              (material/Text
               (.-myShelves locales)
@@ -274,31 +263,31 @@
              .children
              [(shelf-card {:title (.-shelfReadTitle locales)
                            :subtitle (.-shelfReadSubtitle locales)
-                           :icon symbols/Symbols.check_circle
-                           :color (:10 theme/primary)
                            :bg-color (:70 theme/primary)
-                           :number (:done counts)})
+                           :number (:done counts)
+                           :badge (badges/read-badge)
+                           :on-tap go-to-done-shelf})
 
               (shelf-card {:title (.-shelfToReadTitle locales)
                            :subtitle (.-shelfToReadSubtitle locales)
-                           :icon symbols/Symbols.bookmark
-                           :color (:10 theme/secondary)
                            :bg-color (:70 theme/secondary)
-                           :number (:to-read counts)})
+                           :number (:to-read counts)
+                           :badge (badges/to-read-badge)
+                           :on-tap go-to-to-read-shelf})
 
               (shelf-card {:title (.-shelfFavoritesTitle locales)
                            :subtitle (.-shelfFavoritesSubtitle locales)
-                           :icon symbols/Symbols.favorite
-                           :color (:10 theme/tertiary)
                            :bg-color (:70 theme/tertiary)
-                           :number (:to-read counts)})
+                           :number (:favorite counts)
+                           :badge (badges/favorite-badge)
+                           :on-tap go-to-favorite-shelf})
 
               (shelf-card {:title (.-shelfReadingTitle locales)
                            :subtitle (.-shelfReadingSubtitle locales)
-                           :icon symbols/Symbols.book_ribbon
-                           :color (:10 theme/neutral)
                            :bg-color (:70 theme/neutral)
-                           :number (:to-read counts)})])]))
+                           :number (:reading counts)
+                           :badge (badges/reading-badge)
+                           :on-tap go-to-reading-shelf})])]))
 
         (material/SliverToBoxAdapter
          .child
@@ -311,7 +300,7 @@
           {:flds [secondary]} .-colorScheme} material/Theme}
    :context context
    :let [locales (app-l10n/AppLocalizations.of context)]
-   
+
    (material/FutureBuilder
     .future
     (db/get-recent-activity 5)
@@ -322,40 +311,43 @@
         (let [data (.-data snapshot)]
           (if (empty? data)
             (material/SliverToBoxAdapter
-             
+
              .child
              (material/Container))
 
-           (material/SliverMainAxisGroup
+            (material/SliverMainAxisGroup
 
-            .slivers
-            [(material/SliverToBoxAdapter
+             .slivers
+             [(material/SliverToBoxAdapter
 
-              .child
-              (material/Row
+               .child
+               (material/Row
 
-               .mainAxisAlignment material/MainAxisAlignment.spaceBetween
+                .mainAxisAlignment material/MainAxisAlignment.spaceBetween
 
-               .children
-               [(material/Text
-                 (.-recentActivity locales)
-                 .softWrap true
-                 .maxLines 2
-                 .style headlineSmall)
+                .children
+                [(material/Text
+                  (.-recentActivity locales)
+                  .softWrap true
+                  .maxLines 2
+                  .style headlineSmall)
 
-                (material/TextButton
+                 (material/TextButton
 
-                 .child
-                 (material/Text
-                  (.toUpperCase (.-viewJournal locales))
+                  .child
+                  (material/Text
+                   (.toUpperCase (.-viewJournal locales))
 
-                  .style (.copyWith labelLarge
-                                    .color secondary))
+                   .style (.copyWith labelLarge
+                                     .color secondary))
 
-                 .onPressed go-to-journal)]))])))
+                  .onPressed go-to-journal)]))
+
+              ;; TODO: Add recent activities
+              ])))
 
         (material/SliverToBoxAdapter
-         
+
          .child
          (material/SizedBox
           .height 80
@@ -365,13 +357,18 @@
           .child
           (material/CircularProgressIndicator))))))))
 
-(defn home-widget 
-  [{:keys [go-to-add go-to-journal]}]
+(defn home-widget
+  [{:keys [go-to-add
+           go-to-journal
+           go-to-to-read-shelf
+           go-to-reading-shelf
+           go-to-favorite-shelf
+           go-to-done-shelf]}]
   (flutter/widget
    :get {{{:flds [headlineMedium]} .-textTheme} material/Theme}
    :context context
    :let [locales (app-l10n/AppLocalizations.of context)]
-   
+
    (material/CustomScrollView
     .slivers
     [;; App bar
@@ -385,7 +382,7 @@
        .child
        (material/Text
         (.-homeTitle locales)
-        
+
         .style
         (.copyWith headlineMedium
                    .fontWeight material/FontWeight.bold))))
@@ -397,13 +394,16 @@
       .child
       (material/SizedBox
        .height 30))
-     
-     (shelves)
+
+     (shelves {:go-to-to-read-shelf go-to-to-read-shelf
+               :go-to-reading-shelf go-to-reading-shelf
+               :go-to-favorite-shelf go-to-favorite-shelf
+               :go-to-done-shelf go-to-done-shelf})
 
      (material/SliverToBoxAdapter
       .child
       (material/SizedBox
        .height 30))
-     
+
      (recent-activity
       {:go-to-journal go-to-journal})])))

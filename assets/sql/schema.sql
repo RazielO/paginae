@@ -1,10 +1,12 @@
 CREATE TABLE books (
-    id     TEXT PRIMARY KEY,
-    title  TEXT,
-    author TEXT,
-    pages  INTEGER,
-    status TEXT,
-    format TEXT
+    id         TEXT PRIMARY KEY,
+    title      TEXT,
+    author     TEXT,
+    pages      INTEGER,
+    status     TEXT,
+    format     TEXT,
+    favorite   INTEGER,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE activity (
@@ -14,5 +16,7 @@ CREATE TABLE activity (
     pages        INTEGER,
     percentage   INTEGER,
     date         TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (book_id) REFERENCES books (id)
+    FOREIGN KEY (book_id) 
+        REFERENCES books (id)
+        ON DELETE CASCADE
 );

@@ -37,7 +37,7 @@
     "currentStatus": "Estatus",
     "currentlyReading": "Leyendo",
     "ebook": "E-Book",
-    "firstPublished": "Primera publicación",
+    "firstPublished": "Primera publicación: {year}",
     "format": "Formato",
     "hardcover": "Tapa Dura",
     "homeTitle": "Mis Libros",
@@ -126,5 +126,50 @@
     "addNewBook": "Añade un libro",
     "@addNewBook": {
         "description": "Button to go to the add book screen"
+    },
+    "hello": "Hola",
+    "@hello": {
+        "description": "Temporary placeholder text"
+    },
+    "deleteBookTitle": "¿Quieres eliminar el libro \"{title}\"?",
+    "@deleteBookTitle": {
+        "description": "Confirmation dialog title shown before deleting a book",
+        "placeholders": {
+            "title": {
+                "type": "String"
+            }
+        }
+    },
+    "delete": "Eliminar",
+    "@delete": {
+        "description": "Label for the delete button"
+    },
+    "filterBy": "Filtrar por",
+    "@filterBy": {
+        "description": "Title of the filter popup menu in the library screen"
+    },
+    "filterFinished": "Terminados",
+    "@filterFinished": {
+        "description": "Filter option to show finished books"
+    },
+    "filterToRead": "Por leer",
+    "@filterToRead": {
+        "description": "Filter option to show books to read"
+    },
+    "filterFavorites": "Favoritos",
+    "@filterFavorites": {
+        "description": "Filter option to show favorite books"
+    },
+    "filterReading": "Leyendo",
+    "@filterReading": {
+        "description": "Filter option to show currently reading books"
+    },
+    "resetFilter": "Restablecer filtro",
+    "@resetFilter": {
+        "description": "Action to clear the active book filter"
+    },
+    "allMyBooks": "Todos mis libros",
+    "@allMyBooks": {
+        "description": "Title of the library screen showing all the user's books"
     }
 }

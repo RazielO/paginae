@@ -1,19 +1,23 @@
 (ns paginae.main
   (:require [cljd.flutter :as flutter]
-            ["package:flutter/material.dart" :as material]
+            ["package:flutter/material.dart" :as material] 
             [paginae.theme :as theme]
-            [paginae.book-search.book-search :as book-search] 
-            [paginae.image.utils :as img-utils]
+            [paginae.book-search.book-search :as book-search]
             [paginae.home.home :as home]
+            [paginae.my-books.my-books :as my-books]
+            [paginae.image.utils :as img-utils]
             ["../l10n/app_localizations.dart" :as app-l10n]
             ["package:material_symbols_icons/symbols.dart" :as symbols]))
 
 (defn main-widget []
   (flutter/widget
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+
    (material/Center
     .child
 
-    (material/Text "Hello"))))
+    (material/Text (.-hello locales)))))
 
 (defn bottom-sheet-btn
   "Icon button for the bottom sheet"
@@ -154,8 +158,9 @@
   []
 
   (flutter/widget
-   :watch [tab (atom 0) :as current-tab]
-   
+   :watch [tab (atom 0) :as current-tab
+           books-filter (atom nil) :as filter-atom]
+
    (material/MaterialApp
     .title "Paginae"
 
@@ -177,21 +182,35 @@
       .child
       (case tab
         0 (home/home-widget {:go-to-add #(reset! current-tab 3)
-                             :go-to-journal #(reset! current-tab 1)})
+                             :go-to-journal #(reset! current-tab 1)
+                             :go-to-reading-shelf (fn []
+                                                    (reset! filter-atom :reading)
+                                                    (reset! current-tab 2))
+                             :go-to-to-read-shelf (fn []
+                                                    (reset! filter-atom :to-read)
+                                                    (reset! current-tab 2))
+                             :go-to-done-shelf (fn []
+                                                 (reset! filter-atom :done)
+                                                 (reset! current-tab 2))
+                             :go-to-favorite-shelf (fn []
+                                                     (reset! filter-atom :favorite)
+                                                     (reset! current-tab 2))})
         1 (main-widget) ;; TODO: Change to stats widget
-        2 (main-widget) ;; TODO: Change to my library widget
-        3 (book-search/book-search-widget)))
+        2 (my-books/my-books-widget books-filter)
+        3 (book-search/book-search-widget))) 
 
      .bottomNavigationBar
      (bottom-sheet
       tab
       (fn [i]
+        (when (= i 2)
+          (reset! filter-atom nil))
+
         (reset! current-tab i)))))))
 
 (defn main
   []
-
   (img-utils/init-image-directory)
 
   (flutter/run
-    (main-screen)))
+   (main-screen)))

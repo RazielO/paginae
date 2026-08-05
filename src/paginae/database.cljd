@@ -24,7 +24,13 @@
       (let [path (path/join db-path "paginae.db")]
         (sqlite/openDatabase
          path
+
          .version 1
+
+         .onConfigure
+         (fn [^sqlite/Database db]
+           (.execute db "PRAGMA foreign_keys = ON"))
+
          .onCreate
          (fn [^sqlite/Database db _version]
            (->
@@ -59,24 +65,13 @@
    (get-db)
    (.then
     (fn [^sqlite/Database db]
-      (.then
-       (.query db "books")
-       (fn [rows]
-         (map book/from-db-entry rows)))))))
-
-(defn get-reading-books
-  "Query reading books"
-  []
-  (->
-   (get-db)
-   (.then
-    (fn [^sqlite/Database db]
       (->
        (.query db
                "books"
-               .where "status = \"reading\"")
+               .orderBy "created_at DESC")
        (.then
-        #(map book/from-db-entry %)))))))
+        (fn [rows]
+          (map book/from-db-entry rows))))))))
 
 (defn get-book-counts
   "Query the book counts by status"
@@ -85,23 +80,60 @@
    (get-db)
    (.then
     (fn [^sqlite/Database db]
-        (->
-         (.rawQuery db
-                    "SELECT status, COUNT(*) as count
+      (->
+       (.rawQuery db
+                  "SELECT status, COUNT(*) as count
                        FROM books
-                       GROUP BY status")
-         (.then
-          (fn [data]
-            (->>
-             data
-             (map #(into {} %))
-             (map (fn [row]
-                    [(keyword (get row "status")) (get row "count")]))
-             (into {})
-             (merge
-              {:to-read 0
-               :reading 0
-               :done 0})))))))))
+                       GROUP BY status
+                   UNION
+                   SELECT 'favorite' AS status,
+                          COUNT(*) as count
+                       FROM books
+                       WHERE favorite = 1")
+       (.then
+        (fn [data]
+          (->>
+           data
+           (map #(into {} %))
+           (map (fn [row]
+                  [(keyword (get row "status")) (get row "count")]))
+           (into {})
+           (merge
+            {:to-read 0
+             :reading 0
+             :done 0
+             :favorite 0})))))))))
+
+(defn get-books-by-status
+  "Query books that have a certain status"
+  [status]
+  (->
+   (get-db)
+   (.then
+    (fn [^sqlite/Database db]
+      (->
+       (.query db
+               "books"
+               .where "status = ?"
+               .whereArgs [(name status)]
+               .orderBy "created_at DESC")
+       (.then
+        #(map book/from-db-entry %)))))))
+
+(defn get-favorite-books
+  "Query favorite books"
+  []
+  (->
+   (get-db)
+   (.then
+    (fn [^sqlite/Database db]
+      (->
+       (.query db
+               "books"
+               .where "favorite = 1"
+               .orderBy "created_at DESC")
+       (.then
+        #(map book/from-db-entry %)))))))
 
 (defn get-recent-activity
   "Query the last n activity items"
@@ -113,13 +145,14 @@
       (.then
        (.query db
                "activity"
-               .orderBy "date"
+               .orderBy "date DESC"
                .limit n)
        (fn [result]
          result))))))
 
-(defn get-book [id]
+(defn get-book
   "Query for a book by id"
+  [id]
   (->
    (get-db)
    (.then
@@ -134,3 +167,15 @@
         (fn [rows]
           (when (> (count rows) 0)
             (book/from-db-entry (first rows))))))))))
+
+(defn delete-book
+  "Delete a book from the database by id"
+  [id]
+  (->
+   (get-db)
+   (.then
+    (fn [^sqlite/Database db]
+      (.delete db
+               "books"
+               .where "id = ?"
+               .whereArgs [id])))))

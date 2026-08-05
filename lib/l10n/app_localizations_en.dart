@@ -159,4 +159,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addNewBook => 'Add new book';
+
+  @override
+  String get hello => 'Hello';
+
+  @override
+  String deleteBookTitle(String title) {
+    return 'Do you want to delete the book \"$title\"?';
+  }
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get filterBy => 'Filter By';
+
+  @override
+  String get filterFinished => 'Finished';
+
+  @override
+  String get filterToRead => 'To-Read';
+
+  @override
+  String get filterFavorites => 'Favorites';
+
+  @override
+  String get filterReading => 'Reading';
+
+  @override
+  String get resetFilter => 'Reset filter';
+
+  @override
+  String get allMyBooks => 'All My Books';
 }

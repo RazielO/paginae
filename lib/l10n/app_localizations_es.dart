@@ -52,7 +52,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String firstPublished(String year) {
-    return 'Primera publicación';
+    return 'Primera publicación: $year';
   }
 
   @override
@@ -159,4 +159,36 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get addNewBook => 'Añade un libro';
+
+  @override
+  String get hello => 'Hola';
+
+  @override
+  String deleteBookTitle(String title) {
+    return '¿Quieres eliminar el libro \"$title\"?';
+  }
+
+  @override
+  String get delete => 'Eliminar';
+
+  @override
+  String get filterBy => 'Filtrar por';
+
+  @override
+  String get filterFinished => 'Terminados';
+
+  @override
+  String get filterToRead => 'Por leer';
+
+  @override
+  String get filterFavorites => 'Favoritos';
+
+  @override
+  String get filterReading => 'Leyendo';
+
+  @override
+  String get resetFilter => 'Restablecer filtro';
+
+  @override
+  String get allMyBooks => 'Todos mis libros';
 }

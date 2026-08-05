@@ -21,7 +21,7 @@
     },
     "addToLibrary": "Add To Library",
     "@addToLibrary": {
-      "description": ""  
+        "description": "Label for the button that adds a book to the library"
     },
     "searchTitle": "Add New Book",
     "@searchTitle": {
@@ -40,7 +40,7 @@
         "description": "Search book screen label for when no books were found"
     },
     "searchBookHint": "Search by title, author or ISBN",
-    "@searchBookHing": {
+    "@searchBookHint": {
         "description": "Search book screen hint for input text field"
     },
     "searchCancelScanning": "Cancel scanning",
@@ -154,7 +154,7 @@
         "description": "Title for the 'read' shelf"
     },
     "shelfReadSubtitle": "Completed books",
-    "@shelfReaSubtitle": {
+    "@shelfReadSubtitle": {
         "description": "Subtitle for the 'read' shelf"
     },
     "shelfToReadTitle": "To Read",
@@ -162,7 +162,7 @@
         "description": "Title for the 'to read' shelf"
     },
     "shelfToReadSubtitle": "The backlog",
-    "@shelfToReaSubtitle": {
+    "@shelfToReadSubtitle": {
         "description": "Subtitle for the 'to read' shelf"
     },
     "shelfFavoritesTitle": "Favorites",
@@ -196,5 +196,50 @@
     "addNewBook": "Add new book",
     "@addNewBook": {
         "description": "Button to go to the add book screen"
+    },
+    "hello": "Hello",
+    "@hello": {
+        "description": "Temporary placeholder text"
+    },
+    "deleteBookTitle": "Do you want to delete the book \"{title}\"?",
+    "@deleteBookTitle": {
+        "description": "Confirmation dialog title shown before deleting a book",
+        "placeholders": {
+            "title": {
+                "type": "String"
+            }
+        }
+    },
+    "delete": "Delete",
+    "@delete": {
+        "description": "Label for the delete button"
+    },
+    "filterBy": "Filter By",
+    "@filterBy": {
+        "description": "Title of the filter popup menu in the library screen"
+    },
+    "filterFinished": "Finished",
+    "@filterFinished": {
+        "description": "Filter option to show finished books"
+    },
+    "filterToRead": "To-Read",
+    "@filterToRead": {
+        "description": "Filter option to show books to read"
+    },
+    "filterFavorites": "Favorites",
+    "@filterFavorites": {
+        "description": "Filter option to show favorite books"
+    },
+    "filterReading": "Reading",
+    "@filterReading": {
+        "description": "Filter option to show currently reading books"
+    },
+    "resetFilter": "Reset filter",
+    "@resetFilter": {
+        "description": "Action to clear the active book filter"
+    },
+    "allMyBooks": "All My Books",
+    "@allMyBooks": {
+        "description": "Title of the library screen showing all the user's books"
     }
 }

@@ -10,6 +10,8 @@
             status
             format
             cover-uri
+            favorite
+            created-at
             local-cover?])
 
 (defn empty-book
@@ -21,6 +23,8 @@
     :author ""
     :first-published ""
     :pages 0
+    :favorite false
+    :created-at nil
     :status :to-read
     :format :hardcover
     :cover-uri ""
@@ -45,6 +49,8 @@
       :pages (maybe-string-to-int (get json "number_of_pages_median" 0))
       :status :to-read
       :format :hardcover
+      :favorite false
+      :created-at nil
       :cover-uri (when has-cover?
                    (str "https://covers.openlibrary.org/b/olid/" (get json "cover_edition_key") "-M.jpg"))
       :local-cover? (not has-cover?)})))
@@ -57,7 +63,8 @@
    "author" (:author book)
    "pages" (:pages book)
    "status" (name (:status book))
-   "format" (name (:format book))})
+   "format" (name (:format book))
+   "favorite" (if (:favorite book) 1 0)})
 
 (defn from-db-entry
   "Convert a db entry into a Book"
@@ -70,6 +77,8 @@
     :pages (get entry "pages")
     :status (keyword (get entry "status"))
     :format (keyword (get entry "format"))
+    :favorite (not (zero? (int (get entry "favorite"))))
+    :created-at (dart:core/DateTime.parse (get entry "created_at"))
     :cover-uri nil
     :local-cover? true}))
 
@@ -117,3 +126,8 @@
   "Return a new Book with saved-cover? set to new-value (boolean)."
   [^Book book new-value]
   (assoc book :saved-cover? new-value))
+
+(defn update-favortite-status
+  "Return a new book with favorite status set to new-favorite (boolean)."
+  [^Book book new-favorite]
+  (assoc book :favorite new-favorite))
