@@ -1,0 +1,136 @@
+(ns paginae.book-details.activity-dialog
+  (:require
+   ["../l10n/app_localizations.dart" :as app-l10n]
+   ["package:flutter/material.dart" :as material]
+   ["package:flutter/widgets.dart" :as widgets]
+   [cljd.flutter :as flutter]
+   [paginae.common.number-input :as common.number-input]))
+
+(defn add-activity-dialog
+  "Dialog that permits the addition of a reading session"
+  [{:keys [context
+           ^material/TextEditingController controller
+           book
+           on-confirm]}]
+
+  (material/showDialog
+   .context context
+
+   .builder
+   (fn [dialog-context]
+
+     (flutter/widget
+      :let [locales (app-l10n/AppLocalizations.of dialog-context)
+            theme (material/Theme.of dialog-context)
+            color-scheme (.-colorScheme theme)
+            text-theme (.-textTheme theme)
+            pages (:pages book)
+            has-pages? (not (nil? pages))]
+      :watch [as-pages? (atom has-pages?) :as as-pages]
+
+      (material/Dialog)
+
+      .child
+      (material/Padding
+       .padding
+       (material/EdgeInsets.symmetric .horizontal 10 .vertical 20))
+
+      .child
+      (material/Column
+       .spacing 20
+
+       .mainAxisSize material/MainAxisSize.min)
+
+      .children
+      [;; Title
+       (material/Text
+        (.-setReadingProgress locales)
+
+        .style
+        (.-titleLarge text-theme))
+
+       ;; Button to switch between percentage and page progress input
+       (if has-pages?
+         (material/ElevatedButton
+          .child
+          (material/Text
+            (if as-pages?
+              (.-switchToPercentage locales)
+              (.-switchToPages locales)))
+
+          .onPressed
+          #(swap! as-pages not))
+
+         (material/SizedBox.shrink))
+
+       ;; Input
+       (material/Row
+        .spacing 10
+
+        .children
+        [;; Text input
+         (material/Flexible
+
+          .child
+          (if as-pages?
+            (common.number-input/integer-input-field
+             {:lower-limit 1
+              :upper-limit pages
+              :label (.-currentPage locales)
+              :controller controller
+              :locales locales})
+            (common.number-input/float-input-field
+             {:lower-limit 0.1
+              :upper-limit 100.0
+              :label (.-currentPercentage locales)
+              :controller controller
+              :locales locales})))
+
+         ;; Label (pages or percentage)
+         (material/Text
+          (if as-pages? (.-pageUnit locales) "%"))])
+
+       ;; Buttons
+       (material/Row
+        .mainAxisAlignment material/MainAxisAlignment.end
+
+        .children
+        [;; Cancel button
+         (material/TextButton
+
+          .child
+          (material/Text
+           (.-cancel locales)
+
+           .style
+           (.-labelLarge text-theme))
+
+          .onPressed
+          (fn []
+            (set! (.-text controller) "")
+            (.pop (widgets/Navigator.of dialog-context))))
+
+         ;; Save button
+         (material/TextButton
+
+          .child
+          (material/Text
+           (.-save locales)
+
+           .style
+           (.copyWith
+            (.-labelLarge text-theme)
+
+            .color
+            (.-primary color-scheme)))
+
+          .onPressed
+          (fn []
+            (let [data (.trim (.-text controller))
+                  value (parse-double data)
+                  progress (if as-pages?
+                             (/ value pages)
+                             (/ value 100.0))]
+              (on-confirm progress)
+              (set! (.-text controller) "")
+              (.pop (widgets/Navigator.of dialog-context) progress))))])]))))

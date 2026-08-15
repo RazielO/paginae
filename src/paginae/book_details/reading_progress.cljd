@@ -1,0 +1,127 @@
+(ns paginae.book-details.reading-progress
+  (:require
+   ["../l10n/app_localizations.dart" :as app-l10n]
+   ["package:material_symbols_icons/symbols.dart" :as symbols]
+   ["package:flutter/material.dart" :as material]
+   [cljd.flutter :as flutter]
+   [paginae.theme :as theme]))
+
+(defn- progress-circle
+  "Widget that shows a percentage reading progress"
+  [book]
+  (flutter/widget
+   :get {{{:flds [primary]} .-colorScheme} material/Theme}
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+
+   (material/Stack
+    .alignment material/Alignment.center)
+
+   .children
+   [(material/SizedBox
+     .width 150
+
+     .height 150
+
+     .child
+     (material/CircularProgressIndicator
+      .value (:current-progress book)
+
+      .strokeWidth 15
+
+      .strokeCap material/StrokeCap.round
+
+      .backgroundColor (:50 theme/neutral)
+
+      .valueColor (material/AlwaysStoppedAnimation primary)))
+
+    (material/Column
+     .mainAxisSize material/MainAxisSize.min
+
+     .children
+     [(material/Text
+       (str (.round (* 100 (:current-progress book))) "%")
+
+       .style
+       (material/TextStyle
+        .fontSize 30
+
+        .fontWeight material/FontWeight.bold))
+
+      (material/Text
+       (.-readLabel locales)
+
+       .style
+       (material/TextStyle
+        .fontSize 16
+
+        .letterSpacing 2
+
+        .color material/Colors.grey))])]))
+
+(defn- progress-text
+  "Show the number of pages until the end of the book if the pages is not null"
+  [book]
+  (flutter/widget
+   :get {{{:flds [bodyLarge]} .-textTheme} material/Theme}
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+
+   (if (= (:status book) :done)
+     ;; Done text
+     (material/Text (.-finishedBookMessage locales) .style bodyLarge)
+     ;; Current progress text
+     (let [pages (:pages book)
+           current-page (.floor (* (or pages 0) (:current-progress book)))]
+       (if (nil? pages)
+         (material/SizedBox.shrink)
+         (material/Text
+          (.readProgress locales current-page pages)
+
+          .style bodyLarge))))))
+
+(defn- start-reading-button
+  "Icon button to mark a book's status as currently reading"
+  [mark-as-started]
+  (flutter/widget
+   :get {{{:flds [titleLarge]} .-textTheme} material/Theme}
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+   (material/Column
+    .spacing 10)
+
+   .children
+   [(material/Text
+     (.-bookNotStartedMessage locales)
+
+     .textAlign material/TextAlign.center
+
+     .style titleLarge)
+
+    (material/IconButton.outlined
+     .icon
+     (material/Icon symbols/Symbols.sports_score)
+
+     .iconSize 40
+
+     .style
+     (material/ButtonStyle
+      .elevation
+      (material/WidgetStatePropertyAll
+       40.0))
+
+     .onPressed mark-as-started)]))
+
+(defn reading-progress
+  "Widget displaying the book progress"
+  [{:keys [book
+           mark-as-started]}]
+  (if (= (:status book) :to-read)
+    (start-reading-button mark-as-started)
+
+    (material/Column
+     .spacing 15
+
+     .children
+     [(progress-circle book)
+      (progress-text book)])))

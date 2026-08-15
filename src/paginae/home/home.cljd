@@ -1,76 +1,101 @@
 (ns paginae.home.home
-  (:require [cljd.flutter :as flutter]
+  (:require ["../l10n/app_localizations.dart" :as app-l10n]
+            ["package:carousel_slider/carousel_slider.dart" :as carousel]
             ["package:flutter/material.dart" :as material]
-            ["package:flutter/widgets.dart" :as widgets]
+            [cljd.flutter :as flutter]
+            [paginae.book-details.book-details :as book-details]
             [paginae.database :as db]
-            [paginae.image.widget :as image]
             [paginae.home.badges :as badges]
-            ["../l10n/app_localizations.dart" :as app-l10n]
+            [paginae.image.widget :as image]
             [paginae.theme :as theme]))
 
 (defn- reading-book-card
   "Card to display currently reading book"
-  [book]
+  [book
+   update-books]
 
   (flutter/widget
    :get {{{:flds [titleLarge bodyMedium]} .-textTheme} material/Theme}
    :context context
    :let [locales (app-l10n/AppLocalizations.of context)]
+   :get [material/Navigator]
 
-   (material/Card
+   (material/InkWell
+    .onTap
+    (fn []
+      (let [_ (await (.push
+                      navigator
+                      (#/(material/MaterialPageRoute Object)
+                       .builder
+                       (flutter/build (book-details/book-details book)))))]
+        (update-books)))
 
     .child
-    (material/Container
-
-     .padding
-     (material/EdgeInsets.all 10)
-
+    (material/Card
      .child
-     (material/Column
-      .crossAxisAlignment material/CrossAxisAlignment.start
+     (material/Container
 
-      .children
-      [(image/cover-image
-        {:book book
-         :placeholder-text (.-noCover locales)
-         :bordered? false
-         :clickable? false
-         :on-click nil
-         :width 175})
+      .padding
+      (material/EdgeInsets.all 10)
 
-       (material/Text
-        (:title book)
+      .child
+      (material/Column
+       .crossAxisAlignment material/CrossAxisAlignment.center
 
-        .style
-        (.copyWith titleLarge
-                   .fontWeight material/FontWeight.bold)
+       .mainAxisAlignment material/MainAxisAlignment.spaceBetween
 
-        .overflow material/TextOverflow.ellipsis)
+       .children
+       [(image/cover-image
+         {:book book
+          :placeholder-text (.-noCover locales)
+          :bordered? false
+          :clickable? false
+          :on-click nil
+          :width 175})
 
-       (material/Text
-        (:author book)
+        (material/Column
 
-        .style bodyMedium
+         .children [(material/Text
+                     (:title book)
 
-        .overflow material/TextOverflow.ellipsis)
+                     .style
+                     (.copyWith titleLarge
+                                .fontWeight material/FontWeight.bold)
 
-       (material/Expanded
+                     .overflow material/TextOverflow.ellipsis)
 
-        .child
-        (material/Row
+                    (material/Text
+                     (if (nil? (:author book))
+                       ""
+                       (:author book))
 
-         .mainAxisAlignment material/MainAxisAlignment.spaceBetween
+                     .style bodyMedium
 
-         .children
-         [(material/Text (.toUpperCase "68% complete"))
-          (material/Text (.toUpperCase "page 192"))])) ;; TODO: Change to actual progress
+                     .overflow material/TextOverflow.ellipsis)])
 
-       (material/LinearProgressIndicator
-        .value 0.68)])))))
+        (let [progress (:current-progress book)
+              pages (:pages book)]
+          (material/Column
+           .spacing 10
+
+           .children [(material/Row
+
+                       .mainAxisAlignment material/MainAxisAlignment.spaceBetween
+
+                       .children
+                       [(material/Text (.toUpperCase (.percentComplete locales (.round (* 100 progress)))))
+                         (material/Text (if (nil? pages)
+                                          ""
+                                          (.toUpperCase (.pageCount locales (.round (* pages progress))))))])
+
+                      (material/LinearProgressIndicator
+                       .value progress)]))]))))))
 
 (defn- books-reading
   "Widget to display currently reading books"
-  [{:keys [go-to-add]}]
+  [{:keys [books
+           go-to-add
+           on-pop]}]
 
   (flutter/widget
    :get {{{:flds [bodyMedium headlineSmall titleLarge titleMedium]} .-textTheme
@@ -78,92 +103,83 @@
    :context context
    :let [locales (app-l10n/AppLocalizations.of context)]
 
-   (material/SliverToBoxAdapter
-    .child
+   (material/SliverToBoxAdapter)
 
-    (material/Center
-     .child
+   .child
+   (material/Center)
 
-     (material/FutureBuilder
-      .future
-      (db/get-books-by-status :reading)
+   .child
+   (if (empty? books)
+     ;; If no books, action to add one
+     (material/Column
 
-      .builder
-      (fn [_context ^widgets/AsyncSnapshot snapshot]
-        (if (.-hasData snapshot)
-          (let [books (.-data snapshot)]
+      .spacing 10
 
-            (if (empty? books)
-              (material/Column
+      .children
+      [(material/Text
+        (.-noBooks locales)
 
-               .spacing 10
+        .style (.copyWith titleLarge
+                          .fontFamily "Manrope"))
 
-               .children
-               [(material/Text
-                 (.-noBooks locales)
+       (material/FilledButton
 
-                 .style (.copyWith titleLarge
-                                   .fontFamily "Manrope"))
+        .onPressed go-to-add
 
-                (material/FilledButton
+        .child
+        (material/Text
+         (.toUpperCase (.-addNewBook locales))
 
-                 .onPressed go-to-add
+         .style (.copyWith titleMedium
+                           .color onPrimary
+                           .fontFamily "Manrope"
+                           .fontWeight material/FontWeight.bold)))])
 
-                 .child
-                 (material/Text
-                  (.toUpperCase (.-addNewBook locales))
+     ;; List the reading books 
+     (material/Column
 
-                  .style (.copyWith titleMedium
-                                    .color onPrimary
-                                    .fontFamily "Manrope"
-                                    .fontWeight material/FontWeight.bold)))])
+      .spacing 10
 
-              (material/Column
+      .children
+      [(material/Row
+        .mainAxisAlignment material/MainAxisAlignment.spaceBetween
 
-               .spacing 10
+        .children
+        [;; Section title
+         (material/Text
+          (.-currentlyReading locales)
+          .softWrap true
+          .maxLines 2
+          .style headlineSmall)
 
-               .children
-               [(material/Row
-                 .mainAxisAlignment material/MainAxisAlignment.spaceBetween
+         ;; Book count 
+         (material/Text
+          (.toUpperCase ^String ((.-booksInProgress locales) (count books)))
+          .softWrap true
+          .maxLines 2
+          .style (.copyWith bodyMedium
+                            .fontWeight material/FontWeight.bold
+                            .color primary))])
 
-                 .children
-                 [;; Section title
-                  (material/Text
-                   (.-currentlyReading locales)
-                   .softWrap true
-                   .maxLines 2
-                   .style headlineSmall)
+       ;; Book carousel
+       (carousel/CarouselSlider.builder
+        .itemCount
+        (count books)
 
-                  ;; Book count 
-                  (material/Text
-                   (.toUpperCase ^String ((.-booksInProgress locales) (count books)))
-                   .softWrap true
-                   .maxLines 2
-                   .style (.copyWith bodyMedium
-                                     .fontWeight material/FontWeight.bold
-                                     .color primary))])
+        .options
+        (carousel/CarouselOptions
+         .height 400
 
-                (material/SizedBox
-                 .height 400
+         .initialPage 0
 
-                 .child
-                 (material/PageView.builder
-                  .itemCount
-                  (count books)
+         .enableInfiniteScroll false)
 
-                  .itemBuilder
-                  (fn [_context idx]
-                    (let [book (nth books idx)]
-                      (material/Padding
-                       .padding
-
-                       (material/EdgeInsets.symmetric
-                        .horizontal 4)
-
-                       .child
-                       (reading-book-card book))))))])))
-
-          (material/CircularProgressIndicator))))))))
+        .itemBuilder
+        (fn [_context idx _pageViewIdx]
+          (let [book (nth books idx)]
+            (material/Padding
+             .padding (material/EdgeInsets.symmetric .horizontal 4)
+             .child (reading-book-card book on-pop)))))]))))
 
 (defn- shelf-card
   "Card that represents a 'bookshelf' (group of books)"
@@ -227,7 +243,8 @@
 
 (defn- shelves
   "Widget that contains cards with book groups"
-  [{:keys [go-to-to-read-shelf
+  [{:keys [counts
+           go-to-to-read-shelf
            go-to-reading-shelf
            go-to-favorite-shelf
            go-to-done-shelf]}]
@@ -237,127 +254,138 @@
    :let [locales (app-l10n/AppLocalizations.of context)
          portrait? (= material/Orientation.portrait (.-orientation (material/MediaQuery.of context)))]
 
-   (material/FutureBuilder
-    .future
-    (db/get-book-counts)
+   (material/SliverMainAxisGroup
 
-    .builder
-    (fn [_context ^widgets/AsyncSnapshot snapshot]
-      (if (.-hasData snapshot)
-        (let [counts (.-data snapshot)]
-          (material/SliverMainAxisGroup
+    .slivers
+    [(material/SliverToBoxAdapter
 
-           .slivers
-           [(material/SliverToBoxAdapter
+      .child
+      (material/Text
+       (.-myShelves locales)
+       .softWrap true
+       .maxLines 2
+       .style headlineSmall))
 
-             .child
-             (material/Text
-              (.-myShelves locales)
-              .softWrap true
-              .maxLines 2
-              .style headlineSmall))
+     (material/SliverGrid.count
+      .crossAxisCount (if portrait? 2 4)
 
-            (material/SliverGrid.count
-             .crossAxisCount (if portrait? 2 4)
+      .children
+      [(shelf-card
+        {:title (.-shelfReadTitle locales)
+         :subtitle (.-shelfReadSubtitle locales)
+         :bg-color (:70 theme/primary)
+         :number (:done counts)
+         :badge (badges/read-badge)
+         :on-tap go-to-done-shelf})
 
-             .children
-             [(shelf-card {:title (.-shelfReadTitle locales)
-                           :subtitle (.-shelfReadSubtitle locales)
-                           :bg-color (:70 theme/primary)
-                           :number (:done counts)
-                           :badge (badges/read-badge)
-                           :on-tap go-to-done-shelf})
+       (shelf-card
+        {:title (.-shelfToReadTitle locales)
+         :subtitle (.-shelfToReadSubtitle locales)
+         :bg-color (:70 theme/secondary)
+         :number (:to-read counts)
+         :badge (badges/to-read-badge)
+         :on-tap go-to-to-read-shelf})
 
-              (shelf-card {:title (.-shelfToReadTitle locales)
-                           :subtitle (.-shelfToReadSubtitle locales)
-                           :bg-color (:70 theme/secondary)
-                           :number (:to-read counts)
-                           :badge (badges/to-read-badge)
-                           :on-tap go-to-to-read-shelf})
+       (shelf-card
+        {:title (.-shelfFavoritesTitle locales)
+         :subtitle (.-shelfFavoritesSubtitle locales)
+         :bg-color (:70 theme/tertiary)
+         :number (:favorite counts)
+         :badge (badges/favorite-badge)
+         :on-tap go-to-favorite-shelf})
 
-              (shelf-card {:title (.-shelfFavoritesTitle locales)
-                           :subtitle (.-shelfFavoritesSubtitle locales)
-                           :bg-color (:70 theme/tertiary)
-                           :number (:favorite counts)
-                           :badge (badges/favorite-badge)
-                           :on-tap go-to-favorite-shelf})
+       (shelf-card
+        {:title (.-shelfReadingTitle locales)
+         :subtitle (.-shelfReadingSubtitle locales)
+         :bg-color (:70 theme/neutral)
+         :number (:reading counts)
+         :badge (badges/reading-badge)
+         :on-tap go-to-reading-shelf})])])))
 
-              (shelf-card {:title (.-shelfReadingTitle locales)
-                           :subtitle (.-shelfReadingSubtitle locales)
-                           :bg-color (:70 theme/neutral)
-                           :number (:reading counts)
-                           :badge (badges/reading-badge)
-                           :on-tap go-to-reading-shelf})])]))
+(defn- activity-card
+  "Card for displaying a reading activity"
+  [{:keys [activity book]}]
+  (flutter/widget
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
 
-        (material/SliverToBoxAdapter
-         .child
-         (material/CircularProgressIndicator)))))))
+   (material/Card)
+
+   .child
+   (material/Row)
+
+   .children
+   [(image/cover-image
+     {:book book
+      :placeholder-text (.-noCover locales)
+      :bordered? false
+      :clickable? false
+      :on-click nil
+      :width 100})
+
+    (material/Column
+
+     .children
+     [(material/Text
+       (:title book))
+
+      (material/Text
+       (.reachedPercent locales (.round (* 100 (:progress activity)))))])]))
 
 (defn- recent-activity
-  [{:keys [go-to-journal]}]
+  "Widget to display the most recent reading activity"
+  [{:keys [activities
+           go-to-journal]}]
   (flutter/widget
    :get {{{:flds [headlineSmall labelLarge]} .-textTheme
           {:flds [secondary]} .-colorScheme} material/Theme}
    :context context
    :let [locales (app-l10n/AppLocalizations.of context)]
 
-   (material/FutureBuilder
-    .future
-    (db/get-recent-activity 5)
+   (if (empty? activities)
+     (material/SliverToBoxAdapter
 
-    .builder
-    (fn [_context ^widgets/AsyncSnapshot snapshot]
-      (if (.-hasData snapshot)
-        (let [data (.-data snapshot)]
-          (if (empty? data)
-            (material/SliverToBoxAdapter
+      .child
+      (material/Container))
 
-             .child
-             (material/Container))
+     (material/SliverMainAxisGroup
 
-            (material/SliverMainAxisGroup
+      .slivers
+      [(material/SliverToBoxAdapter
 
-             .slivers
-             [(material/SliverToBoxAdapter
+        .child
+        (material/Row
 
-               .child
-               (material/Row
+         .mainAxisAlignment material/MainAxisAlignment.spaceBetween
 
-                .mainAxisAlignment material/MainAxisAlignment.spaceBetween
+         .children
+         [(material/Text
+           (.-recentActivity locales)
+           .softWrap true
+           .maxLines 2
+           .style headlineSmall)
 
-                .children
-                [(material/Text
-                  (.-recentActivity locales)
-                  .softWrap true
-                  .maxLines 2
-                  .style headlineSmall)
+          (material/TextButton
 
-                 (material/TextButton
+           .child
+           (material/Text
+            (.toUpperCase (.-viewJournal locales))
 
-                  .child
-                  (material/Text
-                   (.toUpperCase (.-viewJournal locales))
+            .style (.copyWith labelLarge
+                              .color secondary))
 
-                   .style (.copyWith labelLarge
-                                     .color secondary))
+           .onPressed go-to-journal)]))
 
-                  .onPressed go-to-journal)]))
-
-              ;; TODO: Add recent activities
-              ])))
-
-        (material/SliverToBoxAdapter
-
-         .child
-         (material/SizedBox
-          .height 80
-
-          .width 80
-
-          .child
-          (material/CircularProgressIndicator))))))))
+       (material/SliverList
+        .delegate
+        (material/SliverChildBuilderDelegate
+         (fn [_context idx]
+           (when (< idx (count activities))
+             (let [entry (nth activities idx)]
+               (activity-card entry))))))]))))
 
 (defn home-widget
+  "Widget that shows the home screen"
   [{:keys [go-to-add
            go-to-journal
            go-to-to-read-shelf
@@ -368,6 +396,13 @@
    :get {{{:flds [headlineMedium]} .-textTheme} material/Theme}
    :context context
    :let [locales (app-l10n/AppLocalizations.of context)]
+   :watch [revision (atom 0) :as data-revision
+           books (db/get-books-by-status :reading) :default [] :refresh-on revision
+           counts (db/get-book-counts) :default {:to-read 0
+                                                 :favorite 0
+                                                 :done 0
+                                                 :read 0} :refresh-on revision
+            last-activities (db/get-recent-activity 5) :default [] :refresh-on revision]
 
    (material/CustomScrollView
     .slivers
@@ -388,17 +423,33 @@
                    .fontWeight material/FontWeight.bold))))
 
      (books-reading
-      {:go-to-add go-to-add})
+      {:go-to-add go-to-add
+       :books books
+       :on-pop #(swap! data-revision inc)})
 
      (material/SliverToBoxAdapter
       .child
       (material/SizedBox
        .height 30))
 
-     (shelves {:go-to-to-read-shelf go-to-to-read-shelf
-               :go-to-reading-shelf go-to-reading-shelf
-               :go-to-favorite-shelf go-to-favorite-shelf
-               :go-to-done-shelf go-to-done-shelf})
+     (shelves
+      {:counts counts
+       :go-to-to-read-shelf
+       (fn []
+         (await (go-to-to-read-shelf))
+         (swap! data-revision inc))
+       :go-to-reading-shelf
+       (fn []
+         (go-to-reading-shelf)
+         (swap! data-revision inc))
+       :go-to-favorite-shelf
+       (fn []
+         (go-to-favorite-shelf)
+         (swap! data-revision inc))
+       :go-to-done-shelf
+       (fn []
+         (go-to-done-shelf)
+         (swap! data-revision inc))})
 
      (material/SliverToBoxAdapter
       .child
@@ -406,4 +457,5 @@
        .height 30))
 
      (recent-activity
-      {:go-to-journal go-to-journal})])))
+      {:activities last-activities
+       :go-to-journal go-to-journal})])))

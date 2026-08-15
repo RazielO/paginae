@@ -1,0 +1,26 @@
+(ns paginae.types.note)
+
+(defrecord Note
+           [id
+            book-id
+            contents
+            created-at])
+
+(defn from-db-entry
+  "Convert a db entry into a Note"
+  [entry]
+  (map->Note
+   {:id (get entry "id")
+    :book-id (get entry "book_id")
+    :contents (get entry "contents")
+    :created-at (dart:core/DateTime.parse (get entry "created_at"))}))
+
+(defn to-db-map [note]
+  {"id" (:id note)
+               "book_id" (:book-id note)
+               "contents" (:contents note)}
+  )
+
+(defn update-contents
+  [note contents]
+  (assoc note :contents contents))

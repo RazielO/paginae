@@ -1,0 +1,53 @@
+(ns paginae.common.confirm-dialog
+  (:require
+   ["../l10n/app_localizations.dart" :as app-l10n]
+   ["package:flutter/material.dart" :as material]
+   ["package:flutter/widgets.dart" :as widgets]))
+
+(defn confirm-dialog
+  "Dialog to ask to do an action"
+  [{:keys [title
+           content
+           context
+           on-confirm]}]
+  (material/showDialog
+   .context context
+
+   .builder
+   (fn [dialog-context]
+     (let [locales (app-l10n/AppLocalizations.of dialog-context)
+           theme (material/Theme.of dialog-context)
+           color-scheme (.-colorScheme theme)
+           text-theme (.-textTheme theme)]
+       (material/AlertDialog
+
+        .title
+        (material/Text title)
+
+        .content
+        (material/Text content)
+
+        .actions
+        [(material/TextButton
+          .child
+          (material/Text (.-cancel locales)
+                         .style (.-labelLarge text-theme))
+
+          .onPressed
+          (fn []
+            (.pop (widgets/Navigator.of dialog-context))))
+
+         (material/ElevatedButton
+          .style (material/ButtonStyle
+                  .backgroundColor (material/WidgetStatePropertyAll (.-secondary color-scheme)))
+
+          .child
+          (material/Text (.-delete locales)
+                         .style (.copyWith
+                                 (.-labelLarge text-theme)
+                                 .color (.-onSecondary color-scheme)))
+
+          .onPressed
+          (fn []
+            (on-confirm)
+            (.pop (widgets/Navigator.of dialog-context))))])))))

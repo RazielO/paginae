@@ -419,15 +419,12 @@
              (when (not loading-more?)
                (reset! loading-more true)
 
-               (->
-                ^Future (query/query-books text offset unknown-str)
-                (.then
-                 (fn [result]
-                   (swap! books-atom into (:data result))
-                   (reset! total-atom (:total result))
-                   (swap! offset-atom + 20)
-                   (reset! loading-more false)
-                   (reset! has-more (= total-books (count books))))))))]
+               (let [result (await (query/query-books text offset unknown-str))]
+                 (swap! books-atom into (:data result))
+                 (reset! total-atom (:total result))
+                 (swap! offset-atom + 20)
+                 (reset! loading-more false)
+                 (reset! has-more (= total-books (count books))))))]
 
      (do
        (-> scroll-controller

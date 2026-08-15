@@ -1,0 +1,566 @@
+(ns paginae.book-details.book-details
+  (:require ["../l10n/app_localizations.dart" :as app-l10n]
+            ["package:flutter/material.dart" :as material]
+            ["package:flutter/widgets.dart" :as widgets]
+            ["package:intl/intl.dart" :as intl]
+            ["package:material_symbols_icons/symbols.dart" :as symbols]
+            ["package:share_plus/share_plus.dart" :as share_plus]
+            [cljd.flutter :as flutter]
+            [paginae.book-details.reading-timer :as book-details.reading-timer]
+            [paginae.book-details.reading-progress :as book-details.reading-progress]
+            [paginae.book-details.activity-dialog :as book-details.activity-dialog]
+            [paginae.common.confirm-dialog :as common.confirm-dialog]
+            [paginae.database :as db]
+            [paginae.image.widget :as image]
+            [paginae.types.book :as book-type]
+            [paginae.types.note :as note-type]
+            [paginae.types.activity :as activity-type]))
+
+(defn- add-note-dialog
+  "Dialog for adding a note to the book"
+  [context
+   ^material/TextEditingController controller]
+
+  (material/showDialog
+   .context
+   context
+
+   .builder
+   (fn [dialog-context]
+     (flutter/widget
+      :let [locales (app-l10n/AppLocalizations.of dialog-context)
+            theme (material/Theme.of dialog-context)
+            color-scheme (.-colorScheme theme)
+            text-theme (.-textTheme theme)]
+
+      (material/Dialog)
+
+      .child
+      (material/Padding
+       .padding
+       (material/EdgeInsets.symmetric .horizontal 10 .vertical 20))
+
+      .child
+      (material/Column
+       .mainAxisSize
+       material/MainAxisSize.min)
+
+      .children
+      [;; Title
+       (material/Text
+        (.-addNote locales)
+
+        .style
+        (.-titleLarge text-theme))
+
+       (material/SizedBox .height 20)
+
+       ;; Note text field
+       (material/TextField
+        .controller controller
+
+        .minLines 5
+
+        .maxLines 5
+
+        .decoration
+        (material/InputDecoration
+         .hintText (.-addNote locales)
+
+         .filled true
+
+         .border
+         (material/OutlineInputBorder
+          .borderRadius
+          (material/BorderRadius.circular 12))))
+
+       ;; Buttons
+       (material/Row
+        .mainAxisAlignment
+        material/MainAxisAlignment.end
+
+        .children
+        [;; Cancel button
+         (material/TextButton
+          .child
+          (material/Text
+           (.-cancel locales)
+
+           .style
+           (.-labelLarge text-theme))
+
+          .onPressed
+          (fn []
+            (set! (.-text controller) "")
+            (.pop (widgets/Navigator.of dialog-context))))
+
+         ;; Save button
+         (material/TextButton
+          .child
+          (material/Text
+           (.-save locales)
+
+           .style
+           (.copyWith
+            (.-labelLarge text-theme)
+
+            .color
+            (.-primary color-scheme)))
+
+          .onPressed
+          (fn []
+            (let [note (.trim (.-text controller))]
+              (when (not (empty? note))
+                (set! (.-text controller) "")
+                (.pop (widgets/Navigator.of dialog-context) note)))))])]))))
+
+
+(defn- action-button
+  "Pill button for actions"
+  [{:keys [on-pressed
+           icon
+           text
+           ^material/Color background
+           ^material/Color foreground]}]
+  (material/ElevatedButton
+   .onPressed on-pressed
+
+   .child
+   (material/Row
+    .mainAxisAlignment material/MainAxisAlignment.center
+
+    .spacing 10
+
+    .children
+    [;; Icon
+     (material/Icon icon)
+     ;; Text
+     (material/Text text)])
+
+   .style
+   (material/ButtonStyle
+    .backgroundColor
+    (material/WidgetStatePropertyAll background)
+
+    .foregroundColor
+    (material/WidgetStatePropertyAll foreground)
+
+    .padding
+    (material/WidgetStatePropertyAll
+     (material/EdgeInsets.all 15)))))
+
+(defn- note-card
+  "Card for displaying a note"
+  [{:keys [context
+           note
+           book-name
+           notes-revisions
+           ^material/TextEditingController note-controller]}]
+
+  (flutter/widget
+   :let [locales (app-l10n/AppLocalizations.of context)]
+   :get {{{:flds [labelLarge bodyLarge]} .-textTheme
+          {:flds [secondary onSurface]} .-colorScheme} material/Theme}
+
+   (material/Card
+    .margin
+    (material/EdgeInsets.only .bottom 20))
+
+   .child
+   (material/ConstrainedBox
+    .constraints
+    (material/BoxConstraints .minHeight 100))
+
+   .child
+   (material/Padding
+    .padding
+    (material/EdgeInsets.all 10))
+
+   .child
+   (material/Column
+    .spacing
+    10
+    .crossAxisAlignment
+    material/CrossAxisAlignment.stretch)
+
+   .children
+   [;; Title
+    (material/Row
+     .mainAxisAlignment
+     material/MainAxisAlignment.spaceBetween
+
+     .children
+     [;; Note title
+      (material/Text
+       (.toUpperCase (.-note locales))
+
+       .style
+       (.copyWith labelLarge
+
+                  .color secondary))
+
+      ;; Note's date
+      (material/Text
+       (.format
+        (intl/DateFormat.yMMMd)
+        (:created-at note))
+
+       .style
+       (.copyWith
+        labelLarge
+
+        .color
+        (.withAlpha onSurface 180)))])
+
+    ;; Note's contents
+    (material/Text
+     (:contents note)
+
+     .textAlign
+     material/TextAlign.start
+
+     .style
+     bodyLarge)
+
+    ;; Actions
+    (material/Row
+     .spacing 10
+
+     .children
+     [;; Edit button
+      (material/TextButton
+
+       .child
+       (material/Row
+        .spacing 5
+
+        .children
+        [(material/Icon
+          symbols/Symbols.edit
+
+          .color
+          onSurface)
+
+         (material/Text
+          (.toUpperCase (.-edit locales))
+
+          .style
+          labelLarge)])
+
+       .onPressed
+       (fn []
+         (set! (.-text note-controller) (:contents note))
+         (let [new-contents (await (add-note-dialog context note-controller))]
+           (when note
+             (await (db/update-book-note
+                     (note-type/update-contents note new-contents)))
+             (swap! notes-revisions inc)))))
+
+      ;; Share button
+      (material/TextButton
+
+       .child
+       (material/Row
+        .spacing 5
+
+        .children
+        [(material/Icon
+          symbols/Symbols.share
+
+          .color
+          onSurface)
+
+         (material/Text
+          (.toUpperCase (.-share locales))
+
+          .style
+          labelLarge)])
+
+       .onPressed
+       (fn []
+         (.share share_plus/SharePlus.instance
+                 (share_plus/ShareParams.
+                  .text
+                  (.shareNoteText locales book-name (:contents note))))
+         nil))
+
+      ;; Delete button
+      (material/TextButton
+
+       .child
+       (material/Row
+        .spacing 5
+
+        .children
+        [(material/Icon
+          symbols/Symbols.delete
+
+          .color
+          material/Colors.red)
+
+         (material/Text
+          (.toUpperCase (.-delete locales))
+
+          .style
+          (.copyWith
+           labelLarge
+
+           .color
+           material/Colors.red))])
+       .onPressed
+       (fn []
+         (common.confirm-dialog/confirm-dialog
+          {:title (.-removeNoteTitle locales)
+           :content ""
+           :context context
+           :on-confirm
+           (fn []
+             (let [_ (await (db/delete-note (:id note)))]
+               (swap! notes-revisions inc)))})))])]))
+
+(defn- app-bar
+  "App bar for the book details screen"
+  [context
+   book-atom]
+
+  (let [locales (app-l10n/AppLocalizations.of context)
+        color-scheme (.-colorScheme (material/Theme.of context))]
+    (material/AppBar
+     .title
+     (material/Text
+      (.-bookDetailsTitle locales))
+
+     .leading
+     (material/IconButton
+      .icon
+      (material/Icon symbols/Symbols.arrow_back)
+
+      .tooltip (.-goBack locales)
+
+      .onPressed
+      (fn [] (.pop (widgets/Navigator.of context))))
+
+     .actions
+     [(material/IconButton
+       .icon
+       (material/Icon
+        symbols/Symbols.favorite
+
+        .fill
+        (if (:favorite @book-atom) 1.0 0.0)
+
+        .color
+        (if (:favorite @book-atom)
+          (.-primary color-scheme)
+          (.-onSurface color-scheme)))
+
+       .tooltip
+       (if (:favorite @book-atom)
+         (.-unsetFavorite locales)
+         (.-setFavorite locales))
+
+       .onPressed
+       (fn []
+         (let [new-status (not (:favorite @book-atom))]
+           (swap! book-atom #(book-type/update-favorite-status % new-status))
+           (db/update-book @book-atom))))])))
+
+(defn- activity-card
+  "Card for displaying a reading activity"
+  [activity book]
+  (flutter/widget
+   :get {{{:flds [labelLarge bodyLarge]} .-textTheme
+          {:flds [onSurface]} .-colorScheme} material/Theme}
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+
+   (material/Card)
+
+   .child
+   (material/ConstrainedBox
+    .constraints
+    (material/BoxConstraints .minHeight 80))
+
+   .child
+   (material/Padding
+    .padding
+    (material/EdgeInsets.all 10))
+
+   .child
+   (material/Column
+    .spacing 5
+
+    .mainAxisAlignment material/MainAxisAlignment.center
+
+    .crossAxisAlignment material/CrossAxisAlignment.center)
+
+   .children
+   [;; Date
+    (material/Text
+     (.format
+      (intl/DateFormat.yMMMd)
+      (:date activity))
+
+     .textAlign
+     material/TextAlign.end
+
+     .style
+     (.copyWith
+      labelLarge
+
+      .color
+      (.withAlpha onSurface 180)))
+    ;; Activity
+    (material/Text
+     (activity-type/activity-string activity book locales)
+
+     .textAlign material/TextAlign.center
+
+     .style bodyLarge)]))
+
+(defn book-details
+  "Widget that shows the details of a book"
+  [^book-type/Book book-value]
+
+  (flutter/widget
+   :get
+   {{{:flds [headlineSmall titleMedium titleLarge]} .-textTheme
+     {:flds [primary onPrimary secondary onSecondary tertiary onTertiary]} .-colorScheme} material/Theme}
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+   :get [material/Navigator]
+   :watch [book (atom book-value) :as book-atom
+           rev (atom 0) :as data-revisions
+           notes (db/get-book-notes (:id book)) :default [] :refresh-on rev
+           activities (db/get-book-activities (:id book)) :default [] :refresh-on rev]
+   :managed [note-controller (material/TextEditingController)
+             activity-controller (material/TextEditingController)]
+
+   (material/Scaffold
+    .appBar
+    (app-bar context book-atom))
+
+   .body
+   (material/Container
+    .padding
+    (material/EdgeInsets.all 10))
+
+   .child
+   (material/SingleChildScrollView)
+
+   .child
+   (material/Column
+    .crossAxisAlignment
+    material/CrossAxisAlignment.center
+
+    .spacing 10
+
+    .children
+    [;; Cover image
+     (image/cover-image
+      {:book book
+       :placeholder-text (.-noCover locales)
+       :bordered? false
+       :clickable? false
+       :width 200})
+
+     ;; Title
+     (material/Text
+      (:title book)
+
+      .style headlineSmall)
+
+     ;; Author
+     (material/Text
+      (.byAuthor locales (if (nil? (:author book)) (.-unknown locales) (:author book)))
+
+      .style
+      (.copyWith titleMedium .fontStyle material/FontStyle.italic))
+
+     (material/SizedBox .height 20)
+
+     ;; Progress circle
+     (book-details.reading-progress/reading-progress
+      {:book book
+       :mark-as-started  (fn []
+                           (reset! book-atom (book-type/update-status book :reading))
+                           (db/update-book @book-atom))})
+
+     (material/SizedBox .height 20)
+     ;; Action buttons
+     ;; Timer
+     (action-button
+      {:on-pressed
+       (fn []
+         (let [result (await (.push navigator
+                                    (#/ (material/MaterialPageRoute Object)
+                                     .builder
+                                     (flutter/build
+                                      (book-details.reading-timer/reading-timer book)))))]
+           (when result
+             (swap! book-atom #(book-type/update-current-progress % result))
+             (swap! data-revisions inc))))
+       :icon symbols/Symbols.timer
+       :text (.-readingTimer locales)
+       :background primary
+       :foreground onPrimary})
+     ;; Update progress
+     (action-button {:on-pressed
+                     (fn []
+                       (let [data (await (book-details.activity-dialog/add-activity-dialog
+                                          {:context context
+                                           :controller activity-controller
+                                           :book book
+                                           :on-confirm
+                                           (fn [progress]
+                                             (db/insert-book-activity {:book-id (:id book)
+                                                                       :progress progress}))}))]
+                         (when data
+                           (swap! book-atom #(book-type/update-current-progress % data))
+                           (swap! data-revisions inc))))
+                     :icon symbols/Symbols.edit_note
+                     :text (.-updateProgress locales)
+                     :background secondary
+                     :foreground onSecondary})
+     ;; Add note
+     (action-button
+      {:on-pressed (fn []
+                     (let [note (await (add-note-dialog
+                                        context
+                                        note-controller))]
+                       (when note
+                         (await (db/insert-book-note note (:id book)))
+                         (swap! data-revisions inc))))
+       :icon symbols/Symbols.add
+       :text (.-addNoteAction locales)
+       :background tertiary
+       :foreground onTertiary})
+     (material/SizedBox .height 20)
+     ;; Notes
+     (if (not (empty? notes))
+       (material/Text (.-notesSection locales) .style titleLarge)
+       (material/SizedBox.shrink))
+
+     (material/ListView .shrinkWrap
+                        true
+                        .physics
+                        (widgets/NeverScrollableScrollPhysics)
+                        .children
+                        (map #(note-card
+                               {:context context
+                                :note %
+                                :book-name (:title book)
+                                :notes-revisions data-revisions
+                                :note-controller note-controller})
+                             notes))
+     ;; Activities
+     (if (not (empty? activities))
+       (material/Text (.-activitySection locales) .style titleLarge)
+       (material/SizedBox.shrink))
+
+     (material/ListView .shrinkWrap
+                        true
+                        .physics
+                        (widgets/NeverScrollableScrollPhysics)
+                        .children
+                        (map #(activity-card % book) activities))])))

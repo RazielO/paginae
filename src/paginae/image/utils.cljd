@@ -8,11 +8,11 @@
 
 (defonce image-directory-path (atom nil))
 
-(defn init-image-directory []
-  (.then
-   (path-provider/getApplicationDocumentsDirectory)
-   (fn [^io/Directory dir]
-     (reset! image-directory-path (.-path dir)))))
+(defn init-image-directory
+  "Set the image directory path"
+  []
+  (let [^io/Directory dir (await (path-provider/getApplicationDocumentsDirectory))]
+    (reset! image-directory-path (.-path dir))))
 
 (defn cover-path
   "Return the cover image path based on the id"
@@ -35,14 +35,10 @@
 (defn- ^async/Future download-image-bytes
   "Download an image from the internet"
   [url]
-  (let [client (io/HttpClient.)]
-    (.then
-     (.getUrl client (Uri/parse url))
-     (fn [^io/HttpClientRequest request]
-       (.then
-        (.close request)
-        (fn [response]
-          (foundation/consolidateHttpClientResponseBytes response)))))))
+  (let [client (io/HttpClient.)
+        ^io/HttpClientRequest request (await (.getUrl client (Uri/parse url)))
+        response (await (.close request))]
+    (foundation/consolidateHttpClientResponseBytes response)))
 
 (defn- ^async/Future read-local-image-bytes
   "Read the bytes of a local image"
@@ -55,17 +51,10 @@
   (when-not (or (nil? (:cover-uri book))
                 (empty? (:cover-uri book)))
     (let [image-dest (cover-path (:id book))]
-      (if (:local-cover? book)
-
-        ;; local image
-        (.then
-         (read-local-image-bytes (:cover-uri book))
-         (fn [bytes]
-           (resize-and-save-image bytes image-dest)))
-
-        ;; remote image
-        (.then
-         (download-image-bytes (:cover-uri book))
-         (fn [bytes]
-           (resize-and-save-image bytes image-dest)))))))
+      ((let [bytes (if (:local-cover? book)
+                     ;; local image
+                     (await (read-local-image-bytes (:cover-uri book)))
+                     ;; remote image
+                     (download-image-bytes (:cover-uri book)))]
+         (resize-and-save-image bytes image-dest))))))
 

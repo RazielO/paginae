@@ -439,6 +439,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All My Books'**
   String get allMyBooks;
+
+  /// Title for the book details screen
+  ///
+  /// In en, this message translates to:
+  /// **'Book Details'**
+  String get bookDetailsTitle;
+
+  /// Activity description when only a page was reached
+  ///
+  /// In en, this message translates to:
+  /// **'Reached page {pages}'**
+  String activityReachedPage(int pages);
+
+  /// Activity description when only a percentage was reached
+  ///
+  /// In en, this message translates to:
+  /// **'Reached {percentage}%'**
+  String activityReachedPercent(String percentage);
+
+  /// Activity description when reading time and reached page are shown
+  ///
+  /// In en, this message translates to:
+  /// **'Read for {hours}:{minutes} • Reached page {pages}'**
+  String activityReadToPage(String hours, String minutes, int pages);
+
+  /// Activity description when reading time and reached percentage are shown
+  ///
+  /// In en, this message translates to:
+  /// **'Read for {hours}:{minutes} • Reached {percentage}%'**
+  String activityReadToPercent(String hours, String minutes, String percentage);
+
+  /// Section title for reading activity on the book details screen
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get activitySection;
+
+  /// Title and hint for the add note dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note'**
+  String get addNote;
+
+  /// Action button label to add a note to a book
+  ///
+  /// In en, this message translates to:
+  /// **'Add Note'**
+  String get addNoteAction;
+
+  /// Text shown on the reading progress card when the book has not been started
+  ///
+  /// In en, this message translates to:
+  /// **'Book not started yet\nMark as started'**
+  String get bookNotStartedMessage;
+
+  /// Prefix shown before the author of a book
+  ///
+  /// In en, this message translates to:
+  /// **'by {author}'**
+  String byAuthor(String author);
+
+  /// Label for the current page input
+  ///
+  /// In en, this message translates to:
+  /// **'Current page'**
+  String get currentPage;
+
+  /// Label for the current percentage input
+  ///
+  /// In en, this message translates to:
+  /// **'Current percentage'**
+  String get currentPercentage;
+
+  /// Label for the done button
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// Label for the edit action
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// Message shown when the book has been completed
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve finished the book'**
+  String get finishedBookMessage;
+
+  /// Tooltip for the back button
+  ///
+  /// In en, this message translates to:
+  /// **'Go Back'**
+  String get goBack;
+
+  /// Error message shown when the server does not respond
+  ///
+  /// In en, this message translates to:
+  /// **'No response from server'**
+  String get noServerResponse;
+
+  /// Header label for a note card
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get note;
+
+  /// Section title for notes on the book details screen
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notesSection;
+
+  /// Validation error for an integer input outside the allowed range
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number between {lower} and {upper}'**
+  String numberBetweenError(int lower, int upper);
+
+  /// Label showing the current page of a book
+  ///
+  /// In en, this message translates to:
+  /// **'page {count}'**
+  String pageCount(int count);
+
+  /// Unit label shown next to the current page input
+  ///
+  /// In en, this message translates to:
+  /// **'page'**
+  String get pageUnit;
+
+  /// Label showing the completion percentage of a book
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% complete'**
+  String percentComplete(int percent);
+
+  /// Hint for the quick note field in the reading timer
+  ///
+  /// In en, this message translates to:
+  /// **'Quick note'**
+  String get quickNoteHint;
+
+  /// Label shown in the reading progress ring
+  ///
+  /// In en, this message translates to:
+  /// **'READ'**
+  String get readLabel;
+
+  /// Text showing how many pages of the book have been read
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve read {current} out of {total} pages'**
+  String readProgress(int current, int total);
+
+  /// Text shown on the home screen when a reading session reached a percentage
+  ///
+  /// In en, this message translates to:
+  /// **'You reached {percent}%'**
+  String reachedPercent(int percent);
+
+  /// Action button label to open the reading timer
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Timer'**
+  String get readingTimer;
+
+  /// Confirmation dialog title shown before removing a note
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to remove this note?'**
+  String get removeNoteTitle;
+
+  /// Label for the save note button
+  ///
+  /// In en, this message translates to:
+  /// **'Save note'**
+  String get saveNote;
+
+  /// Tooltip for marking a book as favorite
+  ///
+  /// In en, this message translates to:
+  /// **'Set as favorite'**
+  String get setFavorite;
+
+  /// Title for the dialog to set the reading progress
+  ///
+  /// In en, this message translates to:
+  /// **'Set reading progress'**
+  String get setReadingProgress;
+
+  /// Label for the share action
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// Text shared when sharing a note with its book title
+  ///
+  /// In en, this message translates to:
+  /// **'Here\'s one of my notes on \'{book}\':\n\n\"{note}\"'**
+  String shareNoteText(String book, String note);
+
+  /// Action to switch the progress input to pages
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to pages'**
+  String get switchToPages;
+
+  /// Action to switch the progress input to percentage
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to percentage'**
+  String get switchToPercentage;
+
+  /// Tooltip for removing a book from favorites
+  ///
+  /// In en, this message translates to:
+  /// **'Unset as favorite'**
+  String get unsetFavorite;
+
+  /// Action button label to update the reading progress
+  ///
+  /// In en, this message translates to:
+  /// **'Update Progress'**
+  String get updateProgress;
+
+  /// Validation error for a decimal input outside the allowed range
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a value between {lower} and {upper}'**
+  String valueBetweenError(double lower, double upper);
 }
 
 class _AppLocalizationsDelegate

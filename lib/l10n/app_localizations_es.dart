@@ -191,4 +191,150 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get allMyBooks => 'Todos mis libros';
+
+  @override
+  String get bookDetailsTitle => 'Detalles del libro';
+
+  @override
+  String activityReachedPage(int pages) {
+    return 'Llegaste a la página $pages';
+  }
+
+  @override
+  String activityReachedPercent(String percentage) {
+    return 'Llegaste al $percentage%';
+  }
+
+  @override
+  String activityReadToPage(String hours, String minutes, int pages) {
+    return 'Leyendo durante $hours:$minutes • Llegaste a la página $pages';
+  }
+
+  @override
+  String activityReadToPercent(
+    String hours,
+    String minutes,
+    String percentage,
+  ) {
+    return 'Leyendo durante $hours:$minutes • Llegaste al $percentage%';
+  }
+
+  @override
+  String get activitySection => 'Actividad';
+
+  @override
+  String get addNote => 'Añadir una nota';
+
+  @override
+  String get addNoteAction => 'Añadir Nota';
+
+  @override
+  String get bookNotStartedMessage =>
+      'Aún no has empezado el libro\nMarca como empezado';
+
+  @override
+  String byAuthor(String author) {
+    return 'por $author';
+  }
+
+  @override
+  String get currentPage => 'Página actual';
+
+  @override
+  String get currentPercentage => 'Porcentaje actual';
+
+  @override
+  String get done => 'Hecho';
+
+  @override
+  String get edit => 'Editar';
+
+  @override
+  String get finishedBookMessage => 'Has terminado el libro';
+
+  @override
+  String get goBack => 'Volver';
+
+  @override
+  String get noServerResponse => 'No hay respuesta del servidor';
+
+  @override
+  String get note => 'Nota';
+
+  @override
+  String get notesSection => 'Notas';
+
+  @override
+  String numberBetweenError(int lower, int upper) {
+    return 'Ingresa un número entre $lower y $upper';
+  }
+
+  @override
+  String pageCount(int count) {
+    return 'página $count';
+  }
+
+  @override
+  String get pageUnit => 'página';
+
+  @override
+  String percentComplete(int percent) {
+    return '$percent% completo';
+  }
+
+  @override
+  String get quickNoteHint => 'Nota rápida';
+
+  @override
+  String get readLabel => 'Leyendo';
+
+  @override
+  String readProgress(int current, int total) {
+    return 'Has leído $current de $total páginas';
+  }
+
+  @override
+  String reachedPercent(int percent) {
+    return 'Llegaste al $percent%';
+  }
+
+  @override
+  String get readingTimer => 'Temporizador de lectura';
+
+  @override
+  String get removeNoteTitle => '¿Quieres eliminar esta nota?';
+
+  @override
+  String get saveNote => 'Guardar nota';
+
+  @override
+  String get setFavorite => 'Marcar como favorito';
+
+  @override
+  String get setReadingProgress => 'Establecer progreso de lectura';
+
+  @override
+  String get share => 'Compartir';
+
+  @override
+  String shareNoteText(String book, String note) {
+    return 'Esta es una de mis notas sobre \'$book\':\n\n\"$note\"';
+  }
+
+  @override
+  String get switchToPages => 'Cambiar a páginas';
+
+  @override
+  String get switchToPercentage => 'Cambiar a porcentaje';
+
+  @override
+  String get unsetFavorite => 'Quitar de favoritos';
+
+  @override
+  String get updateProgress => 'Actualizar progreso';
+
+  @override
+  String valueBetweenError(double lower, double upper) {
+    return 'Ingresa un valor entre $lower y $upper';
+  }
 }

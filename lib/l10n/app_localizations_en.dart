@@ -191,4 +191,149 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allMyBooks => 'All My Books';
+
+  @override
+  String get bookDetailsTitle => 'Book Details';
+
+  @override
+  String activityReachedPage(int pages) {
+    return 'Reached page $pages';
+  }
+
+  @override
+  String activityReachedPercent(String percentage) {
+    return 'Reached $percentage%';
+  }
+
+  @override
+  String activityReadToPage(String hours, String minutes, int pages) {
+    return 'Read for $hours:$minutes • Reached page $pages';
+  }
+
+  @override
+  String activityReadToPercent(
+    String hours,
+    String minutes,
+    String percentage,
+  ) {
+    return 'Read for $hours:$minutes • Reached $percentage%';
+  }
+
+  @override
+  String get activitySection => 'Activity';
+
+  @override
+  String get addNote => 'Add a note';
+
+  @override
+  String get addNoteAction => 'Add Note';
+
+  @override
+  String get bookNotStartedMessage => 'Book not started yet\nMark as started';
+
+  @override
+  String byAuthor(String author) {
+    return 'by $author';
+  }
+
+  @override
+  String get currentPage => 'Current page';
+
+  @override
+  String get currentPercentage => 'Current percentage';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get finishedBookMessage => 'You\'ve finished the book';
+
+  @override
+  String get goBack => 'Go Back';
+
+  @override
+  String get noServerResponse => 'No response from server';
+
+  @override
+  String get note => 'Note';
+
+  @override
+  String get notesSection => 'Notes';
+
+  @override
+  String numberBetweenError(int lower, int upper) {
+    return 'Enter a number between $lower and $upper';
+  }
+
+  @override
+  String pageCount(int count) {
+    return 'page $count';
+  }
+
+  @override
+  String get pageUnit => 'page';
+
+  @override
+  String percentComplete(int percent) {
+    return '$percent% complete';
+  }
+
+  @override
+  String get quickNoteHint => 'Quick note';
+
+  @override
+  String get readLabel => 'READ';
+
+  @override
+  String readProgress(int current, int total) {
+    return 'You\'ve read $current out of $total pages';
+  }
+
+  @override
+  String reachedPercent(int percent) {
+    return 'You reached $percent%';
+  }
+
+  @override
+  String get readingTimer => 'Reading Timer';
+
+  @override
+  String get removeNoteTitle => 'Do you want to remove this note?';
+
+  @override
+  String get saveNote => 'Save note';
+
+  @override
+  String get setFavorite => 'Set as favorite';
+
+  @override
+  String get setReadingProgress => 'Set reading progress';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String shareNoteText(String book, String note) {
+    return 'Here\'s one of my notes on \'$book\':\n\n\"$note\"';
+  }
+
+  @override
+  String get switchToPages => 'Switch to pages';
+
+  @override
+  String get switchToPercentage => 'Switch to percentage';
+
+  @override
+  String get unsetFavorite => 'Unset as favorite';
+
+  @override
+  String get updateProgress => 'Update Progress';
+
+  @override
+  String valueBetweenError(double lower, double upper) {
+    return 'Enter a value between $lower and $upper';
+  }
 }

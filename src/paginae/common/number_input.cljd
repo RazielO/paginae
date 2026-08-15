@@ -1,0 +1,71 @@
+(ns paginae.common.number-input
+  (:require ["../l10n/app_localizations.dart" :as app-l10n]
+            ["package:flutter/material.dart" :as material]
+            ["package:flutter/services.dart" :as services]
+            [cljd.flutter :as flutter]))
+
+(defn integer-input-field
+  "Input field for an integer number in a range [a, b]. Invalid values show an error."
+  [{:keys [lower-limit
+           upper-limit
+           label
+           ^material/TextEditingController controller
+           ^app-l10n/AppLocalizations locales]}]
+  (flutter/widget
+   ;; :managed [int-ctrl (material/TextEditingController)]
+   :watch [int-text controller :> .-text]
+   :let [int-val (parse-long int-text)
+         int-ok? (and int-val (>= int-val lower-limit) (<= int-val upper-limit))]
+
+   (material/TextField
+    .controller controller
+
+    .keyboardType material/TextInputType.number
+
+    .inputFormatters [services/FilteringTextInputFormatter.digitsOnly]
+
+    .decoration
+    (material/InputDecoration
+     .labelText label
+
+     .errorText
+     (when (and (seq int-text) (not int-ok?))
+       (.numberBetweenError locales lower-limit upper-limit))))))
+
+(defn- float-formatter
+  "Accepts only non-negative numbers with at most one decimal place."
+  []
+  (services/TextInputFormatter.withFunction
+   (fn [^services/TextEditingValue old-value ^services/TextEditingValue new-value]
+     (if (re-matches #"\d{0,3}\.?\d?" (.-text new-value))
+       new-value
+       old-value))))
+
+(defn float-input-field
+  "Input field for a floating number with at most one decimal place in the range [a, b]. Invalid values show an error."
+  [{:keys [lower-limit
+           upper-limit
+           label
+           ^material/TextEditingController controller
+           ^app-l10n/AppLocalizations locales]}]
+  (flutter/widget
+   ;; :managed [float-ctrl (material/TextEditingController)]
+   :watch [float-text controller :> .-text]
+   :let [float-val (parse-double float-text)
+         float-ok? (and float-val (>= float-val lower-limit) (<= float-val upper-limit))]
+
+   (material/TextField
+    .controller controller
+
+    .keyboardType (material/TextInputType.numberWithOptions .decimal true)
+
+    .inputFormatters [(float-formatter)]
+
+    .decoration
+    (material/InputDecoration
+     .labelText label
+
+     .errorText
+     (when (and (seq float-text) (not float-ok?))
+       (.valueBetweenError locales lower-limit upper-limit))))))
+

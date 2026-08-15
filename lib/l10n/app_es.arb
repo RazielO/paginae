@@ -1,11 +1,18 @@
 {
     "@@locale": "es",
     "@@author": "localizify.com",
+    "activityReachedPage": "Llegaste a la página {pages}",
+    "activityReachedPercent": "Llegaste al {percentage}%",
+    "activityReadToPage": "Leyendo durante {hours}:{minutes} • Llegaste a la página {pages}",
+    "activityReadToPercent": "Leyendo durante {hours}:{minutes} • Llegaste al {percentage}%",
+    "activitySection": "Actividad",
     "addBookTitle": "Añadir a Biblioteca",
     "@addBookTitle": {
         "description": "Add book screen title"
     },
     "addCover": "Añadir Portada",
+    "addNote": "Añadir una nota",
+    "addNoteAction": "Añadir Nota",
     "addToLibrary": "Añadir A Biblioteca",
     "appName": "paginae",
     "@appName": {
@@ -14,6 +21,7 @@
     "audiobook": "Audiolibro",
     "bookAuthor": "Autor",
     "bookSearchHint": "Busca por título, autor o ISBN",
+    "bookNotStartedMessage": "Aún no has empezado el libro\nMarca como empezado",
     "bookTitle": "Título",
     "booksInProgress": "{count, plural, =0{Sin libros} =1{Leyendo 1 libro} other{Leyendo {count} libros}}",
     "bottomAdd": "Añadir",
@@ -32,13 +40,20 @@
     "@bottomLibrary": {
         "description": "Bottom bar library tab name"
     },
+    "byAuthor": "por {author}",
     "cancel": "Cancelar",
     "completed": "Terminado",
+    "currentPage": "Página actual",
+    "currentPercentage": "Porcentaje actual",
     "currentStatus": "Estatus",
     "currentlyReading": "Leyendo",
+    "done": "Hecho",
     "ebook": "E-Book",
+    "edit": "Editar",
+    "finishedBookMessage": "Has terminado el libro",
     "firstPublished": "Primera publicación: {year}",
     "format": "Formato",
+    "goBack": "Volver",
     "hardcover": "Tapa Dura",
     "homeTitle": "Mis Libros",
     "@homeTitle": {
@@ -47,9 +62,23 @@
     "loading": "Cargando",
     "noCover": "Sin Portada",
     "noResults": "No se encontraron resultados",
+    "noServerResponse": "No hay respuesta del servidor",
+    "note": "Nota",
+    "notesSection": "Notas",
+    "numberBetweenError": "Ingresa un número entre {lower} y {upper}",
+    "pageCount": "página {count}",
+    "pageUnit": "página",
     "paperback": "Tapa Blanda",
+    "percentComplete": "{percent}% completo",
+    "quickNoteHint": "Nota rápida",
+    "readLabel": "Leyendo",
+    "readProgress": "Has leído {current} de {total} páginas",
+    "reachedPercent": "Llegaste al {percent}%",
     "reading": "Leyendo",
+    "readingTimer": "Temporizador de lectura",
+    "removeNoteTitle": "¿Quieres eliminar esta nota?",
     "save": "Guardar",
+    "saveNote": "Guardar nota",
     "searchBookHint": "Busca por título, autor o ISBN",
     "searchCancelScanning": "Cancelar escaneo",
     "@searchCancelScanning": {
@@ -71,9 +100,18 @@
     "@searchTitle": {
         "description": "Search book screen title"
     },
+    "setFavorite": "Marcar como favorito",
+    "setReadingProgress": "Establecer progreso de lectura",
+    "share": "Compartir",
+    "shareNoteText": "Esta es una de mis notas sobre '{book}':\n\n\"{note}\"",
+    "switchToPages": "Cambiar a páginas",
+    "switchToPercentage": "Cambiar a porcentaje",
     "toRead": "Leer Después",
     "totalPages": "Páginas totales",
     "unknown": "Desconocido",
+    "updateProgress": "Actualizar progreso",
+    "unsetFavorite": "Quitar de favoritos",
+    "valueBetweenError": "Ingresa un valor entre {lower} y {upper}",
     "yourStudy": "Mis Libros",
     "myShelves": "Mis Estanterías",
     "@myShelves": {
@@ -171,5 +209,9 @@
     "allMyBooks": "Todos mis libros",
     "@allMyBooks": {
         "description": "Title of the library screen showing all the user's books"
+    },
+    "bookDetailsTitle": "Detalles del libro",
+    "@bookDetailsTitle": {
+        "description": "Title for the book details screen"
     }
 }

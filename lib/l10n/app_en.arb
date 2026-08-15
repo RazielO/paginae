@@ -241,5 +241,245 @@
     "allMyBooks": "All My Books",
     "@allMyBooks": {
         "description": "Title of the library screen showing all the user's books"
+    },
+    "bookDetailsTitle": "Book Details",
+    "@bookDetailsTitle": {
+        "description": "Title for the book details screen"
+    },
+    "activityReachedPage": "Reached page {pages}",
+    "@activityReachedPage": {
+        "description": "Activity description when only a page was reached",
+        "placeholders": {
+            "pages": {
+                "type": "int"
+            }
+        }
+    },
+    "activityReachedPercent": "Reached {percentage}%",
+    "@activityReachedPercent": {
+        "description": "Activity description when only a percentage was reached",
+        "placeholders": {
+            "percentage": {
+                "type": "String"
+            }
+        }
+    },
+    "activityReadToPage": "Read for {hours}:{minutes} • Reached page {pages}",
+    "@activityReadToPage": {
+        "description": "Activity description when reading time and reached page are shown",
+        "placeholders": {
+            "hours": {
+                "type": "String"
+            },
+            "minutes": {
+                "type": "String"
+            },
+            "pages": {
+                "type": "int"
+            }
+        }
+    },
+    "activityReadToPercent": "Read for {hours}:{minutes} • Reached {percentage}%",
+    "@activityReadToPercent": {
+        "description": "Activity description when reading time and reached percentage are shown",
+        "placeholders": {
+            "hours": {
+                "type": "String"
+            },
+            "minutes": {
+                "type": "String"
+            },
+            "percentage": {
+                "type": "String"
+            }
+        }
+    },
+    "activitySection": "Activity",
+    "@activitySection": {
+        "description": "Section title for reading activity on the book details screen"
+    },
+    "addNote": "Add a note",
+    "@addNote": {
+        "description": "Title and hint for the add note dialog"
+    },
+    "addNoteAction": "Add Note",
+    "@addNoteAction": {
+        "description": "Action button label to add a note to a book"
+    },
+    "bookNotStartedMessage": "Book not started yet\nMark as started",
+    "@bookNotStartedMessage": {
+        "description": "Text shown on the reading progress card when the book has not been started"
+    },
+    "byAuthor": "by {author}",
+    "@byAuthor": {
+        "description": "Prefix shown before the author of a book",
+        "placeholders": {
+            "author": {
+                "type": "String"
+            }
+        }
+    },
+    "currentPage": "Current page",
+    "@currentPage": {
+        "description": "Label for the current page input"
+    },
+    "currentPercentage": "Current percentage",
+    "@currentPercentage": {
+        "description": "Label for the current percentage input"
+    },
+    "done": "Done",
+    "@done": {
+        "description": "Label for the done button"
+    },
+    "edit": "Edit",
+    "@edit": {
+        "description": "Label for the edit action"
+    },
+    "finishedBookMessage": "You've finished the book",
+    "@finishedBookMessage": {
+        "description": "Message shown when the book has been completed"
+    },
+    "goBack": "Go Back",
+    "@goBack": {
+        "description": "Tooltip for the back button"
+    },
+    "noServerResponse": "No response from server",
+    "@noServerResponse": {
+        "description": "Error message shown when the server does not respond"
+    },
+    "note": "Note",
+    "@note": {
+        "description": "Header label for a note card"
+    },
+    "notesSection": "Notes",
+    "@notesSection": {
+        "description": "Section title for notes on the book details screen"
+    },
+    "numberBetweenError": "Enter a number between {lower} and {upper}",
+    "@numberBetweenError": {
+        "description": "Validation error for an integer input outside the allowed range",
+        "placeholders": {
+            "lower": {
+                "type": "int"
+            },
+            "upper": {
+                "type": "int"
+            }
+        }
+    },
+    "pageCount": "page {count}",
+    "@pageCount": {
+        "description": "Label showing the current page of a book",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "pageUnit": "page",
+    "@pageUnit": {
+        "description": "Unit label shown next to the current page input"
+    },
+    "percentComplete": "{percent}% complete",
+    "@percentComplete": {
+        "description": "Label showing the completion percentage of a book",
+        "placeholders": {
+            "percent": {
+                "type": "int"
+            }
+        }
+    },
+    "quickNoteHint": "Quick note",
+    "@quickNoteHint": {
+        "description": "Hint for the quick note field in the reading timer"
+    },
+    "readLabel": "READ",
+    "@readLabel": {
+        "description": "Label shown in the reading progress ring"
+    },
+    "readProgress": "You've read {current} out of {total} pages",
+    "@readProgress": {
+        "description": "Text showing how many pages of the book have been read",
+        "placeholders": {
+            "current": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "reachedPercent": "You reached {percent}%",
+    "@reachedPercent": {
+        "description": "Text shown on the home screen when a reading session reached a percentage",
+        "placeholders": {
+            "percent": {
+                "type": "int"
+            }
+        }
+    },
+    "readingTimer": "Reading Timer",
+    "@readingTimer": {
+        "description": "Action button label to open the reading timer"
+    },
+    "removeNoteTitle": "Do you want to remove this note?",
+    "@removeNoteTitle": {
+        "description": "Confirmation dialog title shown before removing a note"
+    },
+    "saveNote": "Save note",
+    "@saveNote": {
+        "description": "Label for the save note button"
+    },
+    "setFavorite": "Set as favorite",
+    "@setFavorite": {
+        "description": "Tooltip for marking a book as favorite"
+    },
+    "setReadingProgress": "Set reading progress",
+    "@setReadingProgress": {
+        "description": "Title for the dialog to set the reading progress"
+    },
+    "share": "Share",
+    "@share": {
+        "description": "Label for the share action"
+    },
+    "shareNoteText": "Here's one of my notes on '{book}':\n\n\"{note}\"",
+    "@shareNoteText": {
+        "description": "Text shared when sharing a note with its book title",
+        "placeholders": {
+            "book": {
+                "type": "String"
+            },
+            "note": {
+                "type": "String"
+            }
+        }
+    },
+    "switchToPages": "Switch to pages",
+    "@switchToPages": {
+        "description": "Action to switch the progress input to pages"
+    },
+    "switchToPercentage": "Switch to percentage",
+    "@switchToPercentage": {
+        "description": "Action to switch the progress input to percentage"
+    },
+    "unsetFavorite": "Unset as favorite",
+    "@unsetFavorite": {
+        "description": "Tooltip for removing a book from favorites"
+    },
+    "updateProgress": "Update Progress",
+    "@updateProgress": {
+        "description": "Action button label to update the reading progress"
+    },
+    "valueBetweenError": "Enter a value between {lower} and {upper}",
+    "@valueBetweenError": {
+        "description": "Validation error for a decimal input outside the allowed range",
+        "placeholders": {
+            "lower": {
+                "type": "double"
+            },
+            "upper": {
+                "type": "double"
+            }
+        }
     }
 }

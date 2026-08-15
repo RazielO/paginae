@@ -7,6 +7,7 @@
    [paginae.image.widget :as image]
    ["../l10n/app_localizations.dart" :as app-l10n]
    [paginae.home.badges :as badges]
+   [paginae.book-details.book-details :as book-details]
    ["package:material_symbols_icons/symbols.dart" :as symbols]))
 
 (defn- remove-book-dialog
@@ -52,11 +53,10 @@
 
         .onPressed
         (fn []
-          (-> (db/delete-book (:id book))
-              (.then
-               (fn [_]
-                 (.pop (widgets/Navigator.of context))
-                 (refresh!))))))]))))
+          (let [deletion-result (await (db/delete-book (:id book)))]
+            (when deletion-result
+              (.pop (widgets/Navigator.of context))
+              (refresh!)))))]))))
 
 (defn- book-card
   "Card that contains a book"
@@ -64,6 +64,7 @@
   (flutter/widget
    :get {{{:flds [titleLarge labelMedium]} .-textTheme
           {:flds [onSurfaceVariant]} .-colorScheme} material/Theme}
+   :get [material/Navigator]
    :context context
    :let [locales (app-l10n/AppLocalizations.of context)]
 
@@ -77,6 +78,14 @@
        locales
        (.-colorScheme (material/Theme.of context))
        (.-textTheme (material/Theme.of context))))
+
+    .onTap (fn []
+             (.push
+              navigator
+              (#/(material/MaterialPageRoute Object)
+               .builder
+               (flutter/build (book-details/book-details book))))
+             nil)
 
     .child
     (material/Card
@@ -255,7 +264,7 @@
    :let [portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)
          locales (app-l10n/AppLocalizations.of context)]
    :watch [filter (atom filter-by) :as filter-atom
-           refresh (atom 0) :as refresh-atom]
+           _refresh (atom 0) :as refresh-atom]
 
    (material/FutureBuilder
     .future

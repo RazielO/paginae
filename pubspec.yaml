@@ -48,6 +48,12 @@ dependencies:
   # image
   image: ^4.8.0
 
+  # carousel
+  carousel_slider: ^5.1.2
+
+  # share
+  share_plus: ^13.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

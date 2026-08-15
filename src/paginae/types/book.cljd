@@ -11,6 +11,7 @@
             format
             cover-uri
             favorite
+            current-progress
             created-at
             local-cover?])
 
@@ -26,6 +27,7 @@
     :favorite false
     :created-at nil
     :status :to-read
+    :current-progress 0.0
     :format :hardcover
     :cover-uri ""
     :local-cover? true}))
@@ -51,6 +53,7 @@
       :format :hardcover
       :favorite false
       :created-at nil
+      :current-progress 0.0
       :cover-uri (when has-cover?
                    (str "https://covers.openlibrary.org/b/olid/" (get json "cover_edition_key") "-M.jpg"))
       :local-cover? (not has-cover?)})))
@@ -64,6 +67,7 @@
    "pages" (:pages book)
    "status" (name (:status book))
    "format" (name (:format book))
+   "current_progress" (:current-progress book)
    "favorite" (if (:favorite book) 1 0)})
 
 (defn from-db-entry
@@ -78,6 +82,7 @@
     :status (keyword (get entry "status"))
     :format (keyword (get entry "format"))
     :favorite (not (zero? (int (get entry "favorite"))))
+    :current-progress (get entry "current_progress")
     :created-at (dart:core/DateTime.parse (get entry "created_at"))
     :cover-uri nil
     :local-cover? true}))
@@ -127,7 +132,17 @@
   [^Book book new-value]
   (assoc book :saved-cover? new-value))
 
-(defn update-favortite-status
+(defn update-favorite-status
   "Return a new book with favorite status set to new-favorite (boolean)."
   [^Book book new-favorite]
   (assoc book :favorite new-favorite))
+
+(defn update-current-progress
+  "Return a new book with current progress set to new-progress (double)."
+  [^Book book new-progress]
+  (let [status (if (= 1.0 new-progress)
+                 :done
+                 :reading)]
+    (assoc book
+           :current-progress new-progress
+           :status status)))

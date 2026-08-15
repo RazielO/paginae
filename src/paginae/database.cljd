@@ -1,181 +1,270 @@
 (ns paginae.database
-  (:require [paginae.types.book :as book]
-            [clojure.string :as str]
-            ["dart:async" :as async]
-            ["package:sqflite/sqflite.dart" :as sqlite]
+  (:require ["dart:async" :as dart:async]
             ["package:flutter/services.dart" :as services]
-            ["package:path/path.dart" :as path]))
+            ["package:path/path.dart" :as path]
+            ["package:sqflite/sqflite.dart" :as sqlite]
+            [clojure.string :as str]
+            [paginae.types.activity :as activity-type]
+            [paginae.types.book :as book-type]
+            [paginae.types.note :as note-type]))
 
-(defn run-schema [^sqlite/Database db sql]
+(def books-table "books")
+(def notes-table "notes")
+(def activities-table "activities")
+(def schema-path "assets/sql/schema.sql")
+
+(defn run-schema
+  "Execute a SQL schema in the database"
+  [^sqlite/Database db sql]
   (doseq [stmt (remove str/blank?
                        (str/split sql #";"))]
     (.execute db stmt)))
 
-(defn ^async/Future load-schema []
-  (.loadString services/rootBundle "assets/sql/schema.sql"))
+(defn ^dart:async/Future load-schema
+  "Load the SQL schema"
+  []
+  (.loadString services/rootBundle schema-path))
 
-(defn ^async/Future init-db
+(defn ^#/(dart:async/Future sqlite/Database) init-db
   "Initialize the database"
   []
-  (->
-   (sqlite/getDatabasesPath)
-   (.then
-    (fn [db-path]
-      (let [path (path/join db-path "paginae.db")]
-        (sqlite/openDatabase
-         path
+  (letfn [(on-configure [^sqlite/Database db]
+            (.execute db "PRAGMA foreign_keys = ON"))
 
-         .version 1
+          (on-create [^sqlite/Database db _version]
+            (let [schema (await (load-schema))]
+              (await (run-schema db schema))))]
 
-         .onConfigure
-         (fn [^sqlite/Database db]
-           (.execute db "PRAGMA foreign_keys = ON"))
+    (let [path (await (sqlite/getDatabasesPath))
+          db-path (path/join path "paginae.db")]
+      (await
+       ^#/(dart:async/Future sqlite/Database)
+       (sqlite/openDatabase
+        db-path
 
-         .onCreate
-         (fn [^sqlite/Database db _version]
-           (->
-            (load-schema)
-            (.then
-             (fn [^String sql]
-               (run-schema db sql)))))))))))
+        .version 1
 
-(defonce ^async/Future db-instance
-  (delay (init-db)))
+        .onConfigure on-configure
 
-(defn ^async/Future get-db
+        .onCreate on-create)))))
+
+(defonce db-instance
+  (init-db))
+
+(defn  ^#/(dart:async/Future sqlite/Database) get-db
   "Return the database instance, if not initialized, initialize it first"
   []
-  (force db-instance))
+  db-instance)
 
 (defn insert-book
   "Insert a book into the database"
-  [^book/Book book]
-  (->
-   (get-db)
-   (.then
-    (fn [^sqlite/Database db]
-      (.insert db
-               "books"
-               (book/to-db-map book))))))
+  [^book-type/Book book]
+  (let [db (await (get-db))]
+    (await
+     (.insert db
+              "books"
+              (book-type/to-db-map book)))))
+
+(defn insert-book-note
+  "Insert a note into the database for a given book"
+  [note-contents
+   book-id]
+  (let [db (await (get-db))]
+    (await
+     (.insert db
+              notes-table
+              {"contents" note-contents
+               "book_id" book-id}))))
+
+(defn update-progress-activity
+  "Insert a book into the database"
+  [^activity-type/Activity activity]
+  (let [db (await (get-db))]
+    (await
+     (.insert db
+              activities-table
+              (activity-type/to-db-map activity)))
+    (await
+     (.update db
+              books-table
+              {"current_progress" (:progress activity)}
+              .where "id = ?"
+              .whereArgs [(:book-id activity)]))))
+
+(defn update-book
+  "Update a book in the database"
+  [^book-type/Book book]
+  (let [db (await (get-db))]
+    (await
+     (.update db
+              books-table
+              (book-type/to-db-map book)
+              .where "id = ?"
+              .whereArgs [(:id book)]))))
+
+(defn update-book-note
+  "Update a book in the database"
+  [note]
+  (let [db (await (get-db))]
+    (await
+     (.update db
+              notes-table
+              (note-type/to-db-map note)
+              .where "id = ?"
+              .whereArgs [(:id note)]))))
+
+(defn get-book-notes
+  "Get the notes of a book"
+  [book-id]
+  (let [db (await (get-db))
+        rows (await
+              (.query db
+                      notes-table
+                      .columns ["id" "book_id" "contents" "created_at"]
+                      .where "book_id = ?"
+                      .whereArgs [book-id]
+                      .orderBy "created_at ASC"))]
+    (map note-type/from-db-entry rows)))
+
+(defn get-book-activities
+  "Get the activities of a book"
+  [book-id]
+  (let [db (await (get-db))
+        rows (await
+              (.query db
+                      activities-table
+                      .columns ["id" "book_id" "reading_time" "progress" "date" "created_at"]
+                      .where "book_id = ?"
+                      .whereArgs [book-id]
+                      .orderBy "date DESC"))]
+    (map activity-type/from-db-entry rows)))
 
 (defn get-all-books
   "Query all books"
   []
-  (->
-   (get-db)
-   (.then
-    (fn [^sqlite/Database db]
-      (->
-       (.query db
-               "books"
-               .orderBy "created_at DESC")
-       (.then
-        (fn [rows]
-          (map book/from-db-entry rows))))))))
+  (let [db (await (get-db))
+        rows (await (.query db
+                            books-table
+                            .orderBy "created_at DESC"))]
+    (map book-type/from-db-entry rows)))
 
 (defn get-book-counts
   "Query the book counts by status"
   []
-  (->
-   (get-db)
-   (.then
-    (fn [^sqlite/Database db]
-      (->
-       (.rawQuery db
-                  "SELECT status, COUNT(*) as count
-                       FROM books
-                       GROUP BY status
-                   UNION
-                   SELECT 'favorite' AS status,
-                          COUNT(*) as count
-                       FROM books
-                       WHERE favorite = 1")
-       (.then
-        (fn [data]
-          (->>
-           data
-           (map #(into {} %))
-           (map (fn [row]
-                  [(keyword (get row "status")) (get row "count")]))
-           (into {})
-           (merge
-            {:to-read 0
-             :reading 0
-             :done 0
-             :favorite 0})))))))))
+  (let [db (await (get-db))
+        data (await
+              (.rawQuery db
+                         "SELECT status, COUNT(*) as count
+                              FROM books
+                              GROUP BY status
+                          UNION
+                          SELECT 'favorite' AS status,
+                                 COUNT(*) as count
+                              FROM books
+                              WHERE favorite = 1"))]
+    (->>
+     data
+     (map #(into {} %))
+     (map (fn [row]
+            [(keyword (get row "status")) (get row "count")]))
+     (into {})
+     (merge
+      {:to-read 0
+       :reading 0
+       :done 0
+       :favorite 0}))))
 
 (defn get-books-by-status
   "Query books that have a certain status"
   [status]
-  (->
-   (get-db)
-   (.then
-    (fn [^sqlite/Database db]
-      (->
-       (.query db
-               "books"
-               .where "status = ?"
-               .whereArgs [(name status)]
-               .orderBy "created_at DESC")
-       (.then
-        #(map book/from-db-entry %)))))))
+  (let [db (await (get-db))
+        rows (await (.query db
+                            books-table
+                            .where "status = ?"
+                            .whereArgs [(name status)]
+                            .orderBy "created_at DESC"))]
+    (map book-type/from-db-entry rows)))
 
 (defn get-favorite-books
   "Query favorite books"
   []
-  (->
-   (get-db)
-   (.then
-    (fn [^sqlite/Database db]
-      (->
-       (.query db
-               "books"
-               .where "favorite = 1"
-               .orderBy "created_at DESC")
-       (.then
-        #(map book/from-db-entry %)))))))
+  (let [db (await (get-db))
+        rows (await (.query db
+                            books-table
+                            .where "favorite = 1"
+                            .orderBy "created_at DESC"))]
+    (map book-type/from-db-entry rows)))
 
 (defn get-recent-activity
-  "Query the last n activity items"
+  "Query the last n activity items, each paired with its book"
   [n]
-  (->
-   (get-db)
-   (.then
-    (fn [^sqlite/Database db]
-      (.then
-       (.query db
-               "activity"
-               .orderBy "date DESC"
-               .limit n)
-       (fn [result]
-         result))))))
+  (let [db (await (get-db))
+        rows (await
+              (.rawQuery db
+                         (str "SELECT a.id AS activity_id, a.book_id, a.reading_time, "
+                              "a.progress, a.date, "
+                              "b.id, b.title, b.author, b.pages, b.status, b.format, "
+                              "b.current_progress, b.favorite, b.created_at "
+                              "FROM activities a "
+                              "JOIN books b ON a.book_id = b.id "
+                              "ORDER BY a.date DESC "
+                              "LIMIT ?")
+                         [n]))]
+    (map (fn [row]
+           {:activity {:id (get row "activity_id")
+                       :book-id (get row "book_id")
+                       :reading-time (get row "reading_time")
+                       :progress (get row "progress")
+                       :date (get row "date")}
+            :book (book-type/from-db-entry row)})
+         rows)))
 
 (defn get-book
   "Query for a book by id"
   [id]
-  (->
-   (get-db)
-   (.then
-    (fn [^sqlite/Database db]
-      (->
-       (.query db
-               "books"
-               .where "id = ?"
-               .whereArgs [id]
-               .limit 1)
-       (.then
-        (fn [rows]
-          (when (> (count rows) 0)
-            (book/from-db-entry (first rows))))))))))
+  (let [db (await (get-db))
+        rows (await
+              (.query db
+                      books-table
+                      .where "id = ?"
+                      .whereArgs [id]
+                      .limit 1))]
+    (when (> (count rows) 0)
+      (book-type/from-db-entry (first rows)))))
 
 (defn delete-book
   "Delete a book from the database by id"
   [id]
-  (->
-   (get-db)
-   (.then
-    (fn [^sqlite/Database db]
-      (.delete db
-               "books"
-               .where "id = ?"
-               .whereArgs [id])))))
+  (let [db (await (get-db))]
+    (await
+     (.delete db
+              books-table
+              .where "id = ?"
+              .whereArgs [id]))))
+
+(defn delete-note
+  "Delete a book from the database by id"
+  [note-id]
+  (let [db (await (get-db))]
+    (await
+     (.delete db
+              notes-table
+              .where "id = ?"
+              .whereArgs [note-id]))))
+
+(defn insert-book-activity
+  [activity]
+  (let [db (await (get-db))]
+    (await
+     (.insert db
+              activities-table
+              (activity-type/to-db-map activity)))
+    (await
+     (.update db
+              books-table
+              {"current_progress" (:progress activity)
+               "status" (if (= 1.0 (:progress activity))
+                          "done"
+                          "reading")}
+              .where "id = ?"
+              .whereArgs [(:book-id activity)]))))

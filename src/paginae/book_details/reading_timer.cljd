@@ -1,0 +1,226 @@
+(ns paginae.book-details.reading-timer
+  (:require
+   ["../l10n/app_localizations.dart" :as app-l10n]
+   ["dart:async" :as dart:async]
+   ["package:flutter/material.dart" :as material]
+   ["package:flutter/widgets.dart" :as widgets]
+   ["package:material_symbols_icons/symbols.dart" :as symbols]
+   [cljd.flutter :as flutter]
+   [paginae.book-details.activity-dialog :as book-details.activity-dialog]
+   [paginae.database :as db]))
+
+(defn- start-timer
+  "Start the timer"
+  [timer-atom reading-timer-atom]
+  (reset! timer-atom
+          (dart:async/Timer.periodic
+           (dart:core/Duration .seconds 1)
+           (fn [_]
+             (swap! reading-timer-atom inc)))))
+
+(defn- pause-timer
+  "Pause the timer"
+  [timer-atom]
+  (when-let [^dart:async/Timer timer @timer-atom]
+    (.cancel timer)
+    (reset! timer-atom nil)))
+
+(defn- timer-widget
+  "Widget that shows the reading time"
+  [reading-timer-atom]
+  (flutter/widget
+   :get {{{:flds [displayMedium labelLarge]} .-textTheme} material/Theme}
+
+   (material/Text
+    (let [hours (.padLeft (.toString (quot @reading-timer-atom 3600)) 2 "0")
+          mins (.padLeft (.toString (mod (quot @reading-timer-atom 60) 60)) 2 "0")
+          secs (.padLeft (.toString (mod @reading-timer-atom 60)) 2 "0")]
+      (str hours ":" mins ":" secs))
+
+    .style
+    (.copyWith
+     displayMedium
+
+
+     .fontFamily
+     (.-fontFamily labelLarge)))))
+
+(defn- play-pause-button
+  "Widget for the play/pause button"
+  [reading-atom timer-atom reading-timer-atom]
+
+  (flutter/widget
+   :get {{{:flds [surface onSurface]} .-colorScheme} material/Theme}
+
+   (material/IconButton
+    .icon
+    (material/Icon
+     (if @reading-atom
+       symbols/Symbols.pause
+       symbols/Symbols.play_arrow))
+
+    .iconSize 80
+
+    .style
+    (material/ButtonStyle
+     .backgroundColor
+     (material/WidgetStatePropertyAll surface)
+
+     .foregroundColor
+     (material/WidgetStatePropertyAll onSurface))
+
+    .onPressed
+    (fn []
+      (if @reading-atom
+        (pause-timer  timer-atom)
+        (start-timer timer-atom reading-timer-atom))
+      (reset! reading-atom (not @reading-atom))))))
+
+(defn- quick-note-widget
+  "Widget for adding a quick note (input field and button)"
+  [controller on-pressed]
+  (flutter/widget
+   :context context
+   :get {{{:flds [surface primary onPrimary]} .-colorScheme} material/Theme}
+   :let [locales (app-l10n/AppLocalizations.of context)]
+
+   (material/Column
+    .crossAxisAlignment
+    material/CrossAxisAlignment.stretch
+
+    .children
+    [(material/TextField
+      .controller
+      controller
+
+      .minLines 5
+      .maxLines 5
+
+      .decoration
+      (material/InputDecoration
+       .hintText (.-quickNoteHint locales)
+       .filled true
+       .fillColor surface
+
+       .border
+       (material/OutlineInputBorder
+        .borderRadius
+        (material/BorderRadius.circular 12)
+
+        .borderSide
+        material/BorderSide.none)))
+
+     (material/ElevatedButton
+      .child
+      (material/Text (.-saveNote locales))
+
+      .style
+      (material/ButtonStyle
+       .backgroundColor
+       (material/WidgetStateProperty.all primary)
+
+       .foregroundColor
+       (material/WidgetStateProperty.all onPrimary))
+
+      .onPressed
+      on-pressed)])))
+
+
+(defn reading-timer
+  "Widget that shows a reading session timer"
+  [book]
+  (flutter/widget
+   :context context
+   :watch [_timer (atom nil) :as timer-atom
+           reading-timer (atom 0) :as reading-timer-atom
+           _reading (atom nil) :as reading-atom]
+   :managed [note-controller (material/TextEditingController)
+             progress-controller (material/TextEditingController)]
+   :let [locales (app-l10n/AppLocalizations.of context)
+         portrait? (= material/Orientation.portrait (.-orientation (material/MediaQuery.of context)))]
+
+   (material/Scaffold
+    .appBar
+    (material/AppBar
+     .leading
+     (material/IconButton
+      .icon
+      (material/Icon symbols/Symbols.arrow_back)
+
+      .onPressed
+      #(.pop (widgets/Navigator.of context)))
+
+     .actions
+     [(material/ElevatedButton
+       .child
+       (material/Row
+        .spacing 10
+        .children
+        [(material/Icon symbols/Symbols.check)
+         (material/Text (.-done locales))])
+
+       .onPressed
+       (fn []
+         (let [data (await (book-details.activity-dialog/add-activity-dialog
+                            {:context context
+                             :controller progress-controller
+                             :book book
+                             :on-confirm
+                             (fn [progress]
+                               (db/insert-book-activity {:book-id (:id book)
+                                                         :progress progress
+                                                         :reading-time reading-timer}))}))]
+           (when data
+             (.pop (widgets/Navigator.of context) data))))
+       )])
+
+    .body
+    (material/Padding
+     .padding
+     (material/EdgeInsets.all 20)
+
+     .child
+     (material/Center
+
+      .child
+      (letfn [(on-note-save []
+                (let [note (.trim (.-text note-controller))]
+                  (when (not (empty? note))
+                    (db/insert-book-note note (:id book))
+                    (set! (.-text note-controller) "")
+                    nil)))]
+        (if portrait?
+          (material/Column
+           .spacing 30
+
+           .crossAxisAlignment
+           material/CrossAxisAlignment.center
+
+           .children
+           [(timer-widget reading-timer-atom)
+
+            (play-pause-button reading-atom timer-atom reading-timer-atom)
+
+            (quick-note-widget
+             note-controller
+             on-note-save)])
+
+          (material/Row
+           .crossAxisAlignment
+           material/CrossAxisAlignment.center
+
+
+           .children
+           [(material/Expanded
+             .child
+             (material/Column
+              .children
+              [(timer-widget reading-timer-atom)
+
+               (play-pause-button reading-atom timer-atom reading-timer-atom)]))
+
+            (material/Expanded
+             .child
+             (quick-note-widget
+              note-controller
+              on-note-save))]))))))))

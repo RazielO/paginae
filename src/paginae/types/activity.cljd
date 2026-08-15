@@ -1,0 +1,46 @@
+(ns paginae.types.activity
+  (:require ["../l10n/app_localizations.dart" :as app-l10n]))
+
+(defrecord Activity
+           [id
+            book-id
+            reading-time
+            progress
+            date
+            created-at])
+
+(defn from-db-entry
+  "Convert a db entry into an Activity"
+  [entry]
+  (map->Activity
+   {:id (get entry "id")
+    :book-id (get entry "book_id")
+    :reading-time (get entry "reading_time")
+    :progress (get entry "progress")
+    :date (dart:core/DateTime.parse (get entry "date"))
+    :created-at (dart:core/DateTime.parse (get entry "created_at"))}))
+
+(defn to-db-map
+  "Create a map from the activity"
+  [activity]
+  {"book_id" (:book-id activity)
+   "reading_time" (:reading-time activity)
+   "progress" (:progress activity)})
+
+(defn activity-string
+  "Create a string representation for the activity"
+  [activity book ^app-l10n/AppLocalizations locales]
+  (let [has-time? (not (nil? (:reading-time activity)))
+        has-pages? (not (nil? (:pages book)))
+        pages (.round (* (:progress activity) (or (:pages book) 0)))
+        percentage (.toStringAsFixed (* 100 (:progress activity)) 2)
+        seconds (or (:reading-time activity) 0)
+        hours (.padLeft (.toString (quot seconds 3600)) 2 "0")
+        mins (.padLeft (.toString (mod (quot seconds 60) 60)) 2 "0")]
+    (if has-time?
+      (if has-pages?
+        (.activityReadToPage locales hours mins pages)
+        (.activityReadToPercent locales hours mins percentage))
+      (if has-pages?
+        (.activityReachedPage locales pages)
+        (.activityReachedPercent locales percentage)))))
