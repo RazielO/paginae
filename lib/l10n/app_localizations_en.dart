@@ -59,9 +59,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unknown => 'Unknown';
 
   @override
-  String get addBookTitle => 'Add To Library';
-
-  @override
   String get addCover => 'Add Cover';
 
   @override
@@ -159,9 +156,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addNewBook => 'Add new book';
-
-  @override
-  String get hello => 'Hello';
 
   @override
   String deleteBookTitle(String title) {
@@ -336,4 +330,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String valueBetweenError(double lower, double upper) {
     return 'Enter a value between $lower and $upper';
   }
+
+  @override
+  String get journalTitle => 'My reading journal';
+
+  @override
+  String get noActivityThatDay => 'No activity that day';
 }

@@ -413,13 +413,14 @@
    :let [locales (app-l10n/AppLocalizations.of context)
          portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)
          scroll-controller (material/ScrollController)
-         unknown-str (.-unknown locales)]
+         unknown-str (.-unknown locales)
+         no-response-str (.-noServerResponse locales)]
 
    (letfn [(load-books [text]
              (when (not loading-more?)
                (reset! loading-more true)
 
-               (let [result (await (query/query-books text offset unknown-str))]
+               (let [result (await (query/query-books text offset unknown-str no-response-str))]
                  (swap! books-atom into (:data result))
                  (reset! total-atom (:total result))
                  (swap! offset-atom + 20)

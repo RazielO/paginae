@@ -1,23 +1,14 @@
 (ns paginae.main
   (:require [cljd.flutter :as flutter]
-            ["package:flutter/material.dart" :as material] 
+            ["package:flutter/material.dart" :as material]
             [paginae.theme :as theme]
             [paginae.book-search.book-search :as book-search]
             [paginae.home.home :as home]
             [paginae.my-books.my-books :as my-books]
+            [paginae.journal.journal :as journal]
             [paginae.image.utils :as img-utils]
             ["../l10n/app_localizations.dart" :as app-l10n]
             ["package:material_symbols_icons/symbols.dart" :as symbols]))
-
-(defn main-widget []
-  (flutter/widget
-   :context context
-   :let [locales (app-l10n/AppLocalizations.of context)]
-
-   (material/Center
-    .child
-
-    (material/Text (.-hello locales)))))
 
 (defn bottom-sheet-btn
   "Icon button for the bottom sheet"
@@ -127,33 +118,6 @@
           :active? (= 3 current-tab)
           :on-pressed #(change-tab 3)}))])))))
 
-(defn main-app-bar
-  "Scaffold App Bar"
-  [tab]
-  (material/AppBar
-   .title
-   (material/Builder
-    .builder
-    (fn [context]
-      (let [theme (material/Theme.of context)
-            locales (app-l10n/AppLocalizations.of context)]
-        (material/Text
-         (case tab
-           0 (.-appName locales)
-           1 (.-appName locales)
-           2 (.-appName locales)
-           3 (.-searchTitle locales))
-
-         .style
-         (.copyWith
-          (.-headlineSmall (.-textTheme theme))
-
-          .fontWeight
-          material/FontWeight.bold
-
-          .color
-          (.-primary (.-colorScheme theme)))))))))
-
 (defn main-screen
   []
 
@@ -195,9 +159,9 @@
                              :go-to-favorite-shelf (fn []
                                                      (reset! filter-atom :favorite)
                                                      (reset! current-tab 2))})
-        1 (main-widget) ;; TODO: Change to stats widget
+        1 (journal/journal-widget)
         2 (my-books/my-books-widget books-filter)
-        3 (book-search/book-search-widget))) 
+        3 (book-search/book-search-widget)))
 
      .bottomNavigationBar
      (bottom-sheet

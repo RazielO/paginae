@@ -7,6 +7,7 @@
             [paginae.database :as db]
             [paginae.home.badges :as badges]
             [paginae.image.widget :as image]
+            [paginae.journal.journal :as journal]
             [paginae.theme :as theme]))
 
 (defn- reading-book-card
@@ -84,9 +85,9 @@
 
                        .children
                        [(material/Text (.toUpperCase (.percentComplete locales (.round (* 100 progress)))))
-                         (material/Text (if (nil? pages)
-                                          ""
-                                          (.toUpperCase (.pageCount locales (.round (* pages progress))))))])
+                        (material/Text (if (nil? pages)
+                                         ""
+                                         (.toUpperCase (.pageCount locales (.round (* pages progress))))))])
 
                       (material/LinearProgressIndicator
                        .value progress)]))]))))))
@@ -302,36 +303,6 @@
          :badge (badges/reading-badge)
          :on-tap go-to-reading-shelf})])])))
 
-(defn- activity-card
-  "Card for displaying a reading activity"
-  [{:keys [activity book]}]
-  (flutter/widget
-   :context context
-   :let [locales (app-l10n/AppLocalizations.of context)]
-
-   (material/Card)
-
-   .child
-   (material/Row)
-
-   .children
-   [(image/cover-image
-     {:book book
-      :placeholder-text (.-noCover locales)
-      :bordered? false
-      :clickable? false
-      :on-click nil
-      :width 100})
-
-    (material/Column
-
-     .children
-     [(material/Text
-       (:title book))
-
-      (material/Text
-       (.reachedPercent locales (.round (* 100 (:progress activity)))))])]))
-
 (defn- recent-activity
   "Widget to display the most recent reading activity"
   [{:keys [activities
@@ -382,7 +353,7 @@
          (fn [_context idx]
            (when (< idx (count activities))
              (let [entry (nth activities idx)]
-               (activity-card entry))))))]))))
+               (journal/activity-card entry))))))]))))
 
 (defn home-widget
   "Widget that shows the home screen"
@@ -402,7 +373,7 @@
                                                  :favorite 0
                                                  :done 0
                                                  :read 0} :refresh-on revision
-            last-activities (db/get-recent-activity 5) :default [] :refresh-on revision]
+           last-activities (db/get-recent-activity 5) :default [] :refresh-on revision]
 
    (material/CustomScrollView
     .slivers

@@ -1,0 +1,306 @@
+(ns paginae.journal.journal
+  (:require
+   ["../l10n/app_localizations.dart" :as app-l10n]
+   ["package:flutter/material.dart" :as material]
+   ["package:flutter/painting.dart" :as painting]
+   ["package:intl/intl.dart" :as intl]
+   ["package:material_symbols_icons/symbols.dart" :as symbols]
+   ["package:table_calendar/table_calendar.dart" :as calendar]
+   [cljd.flutter :as flutter]
+   [paginae.book-details.book-details :as book-details]
+   [paginae.database :as db]
+   [paginae.image.widget :as image]
+   [paginae.types.activity :as activity-type]))
+
+(defn activity-card
+  "Card for displaying a reading activity"
+  [data]
+  (flutter/widget
+   :get {{{:flds [labelMedium titleMedium]} .-textTheme} material/Theme}
+   :context context
+   :let [locale (material/Localizations.localeOf context)
+         locales (app-l10n/AppLocalizations.of context)
+         book (:book data)
+         activity (:activity data)]
+   :get [material/Navigator]
+
+   (material/InkWell
+    .onTap
+    (fn []
+      (let [_ (await (.push
+                      navigator
+                      (#/(material/MaterialPageRoute Object)
+                       .builder
+                       (flutter/build (book-details/book-details book)))))]
+        ;; TODO: Add parameter of atom that triggers data refresh
+        )))
+
+   (material/Card)
+
+   .child
+   (material/Row
+    .spacing 10)
+
+   .children
+   [(image/cover-image
+     {:book book
+      :placeholder-text (.-noCover locales)
+      :bordered? false
+      :clickable? false
+      :on-click nil
+      :width 100})
+
+    (material/Column
+     .crossAxisAlignment
+     material/CrossAxisAlignment.start
+
+     .children
+     [(material/Text
+       (.format
+        (intl/DateFormat.yMMMd (.toString locale))
+        (:date activity))
+
+       .style
+       labelMedium)
+
+      (material/SizedBox
+
+       .height 20)
+
+      (material/Text
+       (:title book)
+
+       .style
+       titleMedium)
+
+      (material/Text
+       (activity-type/activity-string (:activity data) (:book data) locales))])]))
+
+(defn- same-day
+  "Compare 2 DateTimes by day"
+  [^dart:core/DateTime day1
+   data]
+  (let [^dart:core/DateTime day2 (:date (:activity data))]
+    (and (= (.-year day1) (.-year day2))
+         (= (.-month day1) (.-month day2))
+         (= (.-day day1) (.-day day2)))))
+
+(defn- starting-day-of-week
+  "Get the starting day of week. If locale is english, sunday, otherwise monday"
+  [^material/Locale locale]
+  (if (= (.-languageCode locale) "en")
+    calendar/StartingDayOfWeek.sunday
+    calendar/StartingDayOfWeek.monday))
+
+(defn- journal-calendar
+  "Widget that displays a calendar with reading data"
+  [{:keys [focused-day-atom
+           selected-day-atom
+           ^dart:core/DateTime today
+           first-day
+           locale
+           activities
+           landscape?]}]
+  (flutter/widget
+   :get {{{:flds [labelLarge]} .-textTheme
+          {:flds [primary secondary onSecondary]} .-colorScheme} material/Theme}
+
+   (calendar/TableCalendar
+    .focusedDay
+    @focused-day-atom
+
+    .currentDay
+    today
+
+    .selectedDayPredicate
+    (fn [^dart:core/DateTime day]
+      (calendar/isSameDay day @selected-day-atom))
+
+    .firstDay
+    first-day
+
+    .lastDay
+    today
+
+    .calendarFormat
+    calendar/CalendarFormat.month
+
+    .shouldFillViewport
+    landscape?
+
+    .startingDayOfWeek
+    (starting-day-of-week locale)
+
+    .eventLoader
+    (fn [day]
+      (filter #(same-day day %) activities))
+
+    .calendarStyle
+    (calendar/CalendarStyle
+     .outsideDaysVisible false
+
+     .selectedTextStyle
+     (.copyWith
+      labelLarge
+
+      .color
+      onSecondary)
+
+     .defaultTextStyle
+     labelLarge
+
+     .selectedDecoration
+     (material/BoxDecoration
+      .color secondary
+      .shape material/BoxShape.circle)
+
+     .markerDecoration
+     (material/BoxDecoration
+      .color primary
+      .shape material/BoxShape.circle))
+
+    .locale
+    (.toString locale)
+
+    .weekendDays
+    []
+
+    .rangeSelectionMode
+    calendar/RangeSelectionMode.disabled
+
+    .onPageChanged
+    (fn [^dart:core/DateTime day]
+      (reset! focused-day-atom day))
+
+    .headerStyle
+    (calendar/HeaderStyle
+     .titleCentered
+     true
+
+     .formatButtonVisible
+     false
+
+     .rightChevronIcon
+     (let [^dart:core/DateTime focused-day @focused-day-atom
+           same-month (= (.-month today) (.-month focused-day))
+           same-year (= (.-year today) (.-year focused-day))]
+       (if
+        (not (and same-month same-year))
+         (material/Icon symbols/Symbols.chevron_right)
+         (material/Container))))
+
+    .onDaySelected
+    (fn [selected _focused]
+      (reset! selected-day-atom selected)))))
+
+(defn- activities-by-day
+  "List the activities of a given day"
+  [activities day context]
+  (let [filtered (filter #(same-day day %) activities)
+        locales (app-l10n/AppLocalizations.of context)
+        theme (material/Theme.of context)]
+
+
+    (if (empty? filtered)
+      [(material/Text
+        (.-noActivityThatDay locales)
+
+        .style
+        (.copyWith
+         (.-bodyMedium (.-textTheme theme))
+
+         .color
+         (.withAlpha (.-onSurface (.-colorScheme  theme)) 150)))]
+      (map activity-card filtered))))
+
+(defn journal-widget
+  "Widget to show the reading activity"
+  []
+  (flutter/widget
+   :context context
+   :get {{{:flds [headlineSmall]} .-textTheme} material/Theme}
+   :let [today     (dart:core/DateTime.now)
+         first-day (dart:core/DateTime (.-year today) (- (.-month today) 3) (.-day today))
+         locale (material/Localizations.localeOf context)
+         portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)
+         locales (app-l10n/AppLocalizations.of context)]
+   :watch [selected-day (atom (dart:core/DateTime.now)) :as selected-day-atom
+           ^dart:core/DateTime focused-day (atom (dart:core/DateTime.now)) :as focused-day-atom
+           activities (db/get-activities-by-month (.-month focused-day) (.-year focused-day)) :default [] :refresh-on focused-day]
+
+   (material/Scaffold
+    .appBar
+    (if portrait?
+      (material/AppBar
+       .title
+       (material/Text
+        (.-journalTitle locales)
+
+        .style
+        (.copyWith
+         headlineSmall
+
+         .fontWeight
+         material/FontWeight.bold))
+
+       .centerTitle
+       true)
+      nil))
+
+   .body
+   (if portrait?
+     (material/SingleChildScrollView
+
+      .child
+      (material/Column
+
+       .children
+       (into
+        [(journal-calendar
+          {:focused-day-atom focused-day-atom
+           :selected-day-atom selected-day-atom
+           :today today
+           :first-day first-day
+           :locale locale
+           :activities activities
+           :landscape? false})]
+        (activities-by-day activities selected-day context)
+        ;; (let [filtered (filter #(same-day selected-day %) activities)]
+        ;;   (if (empty? filtered)
+        ;;     [(material/Text
+        ;;       (.-noActivityThatDay locales)
+        ;; 
+        ;;       .style
+        ;;       (.copyWith
+        ;;        bodyMedium
+        ;; 
+        ;;        .color
+        ;;        (.withAlpha onSurface 150)))]
+        ;;     (map activity-card filtered)))
+        )))
+
+     (material/Row
+      .children
+      [(material/Expanded
+        .child
+        (journal-calendar
+         {:focused-day-atom focused-day-atom
+          :selected-day-atom selected-day-atom
+          :today today
+          :first-day first-day
+          :locale locale
+          :activities activities
+          :landscape? true}))
+
+       (material/Expanded
+        .child
+        (material/SingleChildScrollView
+         .scrollDirection
+         painting/Axis.vertical
+
+         .child
+         (material/Column
+          .children
+        (activities-by-day activities selected-day context)
+          ;; (map activity-card (filter #(same-day selected-day %) activities))
+          )))]))))

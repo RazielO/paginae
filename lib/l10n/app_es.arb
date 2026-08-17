@@ -6,10 +6,6 @@
     "activityReadToPage": "Leyendo durante {hours}:{minutes} • Llegaste a la página {pages}",
     "activityReadToPercent": "Leyendo durante {hours}:{minutes} • Llegaste al {percentage}%",
     "activitySection": "Actividad",
-    "addBookTitle": "Añadir a Biblioteca",
-    "@addBookTitle": {
-        "description": "Add book screen title"
-    },
     "addCover": "Añadir Portada",
     "addNote": "Añadir una nota",
     "addNoteAction": "Añadir Nota",
@@ -20,7 +16,6 @@
     },
     "audiobook": "Audiolibro",
     "bookAuthor": "Autor",
-    "bookSearchHint": "Busca por título, autor o ISBN",
     "bookNotStartedMessage": "Aún no has empezado el libro\nMarca como empezado",
     "bookTitle": "Título",
     "booksInProgress": "{count, plural, =0{Sin libros} =1{Leyendo 1 libro} other{Leyendo {count} libros}}",
@@ -61,7 +56,6 @@
     },
     "loading": "Cargando",
     "noCover": "Sin Portada",
-    "noResults": "No se encontraron resultados",
     "noServerResponse": "No hay respuesta del servidor",
     "note": "Nota",
     "notesSection": "Notas",
@@ -74,7 +68,6 @@
     "readLabel": "Leyendo",
     "readProgress": "Has leído {current} de {total} páginas",
     "reachedPercent": "Llegaste al {percent}%",
-    "reading": "Leyendo",
     "readingTimer": "Temporizador de lectura",
     "removeNoteTitle": "¿Quieres eliminar esta nota?",
     "save": "Guardar",
@@ -112,7 +105,6 @@
     "updateProgress": "Actualizar progreso",
     "unsetFavorite": "Quitar de favoritos",
     "valueBetweenError": "Ingresa un valor entre {lower} y {upper}",
-    "yourStudy": "Mis Libros",
     "myShelves": "Mis Estanterías",
     "@myShelves": {
         "description": "Subtitle for a home section"
@@ -165,10 +157,6 @@
     "@addNewBook": {
         "description": "Button to go to the add book screen"
     },
-    "hello": "Hola",
-    "@hello": {
-        "description": "Temporary placeholder text"
-    },
     "deleteBookTitle": "¿Quieres eliminar el libro \"{title}\"?",
     "@deleteBookTitle": {
         "description": "Confirmation dialog title shown before deleting a book",
@@ -213,5 +201,13 @@
     "bookDetailsTitle": "Detalles del libro",
     "@bookDetailsTitle": {
         "description": "Title for the book details screen"
+    },
+    "journalTitle": "Mi diario de lectura",
+    "@journalTitle": {
+        "description": "Title for the journal screen"
+    },
+    "noActivityThatDay": "Sin actividad ese día",
+    "@noActivityThatDay": {
+        "description": "Text shown when there is no reading activity for a given day"
     }
 }

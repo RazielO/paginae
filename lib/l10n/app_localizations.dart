@@ -194,12 +194,6 @@ abstract class AppLocalizations {
   /// **'Unknown'**
   String get unknown;
 
-  /// Add book screen title
-  ///
-  /// In en, this message translates to:
-  /// **'Add To Library'**
-  String get addBookTitle;
-
   /// Add book screen action to add a local cover
   ///
   /// In en, this message translates to:
@@ -379,12 +373,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add new book'**
   String get addNewBook;
-
-  /// Temporary placeholder text
-  ///
-  /// In en, this message translates to:
-  /// **'Hello'**
-  String get hello;
 
   /// Confirmation dialog title shown before deleting a book
   ///
@@ -673,6 +661,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter a value between {lower} and {upper}'**
   String valueBetweenError(double lower, double upper);
+
+  /// Title for the journal screen
+  ///
+  /// In en, this message translates to:
+  /// **'My reading journal'**
+  String get journalTitle;
+
+  /// Text shown when there is no reading activity for a given day
+  ///
+  /// In en, this message translates to:
+  /// **'No activity that day'**
+  String get noActivityThatDay;
 }
 
 class _AppLocalizationsDelegate

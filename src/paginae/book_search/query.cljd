@@ -15,6 +15,7 @@
   [query ;; Query to search
    offset ;; Offset of data to search
    unknown-str ;; String to use as placeholder when no data is provided
+   no-response-str ;; String to return when no response
    ]
 
   (let [uri (Uri/https
@@ -48,7 +49,7 @@
                     :data (map #(book/book-from-query-result % unknown-str)
                                (filter filter-fn
                                        (get json "docs" [])))}))
-                (handle-error "No response from server")))]
+                (handle-error no-response-str)))]
 
       (-> (http/get uri)
           (.timeout (Duration .seconds 10))

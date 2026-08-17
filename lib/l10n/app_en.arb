@@ -68,10 +68,6 @@
     "@unknown": {
         "description": "Label for unknown book data"
     },
-    "addBookTitle": "Add To Library",
-    "@addBookTitle": {
-        "description": "Add book screen title"
-    },
     "addCover": "Add Cover",
     "@addCover": {
         "description": "Add book screen action to add a local cover"
@@ -196,10 +192,6 @@
     "addNewBook": "Add new book",
     "@addNewBook": {
         "description": "Button to go to the add book screen"
-    },
-    "hello": "Hello",
-    "@hello": {
-        "description": "Temporary placeholder text"
     },
     "deleteBookTitle": "Do you want to delete the book \"{title}\"?",
     "@deleteBookTitle": {
@@ -481,5 +473,13 @@
                 "type": "double"
             }
         }
+    },
+    "journalTitle": "My reading journal",
+    "@journalTitle": {
+        "description": "Title for the journal screen"
+    },
+    "noActivityThatDay": "No activity that day",
+    "@noActivityThatDay": {
+        "description": "Text shown when there is no reading activity for a given day"
     }
 }

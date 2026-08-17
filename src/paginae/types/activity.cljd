@@ -20,6 +20,17 @@
     :date (dart:core/DateTime.parse (get entry "date"))
     :created-at (dart:core/DateTime.parse (get entry "created_at"))}))
 
+(defn from-db-join-entry
+  "Convert a db entry into an Activity"
+  [entry]
+  (map->Activity
+   {:id (get entry "activity_id")
+    :book-id (get entry "book_id")
+    :reading-time (get entry "reading_time")
+    :progress (get entry "progress")
+    :date (dart:core/DateTime.parse (get entry "date"))
+    :created-at (dart:core/DateTime.parse (get entry "created_at"))}))
+
 (defn to-db-map
   "Create a map from the activity"
   [activity]
