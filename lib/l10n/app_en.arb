@@ -256,14 +256,11 @@
             }
         }
     },
-    "activityReadToPage": "Read for {hours}:{minutes} • Reached page {pages}",
+    "activityReadToPage": "Read for {time} • Reached page {pages}",
     "@activityReadToPage": {
         "description": "Activity description when reading time and reached page are shown",
         "placeholders": {
-            "hours": {
-                "type": "String"
-            },
-            "minutes": {
+            "time": {
                 "type": "String"
             },
             "pages": {
@@ -271,14 +268,11 @@
             }
         }
     },
-    "activityReadToPercent": "Read for {hours}:{minutes} • Reached {percentage}%",
+    "activityReadToPercent": "Read for {time} • Reached {percentage}%",
     "@activityReadToPercent": {
         "description": "Activity description when reading time and reached percentage are shown",
         "placeholders": {
-            "hours": {
-                "type": "String"
-            },
-            "minutes": {
+            "time": {
                 "type": "String"
             },
             "percentage": {

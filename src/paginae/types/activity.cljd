@@ -41,18 +41,26 @@
 
 (defn activity-string
   "Create a string representation for the activity"
-  [activity book ^app-l10n/AppLocalizations locales]
+  [activity
+   book
+   ^app-l10n/AppLocalizations locales]
   (let [has-time? (not (nil? (:reading-time activity)))
         has-pages? (not (nil? (:pages book)))
         pages (.round (* (:progress activity) (or (:pages book) 0)))
         percentage (.toStringAsFixed (* 100 (:progress activity)) 2)
         seconds (or (:reading-time activity) 0)
-        hours (.padLeft (.toString (quot seconds 3600)) 2 "0")
-        mins (.padLeft (.toString (mod (quot seconds 60) 60)) 2 "0")]
+        hours  (quot seconds 3600)
+        mins (mod (quot seconds 60) 60)
+        secs (mod seconds 60)
+
+        time (.join [(if (zero? hours) "" (str hours "h"))
+                     (if (zero? mins) "" (str mins "m"))
+                     (if (zero? secs) "" (str secs "s"))] " ")]
+
     (if has-time?
       (if has-pages?
-        (.activityReadToPage locales hours mins pages)
-        (.activityReadToPercent locales hours mins percentage))
+        (.activityReadToPage locales time pages)
+        (.activityReadToPercent locales time percentage))
       (if has-pages?
         (.activityReachedPage locales pages)
         (.activityReachedPercent locales percentage)))))

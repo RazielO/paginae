@@ -169,7 +169,7 @@
               (swap! book-atom #(assoc % :title new-title
                                        :author new-author
                                        :pages (parse-long (.trim (.-text pages-controller)))))
-              (db/insert-book @book-atom)
+              (await (db/insert-book @book-atom))
               (await (img-utils/save-book-cover @book-atom))
               (go-to-my-books)
               (.pop navigator)))))

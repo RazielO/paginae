@@ -449,14 +449,14 @@ abstract class AppLocalizations {
   /// Activity description when reading time and reached page are shown
   ///
   /// In en, this message translates to:
-  /// **'Read for {hours}:{minutes} • Reached page {pages}'**
-  String activityReadToPage(String hours, String minutes, int pages);
+  /// **'Read for {time} • Reached page {pages}'**
+  String activityReadToPage(String time, int pages);
 
   /// Activity description when reading time and reached percentage are shown
   ///
   /// In en, this message translates to:
-  /// **'Read for {hours}:{minutes} • Reached {percentage}%'**
-  String activityReadToPercent(String hours, String minutes, String percentage);
+  /// **'Read for {time} • Reached {percentage}%'**
+  String activityReadToPercent(String time, String percentage);
 
   /// Section title for reading activity on the book details screen
   ///

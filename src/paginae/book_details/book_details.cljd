@@ -91,7 +91,7 @@
 
           .onPressed
           (fn []
-            (set! (.-text controller) "")
+            (.-text! controller "")
             (.pop (widgets/Navigator.of dialog-context))))
 
          ;; Save button
@@ -111,7 +111,7 @@
           (fn []
             (let [note (.trim (.-text controller))]
               (when (not (empty? note))
-                (set! (.-text controller) "")
+                (.-text! controller "")
                 (.pop (widgets/Navigator.of dialog-context) note)))))])]))))
 
 
@@ -249,7 +249,7 @@
 
        .onPressed
        (fn []
-         (set! (.-text note-controller) (:contents note))
+         (.-text! note-controller (:contents note))
          (let [new-contents (await (add-note-dialog context note-controller))]
            (when note
              (await (db/update-book-note
@@ -372,7 +372,8 @@
    :get {{{:flds [labelLarge bodyLarge]} .-textTheme
           {:flds [onSurface]} .-colorScheme} material/Theme}
    :context context
-   :let [locales (app-l10n/AppLocalizations.of context)]
+   :let [locales (app-l10n/AppLocalizations.of context)
+         locale (material/Localizations.localeOf context)]
 
    (material/Card)
 
@@ -397,9 +398,14 @@
    .children
    [;; Date
     (material/Text
-     (.format
-      (intl/DateFormat.yMMMd)
-      (:date activity))
+     (str
+      (.format
+       (intl/DateFormat.yMMMd (.toString locale))
+       (:date activity))
+      " "
+      (.format
+       (intl/DateFormat.Hm (.toString locale))
+       (:date activity)))
 
      .textAlign
      material/TextAlign.end

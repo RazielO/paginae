@@ -12,7 +12,6 @@
            ^material/TextEditingController controller
            ^app-l10n/AppLocalizations locales]}]
   (flutter/widget
-   ;; :managed [int-ctrl (material/TextEditingController)]
    :watch [int-text controller :> .-text]
    :let [int-val (parse-long int-text)
          int-ok? (and int-val (>= int-val lower-limit) (<= int-val upper-limit))]

@@ -413,9 +413,9 @@
 
    :let [locales (app-l10n/AppLocalizations.of context)
          portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)
-         scroll-controller (material/ScrollController)
          unknown-str (.-unknown locales)
-         no-response-str (.-noServerResponse locales)]
+         no-response-str (.-noServerResponse locales)] 
+   :managed [scroll-controller (material/ScrollController)]
 
    (letfn [(load-books [text]
              (when (not loading-more?)

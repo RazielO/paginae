@@ -37,36 +37,42 @@
       :on-click nil
       :width 100})
 
-    (material/Column
-     .crossAxisAlignment
-     material/CrossAxisAlignment.start
+    (material/Expanded
 
-     .children
-     [(material/Text
-       (str
-        (.format
-         (intl/DateFormat.yMMMd (.toString locale))
-         (:date activity))
-        " "
-        (.format
-         (intl/DateFormat.Hm (.toString locale))
-         (:date activity)))
+     .child
+     (material/Column
+      .crossAxisAlignment
+      material/CrossAxisAlignment.start
 
-       .style
-       labelMedium)
+      .children
+      [(material/Text
+        (str
+         (.format
+          (intl/DateFormat.yMMMd (.toString locale))
+          (:date activity))
+         " "
+         (.format
+          (intl/DateFormat.Hm (.toString locale))
+          (:date activity)))
 
-      (material/SizedBox
+        .style
+        labelMedium)
 
-       .height 20)
+       (material/SizedBox
 
-      (material/Text
-       (:title book)
+        .height 20)
 
-       .style
-       titleMedium)
+       (material/Text
+        (:title book)
 
-      (material/Text
-       (activity-type/activity-string (:activity data) (:book data) locales))])]))
+        .style
+        titleMedium)
+
+       (material/Text
+        (activity-type/activity-string (:activity data) (:book data) locales)
+
+        .softWrap
+        true)]))]))
 
 (defn- same-day
   "Compare 2 DateTimes by day"

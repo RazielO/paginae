@@ -9,14 +9,30 @@
    [paginae.book-details.activity-dialog :as book-details.activity-dialog]
    [paginae.database :as db]))
 
+(defn- now-in-seconds
+  "Return the current DateTime in seconds since Epoch"
+  []
+  (-> (dart:core/DateTime.now)
+      .toUtc
+      .-millisecondsSinceEpoch
+      (/ 1000)
+      .round))
+
+(defn elapsed-seconds
+  "Calculate the seconds that have passed since a given time"
+  [start-time]
+  (- (now-in-seconds) start-time))
+
 (defn- start-timer
   "Start the timer"
-  [timer-atom reading-timer-atom]
+  [timer-atom
+
+   ticker-atom]
   (reset! timer-atom
           (dart:async/Timer.periodic
            (dart:core/Duration .seconds 1)
            (fn [_]
-             (swap! reading-timer-atom inc)))))
+             (swap! ticker-atom inc)))))
 
 (defn- pause-timer
   "Pause the timer"
@@ -25,29 +41,39 @@
     (.cancel timer)
     (reset! timer-atom nil)))
 
+
 (defn- timer-widget
   "Widget that shows the reading time"
-  [reading-timer-atom]
+  [{:keys [start-time
+           elapsed-time
+           running?]}]
   (flutter/widget
    :get {{{:flds [displayMedium labelLarge]} .-textTheme} material/Theme}
 
    (material/Text
-    (let [hours (.padLeft (.toString (quot @reading-timer-atom 3600)) 2 "0")
-          mins (.padLeft (.toString (mod (quot @reading-timer-atom 60) 60)) 2 "0")
-          secs (.padLeft (.toString (mod @reading-timer-atom 60)) 2 "0")]
-      (str hours ":" mins ":" secs))
+    (if (nil? start-time)
+      "00:00:00"
+      (let [current-time (if running? (elapsed-seconds start-time) 0)
+            seconds (+ elapsed-time current-time)
+            hours (.padLeft (.toString (quot seconds 3600)) 2 "0")
+            mins (.padLeft (.toString (mod (quot seconds 60) 60)) 2 "0")
+            secs (.padLeft (.toString (mod seconds 60)) 2 "0")]
+
+        (str hours ":" mins ":" secs)))
+
 
     .style
     (.copyWith
      displayMedium
-
 
      .fontFamily
      (.-fontFamily labelLarge)))))
 
 (defn- play-pause-button
   "Widget for the play/pause button"
-  [reading-atom timer-atom reading-timer-atom]
+  [{:keys [running-atom
+           on-play
+           on-pause]}]
 
   (flutter/widget
    :get {{{:flds [surface onSurface]} .-colorScheme} material/Theme}
@@ -55,7 +81,7 @@
    (material/IconButton
     .icon
     (material/Icon
-     (if @reading-atom
+     (if @running-atom
        symbols/Symbols.pause
        symbols/Symbols.play_arrow))
 
@@ -71,14 +97,15 @@
 
     .onPressed
     (fn []
-      (if @reading-atom
-        (pause-timer  timer-atom)
-        (start-timer timer-atom reading-timer-atom))
-      (reset! reading-atom (not @reading-atom))))))
+      (if @running-atom
+        (on-pause)
+        (on-play))
+      (swap! running-atom not)))))
 
 (defn- quick-note-widget
   "Widget for adding a quick note (input field and button)"
-  [controller on-pressed]
+  [controller
+   on-pressed]
   (flutter/widget
    :context context
    :get {{{:flds [surface primary onPrimary]} .-colorScheme} material/Theme}
@@ -125,17 +152,21 @@
       .onPressed
       on-pressed)])))
 
-
 (defn reading-timer
   "Widget that shows a reading session timer"
   [book]
   (flutter/widget
    :context context
-   :watch [_timer (atom nil) :as timer-atom
-           reading-timer (atom 0) :as reading-timer-atom
-           _reading (atom nil) :as reading-atom]
    :managed [note-controller (material/TextEditingController)
-             progress-controller (material/TextEditingController)]
+             progress-controller (material/TextEditingController)
+             timer-atom (atom nil) :dispose nil
+             running-atom (atom false) :dispose nil
+             start-time-atom (atom (now-in-seconds)) :dispose nil
+             elapsed-time-atom (atom 0) :dispose nil
+             ticker-atom (atom 0) :dispose nil]
+   :watch [_ticker ticker-atom
+           elapsed-time elapsed-time-atom
+           start-time start-time-atom]
    :let [locales (app-l10n/AppLocalizations.of context)
          portrait? (= material/Orientation.portrait (.-orientation (material/MediaQuery.of context)))]
 
@@ -167,12 +198,12 @@
                              :book book
                              :on-confirm
                              (fn [progress]
-                               (db/insert-book-activity {:book-id (:id book)
-                                                         :progress progress
-                                                         :reading-time reading-timer}))}))]
+                               (db/insert-book-activity
+                                {:book-id (:id book)
+                                 :progress progress
+                                 :reading-time (+ elapsed-time (elapsed-seconds start-time))}))}))]
            (when data
-             (.pop (widgets/Navigator.of context) data))))
-       )])
+             (.pop (widgets/Navigator.of context) data)))))])
 
     .body
     (material/Padding
@@ -186,8 +217,8 @@
       (letfn [(on-note-save []
                 (let [note (.trim (.-text note-controller))]
                   (when (not (empty? note))
-                    (db/insert-book-note note (:id book))
-                    (set! (.-text note-controller) "")
+                    (await (db/insert-book-note note (:id book)))
+                    (.-text! note-controller "")
                     nil)))]
         (if portrait?
           (material/Column
@@ -197,9 +228,19 @@
            material/CrossAxisAlignment.center
 
            .children
-           [(timer-widget reading-timer-atom)
+           [(timer-widget
+             {:start-time start-time
+              :elapsed-time elapsed-time
+              :running? @running-atom})
 
-            (play-pause-button reading-atom timer-atom reading-timer-atom)
+            (play-pause-button
+             {:running-atom running-atom
+              :on-play (fn []
+                         (reset! start-time-atom (now-in-seconds))
+                         (start-timer timer-atom ticker-atom))
+              :on-pause (fn []
+                          (swap! elapsed-time-atom #(+ % (- (now-in-seconds) start-time)))
+                          (pause-timer timer-atom))})
 
             (quick-note-widget
              note-controller
@@ -209,15 +250,26 @@
            .crossAxisAlignment
            material/CrossAxisAlignment.center
 
-
            .children
            [(material/Expanded
+
              .child
              (material/Column
-              .children
-              [(timer-widget reading-timer-atom)
 
-               (play-pause-button reading-atom timer-atom reading-timer-atom)]))
+              .children
+              [(timer-widget
+                {:start-time start-time
+                 :elapsed-time elapsed-time
+                 :running? @running-atom})
+
+               (play-pause-button
+                {:running-atom running-atom
+                 :on-play (fn []
+                            (reset! start-time-atom (now-in-seconds))
+                            (start-timer timer-atom ticker-atom))
+                 :on-pause (fn []
+                             (swap! elapsed-time-atom #(+ % (- (now-in-seconds) start-time)))
+                             (pause-timer timer-atom))})]))
 
             (material/Expanded
              .child

@@ -200,17 +200,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String activityReadToPage(String hours, String minutes, int pages) {
-    return 'Read for $hours:$minutes • Reached page $pages';
+  String activityReadToPage(String time, int pages) {
+    return 'Read for $time • Reached page $pages';
   }
 
   @override
-  String activityReadToPercent(
-    String hours,
-    String minutes,
-    String percentage,
-  ) {
-    return 'Read for $hours:$minutes • Reached $percentage%';
+  String activityReadToPercent(String time, String percentage) {
+    return 'Read for $time • Reached $percentage%';
   }
 
   @override

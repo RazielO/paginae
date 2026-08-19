@@ -107,7 +107,7 @@
 
           .onPressed
           (fn []
-            (set! (.-text controller) "")
+            (.-text! controller "")
             (.pop (widgets/Navigator.of dialog-context))))
 
          ;; Save button
@@ -132,5 +132,5 @@
                              (/ value pages)
                              (/ value 100.0))]
               (on-confirm progress)
-              (set! (.-text controller) "")
+              (.-text! controller "")
               (.pop (widgets/Navigator.of dialog-context) progress))))])]))))

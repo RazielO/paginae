@@ -1,10 +1,8 @@
 {
-    "@@locale": "es",
-    "@@author": "localizify.com",
     "activityReachedPage": "Llegaste a la página {pages}",
     "activityReachedPercent": "Llegaste al {percentage}%",
-    "activityReadToPage": "Leyendo durante {hours}:{minutes} • Llegaste a la página {pages}",
-    "activityReadToPercent": "Leyendo durante {hours}:{minutes} • Llegaste al {percentage}%",
+    "activityReadToPage": "Leíste durante {time} • Llegaste a la página {pages}",
+    "activityReadToPercent": "Leiste durante {time} • Llegaste al {percentage}%",
     "activitySection": "Actividad",
     "addCover": "Añadir Portada",
     "addNote": "Añadir una nota",
