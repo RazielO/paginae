@@ -161,7 +161,9 @@
                                                      (reset! current-tab 2))})
         1 (journal/journal-widget)
         2 (my-books/my-books-widget books-filter)
-        3 (book-search/book-search-widget)))
+        3 (book-search/book-search-widget {:go-to-my-books (fn []
+                                                             (reset! filter-atom nil)
+                                                             (reset! current-tab 2))})))
 
      .bottomNavigationBar
      (bottom-sheet

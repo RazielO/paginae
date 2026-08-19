@@ -23,14 +23,14 @@
   "Maximum width in pixels for a saved image"
   300)
 
-(defn- resize-and-save-image
+(defn- ^async/Future resize-and-save-image
   "Resize an image to a set width and save it to disk"
   [input-bytes output-path]
   (let [decoded (img/decodeImage input-bytes)]
     (when decoded
       (let [resized (img/copyResize decoded .width IMAGE-MAX-WIDTH)
             jpg (img/encodeJpg resized)]
-        (.writeAsBytes (io/File. output-path) jpg)))))
+        (await (.writeAsBytes (io/File. output-path) jpg))))))
 
 (defn- ^async/Future download-image-bytes
   "Download an image from the internet"
@@ -50,11 +50,12 @@
   [book]
   (when-not (or (nil? (:cover-uri book))
                 (empty? (:cover-uri book)))
-    (let [image-dest (cover-path (:id book))]
-      ((let [bytes (if (:local-cover? book)
-                     ;; local image
-                     (await (read-local-image-bytes (:cover-uri book)))
-                     ;; remote image
-                     (download-image-bytes (:cover-uri book)))]
-         (resize-and-save-image bytes image-dest))))))
+    (let [image-dest (cover-path (:id book))
+          bytes (await
+                 (if (:local-cover? book)
+                   ;; local image
+                   (read-local-image-bytes (:cover-uri book))
+                   ;; remote image
+                   (download-image-bytes (:cover-uri book))))]
+      (await (resize-and-save-image bytes image-dest)))))
 

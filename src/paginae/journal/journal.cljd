@@ -7,7 +7,6 @@
    ["package:material_symbols_icons/symbols.dart" :as symbols]
    ["package:table_calendar/table_calendar.dart" :as calendar]
    [cljd.flutter :as flutter]
-   [paginae.book-details.book-details :as book-details]
    [paginae.database :as db]
    [paginae.image.widget :as image]
    [paginae.types.activity :as activity-type]))
@@ -22,18 +21,6 @@
          locales (app-l10n/AppLocalizations.of context)
          book (:book data)
          activity (:activity data)]
-   :get [material/Navigator]
-
-   (material/InkWell
-    .onTap
-    (fn []
-      (let [_ (await (.push
-                      navigator
-                      (#/(material/MaterialPageRoute Object)
-                       .builder
-                       (flutter/build (book-details/book-details book)))))]
-        ;; TODO: Add parameter of atom that triggers data refresh
-        )))
 
    (material/Card)
 
@@ -56,9 +43,14 @@
 
      .children
      [(material/Text
-       (.format
-        (intl/DateFormat.yMMMd (.toString locale))
-        (:date activity))
+       (str
+        (.format
+         (intl/DateFormat.yMMMd (.toString locale))
+         (:date activity))
+        " "
+        (.format
+         (intl/DateFormat.Hm (.toString locale))
+         (:date activity)))
 
        .style
        labelMedium)
@@ -220,13 +212,13 @@
    :context context
    :get {{{:flds [headlineSmall]} .-textTheme} material/Theme}
    :let [today     (dart:core/DateTime.now)
-         first-day (dart:core/DateTime (.-year today) (- (.-month today) 3) (.-day today))
          locale (material/Localizations.localeOf context)
          portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)
          locales (app-l10n/AppLocalizations.of context)]
    :watch [selected-day (atom (dart:core/DateTime.now)) :as selected-day-atom
            ^dart:core/DateTime focused-day (atom (dart:core/DateTime.now)) :as focused-day-atom
-           activities (db/get-activities-by-month (.-month focused-day) (.-year focused-day)) :default [] :refresh-on focused-day]
+           activities (db/get-activities-by-month (.-month focused-day) (.-year focused-day)) :default [] :refresh-on focused-day
+           first-day  (db/get-first-activity-date) :default (dart:core/DateTime.now)]
 
    (material/Scaffold
     .appBar
@@ -264,20 +256,7 @@
            :locale locale
            :activities activities
            :landscape? false})]
-        (activities-by-day activities selected-day context)
-        ;; (let [filtered (filter #(same-day selected-day %) activities)]
-        ;;   (if (empty? filtered)
-        ;;     [(material/Text
-        ;;       (.-noActivityThatDay locales)
-        ;; 
-        ;;       .style
-        ;;       (.copyWith
-        ;;        bodyMedium
-        ;; 
-        ;;        .color
-        ;;        (.withAlpha onSurface 150)))]
-        ;;     (map activity-card filtered)))
-        )))
+        (activities-by-day activities selected-day context))))
 
      (material/Row
       .children
@@ -301,6 +280,4 @@
          .child
          (material/Column
           .children
-        (activities-by-day activities selected-day context)
-          ;; (map activity-card (filter #(same-day selected-day %) activities))
-          )))]))))
+          (activities-by-day activities selected-day context))))]))))

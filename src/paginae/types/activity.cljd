@@ -28,15 +28,16 @@
     :book-id (get entry "book_id")
     :reading-time (get entry "reading_time")
     :progress (get entry "progress")
-    :date (dart:core/DateTime.parse (get entry "date"))
-    :created-at (dart:core/DateTime.parse (get entry "created_at"))}))
+    :date (.toLocal (dart:core/DateTime.parse (get entry "date")))
+    :created-at (.toLocal (dart:core/DateTime.parse (get entry "created_at")))}))
 
 (defn to-db-map
   "Create a map from the activity"
   [activity]
   {"book_id" (:book-id activity)
    "reading_time" (:reading-time activity)
-   "progress" (:progress activity)})
+   "progress" (:progress activity)
+   "date" (.toIso8601String (.toUtc (dart:core/DateTime.now)))})
 
 (defn activity-string
   "Create a string representation for the activity"

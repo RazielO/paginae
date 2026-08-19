@@ -13,7 +13,7 @@
 
 (defn- book-card
   "Card that displays a result book after a search"
-  [book]
+  [book go-to-my-books]
 
   (flutter/widget
    :get {{{:flds [titleLarge]} .-textTheme} material/Theme}
@@ -27,7 +27,7 @@
               navigator
               (#/(material/MaterialPageRoute Object)
                .builder
-               (flutter/build (add-book/add-book-screen book))))
+               (flutter/build (add-book/add-book-screen book go-to-my-books))))
              nil)
 
     .child
@@ -86,7 +86,8 @@
            total-books
            loading?
            as-list?
-           loading-more?]}]
+           loading-more?
+           go-to-my-books]}]
 
   (flutter/widget
    :get {{{:flds [titleLarge]} .-textTheme} material/Theme
@@ -155,7 +156,7 @@
                .child
                (material/LinearProgressIndicator))
 
-              (book-card (nth books index)))))
+              (book-card (nth books index) go-to-my-books))))
 
          (material/SliverGrid.builder
           .itemCount item-count
@@ -180,7 +181,7 @@
                .child
                (material/LinearProgressIndicator))
 
-              (book-card (nth books index))))))))))
+              (book-card (nth books index) go-to-my-books)))))))))
 
 (defn- pill-button
   "Button for adding actions"
@@ -269,7 +270,7 @@
 
 (defn- search-widget
   "Widget that shows text input and options to add a book"
-  [{:keys [on-submitted scanning]}]
+  [{:keys [on-submitted scanning go-to-my-books]}]
   (flutter/widget
    :get {{{:flds [primary onPrimary secondary onSecondary]} .-colorScheme} material/Theme}
    :get [material/Navigator]
@@ -295,7 +296,7 @@
                                      navigator
                                      (#/(material/MaterialPageRoute Object)
                                       .builder
-                                      (flutter/build (add-book/add-book-screen (book/empty-book)))))
+                                      (flutter/build (add-book/add-book-screen (book/empty-book) go-to-my-books))))
                                     nil)
                       :background-color secondary
                       :foreground-color onSecondary})]
@@ -394,7 +395,7 @@
 
 (defn book-search-widget
   "Widget for the add book screen. It allows to search for a book, scan its barcode or go to a manual entry"
-  []
+  [{:keys [go-to-my-books]}]
   (flutter/widget
    :get {{{:flds [background]} .-colorScheme
           {:flds [headlineSmall]} .-textTheme} material/Theme}
@@ -512,14 +513,16 @@
                                               (reset! offset-atom 0)
                                               (reset! total-atom 0)
                                               (load-books text))
-                              :scanning scanning})))
+                              :scanning scanning
+                              :go-to-my-books go-to-my-books})))
 
            (if (and (not scanning?) (not (empty? query)))
              (book-list {:books books
                          :total-books total-books
                          :loading? (empty? books)
                          :as-list? portrait?
-                         :loading-more? loading-more?})
+                         :loading-more? loading-more?
+                         :go-to-my-books go-to-my-books})
              (material/SliverToBoxAdapter
               .child
               (material/Container)))])))))))

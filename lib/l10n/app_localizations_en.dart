@@ -336,4 +336,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noActivityThatDay => 'No activity that day';
+
+  @override
+  String get invalidInteger => 'Enter a valid number';
+
+  @override
+  String get titleRequired => 'The title cannot be empty';
+
+  @override
+  String get authorRequired => 'The author cannot be empty';
 }

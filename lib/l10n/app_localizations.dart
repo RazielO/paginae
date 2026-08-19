@@ -673,6 +673,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No activity that day'**
   String get noActivityThatDay;
+
+  /// Validation error for an integer output that is not an integer value
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get invalidInteger;
+
+  /// Validation error shown when adding a book and the title is empty
+  ///
+  /// In en, this message translates to:
+  /// **'The title cannot be empty'**
+  String get titleRequired;
+
+  /// Validation error shown when adding a book and the author is empty
+  ///
+  /// In en, this message translates to:
+  /// **'The author cannot be empty'**
+  String get authorRequired;
 }
 
 class _AppLocalizationsDelegate

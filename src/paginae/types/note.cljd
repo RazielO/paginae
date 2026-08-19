@@ -13,7 +13,7 @@
    {:id (get entry "id")
     :book-id (get entry "book_id")
     :contents (get entry "contents")
-    :created-at (dart:core/DateTime.parse (get entry "created_at"))}))
+    :created-at (.toLocal (dart:core/DateTime.parse (get entry "created_at")))}))
 
 (defn to-db-map [note]
   {"id" (:id note)

@@ -1,19 +1,25 @@
 (ns paginae.add-book.book-form
-  (:require [cljd.flutter :as flutter]
+  (:require ["../l10n/app_localizations.dart" :as app-l10n]
             ["package:flutter/material.dart" :as material]
-            ["../l10n/app_localizations.dart" :as app-l10n]))
+            ["package:flutter/services.dart" :as services]
+            [cljd.flutter :as flutter]))
 
-(defn- input-field
-  "Input field for the book data"
-  [{:keys [label hint controller]}]
-
+(defn pages-input-field
+  "Input field for a positive integer number. Invalid values show an error."
+  [{:keys [label
+           ^material/TextEditingController controller
+           ^app-l10n/AppLocalizations locales]}]
   (flutter/widget
+   :watch [int-text controller :> .-text]
+   :let [int-val (parse-long int-text)
+         int-ok? (and int-val (>= int-val 0))]
    :get {{{:flds [labelLarge]} .-textTheme} material/Theme
          {{:flds [surface]} .-colorScheme} material/Theme}
 
-   (material/Column
-    .crossAxisAlignment
-    material/CrossAxisAlignment.start
+   (flutter/widget
+    (material/Column
+     .crossAxisAlignment
+     material/CrossAxisAlignment.start)
 
     .children
     [(material/Text
@@ -27,9 +33,13 @@
      (material/TextField
       .controller controller
 
+      .keyboardType material/TextInputType.number
+
+      .inputFormatters [services/FilteringTextInputFormatter.digitsOnly]
+
       .decoration
       (material/InputDecoration
-       .hintText hint
+       .hintText label
        .filled true
        .fillColor surface
 
@@ -39,7 +49,49 @@
         (material/BorderRadius.circular 12)
 
         .borderSide
-        material/BorderSide.none)))])))
+        material/BorderSide.none)
+
+       .errorText
+       (when (and (seq int-text) (not int-ok?))
+         (.-invalidInteger locales))))])))
+
+(defn- input-field
+  "Input field for the book data"
+  [{:keys [label hint controller]}]
+
+  (flutter/widget
+   :get {{{:flds [labelLarge]} .-textTheme} material/Theme
+         {{:flds [surface]} .-colorScheme} material/Theme}
+
+   (material/Column
+    .crossAxisAlignment
+    material/CrossAxisAlignment.start)
+
+   .children
+   [(material/Text
+     label
+
+     .style
+     (.copyWith labelLarge
+                .letterSpacing 1
+                .fontWeight material/FontWeight.bold))
+
+    (material/TextField
+     .controller controller
+
+     .decoration
+     (material/InputDecoration
+      .hintText hint
+      .filled true
+      .fillColor surface
+
+      .border
+      (material/OutlineInputBorder
+       .borderRadius
+       (material/BorderRadius.circular 12)
+
+       .borderSide
+       material/BorderSide.none)))]))
 
 (defn form-card
   "Card that holds the form for the book info"
@@ -64,7 +116,7 @@
      .child
      (material/Column
       .spacing 16
-      
+
       .children
       [(input-field {:label (.-bookTitle locales)
                      :hint (.-bookTitle locales)
@@ -74,6 +126,10 @@
                      :hint (.-bookAuthor locales)
                      :controller author-controller})
 
-       (input-field {:label (.-totalPages locales)
-                     :hint "0"
-                     :controller pages-controller})])))))
+       ;; (input-field {:label (.-totalPages locales)
+       ;;               :hint "0"
+       ;;               :controller pages-controller})
+       (pages-input-field
+        {:label (.-totalPages locales)
+         :controller pages-controller
+         :locales locales})])))))

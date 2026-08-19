@@ -481,5 +481,17 @@
     "noActivityThatDay": "No activity that day",
     "@noActivityThatDay": {
         "description": "Text shown when there is no reading activity for a given day"
+    },
+    "invalidInteger": "Enter a valid number",
+    "@invalidInteger": {
+        "description": "Validation error for an integer output that is not an integer value"
+    },
+    "titleRequired": "The title cannot be empty",
+    "@titleRequired": {
+        "description": "Validation error shown when adding a book and the title is empty"
+    },
+    "authorRequired": "The author cannot be empty",
+    "@authorRequired": {
+        "description": "Validation error shown when adding a book and the author is empty"
     }
 }

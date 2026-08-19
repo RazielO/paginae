@@ -1,7 +1,6 @@
 (ns paginae.add-book.add-book
   (:require [cljd.flutter :as flutter]
             ["package:flutter/material.dart" :as material]
-            [paginae.types.book :as book]
             [paginae.image.utils :as img-utils]
             [paginae.image.widget :as image]
             [paginae.database :as db]
@@ -9,7 +8,9 @@
             [paginae.add-book.book-format :as book-format]
             [paginae.add-book.book-form :as book-form]
             ["../l10n/app_localizations.dart" :as app-l10n]
-            ["package:image_picker/image_picker.dart" :as image-picker]))
+            ["package:image_picker/image_picker.dart" :as image-picker]
+            [paginae.types.book :as book-type]
+            ["package:flutter/widgets.dart" :as widgets]))
 
 (defn- add-cover
   "Pick an image to use as cover"
@@ -26,79 +27,63 @@
 
 (defn- ^material/PreferredSizeWidget app-bar
   "App bar"
-  [{:keys [^app-l10n/AppLocalizations locales
-           on-cancel
-           on-save
-           ^material/ColorScheme color-scheme]}]
+  [context
+   {:keys [on-cancel
+           on-save]}]
 
-  (material/AppBar
-   .centerTitle true
+  (let [locales (app-l10n/AppLocalizations.of context)
+        colorScheme (.-colorScheme (material/Theme.of context))]
 
-   .leading
-   (material/IconButton
-    .icon
-    (material/Icon material/Icons.close)
+    (material/AppBar
+     .centerTitle true
 
-    .onPressed
-    on-cancel
+     .leading
+     (material/IconButton
+      .icon
+      (material/Icon material/Icons.close)
+      .onPressed on-cancel
+      .tooltip (.-cancel locales))
 
-    .tooltip
-    (.-cancel locales))
+     .actions
+     [(material/FilledButton
+       .onPressed
+       on-save
 
-   .actions
-   [(material/FilledButton
-     .onPressed
-     on-save
+       .child
+       (material/Text
+        (.-save locales)
 
-     .child
-     (material/Text
-      (.-save locales)
+        .style
+        (material/TextStyle
+         .fontSize 16
+         .color (.-onSurface colorScheme)))
 
-      .style
-      (material/TextStyle
-       .fontSize 16
-       .color (.-onSurface color-scheme)))
+       .style
+       (material/ButtonStyle
+        .backgroundColor
+        (material/WidgetStatePropertyAll
+         (.-surface colorScheme))
 
-     .style
-     (material/ButtonStyle
-      .backgroundColor
-      (material/WidgetStatePropertyAll (.-surface color-scheme))
+        .foregroundColor
+        (material/WidgetStatePropertyAll
+         (.-onBackground colorScheme))
 
-      .foregroundColor
-      (material/WidgetStatePropertyAll (.-onBackground color-scheme))
-
-      .padding
-      (material/WidgetStatePropertyAll
-       (material/EdgeInsets.all 15))))]
-
-   .title
-   (material/Builder
-    .builder
-    (fn [context]
-      (let [theme (material/Theme.of context)]
-        (material/Text
-         (.-appName (app-l10n/AppLocalizations.of context))
-
-         .style
-         (.copyWith (.-headlineSmall (.-textTheme theme))
-                    .color (.-primary (.-colorScheme theme)))))))))
+        .padding
+        (material/WidgetStatePropertyAll
+         (material/EdgeInsets.all 15))))])))
 
 (defn add-book-widget
   "Body widget on the add book screen"
-  [book-atom]
+  [{:keys [book-atom
+           title-controller
+           author-controller
+           pages-controller]}]
 
   (flutter/widget
    :get {{{:flds [background]} .-colorScheme
-          {:flds [headlineMedium]} .-textTheme} material/Theme}
+          {:flds [headlineSmall]} .-textTheme} material/Theme}
    :context context
-   :managed [title-controller (material/TextEditingController
-                               .text (:title @book-atom))
-
-             author-controller (material/TextEditingController
-                                .text (:author @book-atom))
-
-             pages-controller (material/TextEditingController
-                               .text (str (:pages @book-atom)))]
+   :managed []
    :let [locales (app-l10n/AppLocalizations.of context)]
 
    (material/Container
@@ -110,9 +95,9 @@
      .color background))
 
    (material/Center)
-   
+
    (material/SingleChildScrollView)
-   
+
    (material/Column
     .crossAxisAlignment
     material/CrossAxisAlignment.center
@@ -125,13 +110,14 @@
      (.-addToLibrary locales)
 
      .style
-     headlineMedium
+     (.copyWith
+      headlineSmall
+
+      .fontWeight
+      material/FontWeight.bold)
 
      .textAlign
      material/TextAlign.center)
-
-    (material/SizedBox
-     .height 10)
 
     ;; Cover image
     (image/cover-image
@@ -141,7 +127,7 @@
       :clickable? true
       :on-click (fn []
                   (let [cover (await (add-cover))]
-                    (swap! book-atom book/update-local-cover cover)))})
+                    (swap! book-atom book-type/update-local-cover cover)))})
 
     ;; Form
     (book-form/form-card title-controller author-controller pages-controller)
@@ -152,23 +138,72 @@
     ;; Book formats
     (book-format/format-card book-atom)]))
 
+(defn- show-snackbar
+  "Show a snackbar in the given context with the given message"
+  [context
+   message]
+  (-> (material/ScaffoldMessenger.of context)
+      (.showSnackBar
+       (material/SnackBar
+        .content (material/Text message))))
+  nil)
+
+(defn- save-book
+  "Validate and save book to database"
+  [{:keys [context
+           book-atom
+           ^material/TextEditingController title-controller
+           ^material/TextEditingController author-controller
+           ^material/TextEditingController pages-controller
+           go-to-my-books
+           ^widgets/NavigatorState navigator]}]
+  (let [new-title (.trim (.-text title-controller))
+        new-author (.trim (.-text author-controller))
+        empty-title? (not (seq new-title))
+        empty-author? (not (seq new-author))
+        locales (app-l10n/AppLocalizations.of context)]
+    (cond
+      empty-title?  (show-snackbar context (.-titleRequired locales))
+      empty-author?  (show-snackbar context (.-authorRequired locales))
+      :else (do
+              (swap! book-atom #(assoc % :title new-title
+                                       :author new-author
+                                       :pages (parse-long (.trim (.-text pages-controller)))))
+              (db/insert-book @book-atom)
+              (await (img-utils/save-book-cover @book-atom))
+              (go-to-my-books)
+              (.pop navigator)))))
+
 (defn add-book-screen
-  [^book/Book book]
+  [^book-type/Book book
+   go-to-my-books]
 
   (flutter/widget
-   :watch [book-val (atom book) :as book-atom]
+   :watch [_book-val (atom book) :as book-atom]
+   :managed [title-controller (material/TextEditingController
+                               .text (:title book))
+             author-controller (material/TextEditingController
+                                .text (:author @book-atom))
+
+             pages-controller (material/TextEditingController
+                               .text (str (:pages @book-atom)))]
    :get [material/Navigator]
    :context context
 
    (material/Scaffold
     .appBar
-    (app-bar {:on-cancel #(.pop navigator)
-              :on-save (fn []
-                         (db/insert-book book-val)
-                         (img-utils/save-book-cover book-val)
-                         (.pop navigator))
-              :locales (app-l10n/AppLocalizations.of context)
-              :color-scheme (.-colorScheme (material/Theme.of context))})
+    (app-bar context {:on-cancel #(.pop navigator)
+                      :on-save (fn []
+                                 (save-book {:context context
+                                             :book-atom book-atom
+                                             :title-controller title-controller
+                                             :author-controller author-controller
+                                             :pages-controller pages-controller
+                                             :go-to-my-books go-to-my-books
+                                             :navigator navigator}))})
 
     .body
-    (add-book-widget book-atom))))
+    (add-book-widget {:book-atom book-atom
+                      :title-controller title-controller
+                      :author-controller author-controller
+                      :pages-controller pages-controller}))))

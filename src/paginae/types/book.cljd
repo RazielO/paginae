@@ -23,12 +23,10 @@
     :title ""
     :author ""
     :first-published ""
-    :pages 0
     :favorite false
-    :created-at nil
     :status :to-read
-    :current-progress 0.0
     :format :hardcover
+    :current-progress 0.0
     :cover-uri ""
     :local-cover? true}))
 
@@ -83,8 +81,7 @@
     :format (keyword (get entry "format"))
     :favorite (not (zero? (int (get entry "favorite"))))
     :current-progress (get entry "current_progress")
-    :created-at (dart:core/DateTime.parse (get entry "created_at"))
-    :cover-uri nil
+    :created-at (.toLocal (dart:core/DateTime.parse (get entry "created_at")))
     :local-cover? true}))
 
 (defn update-title

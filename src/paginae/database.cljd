@@ -284,3 +284,20 @@
            {:activity (activity-type/from-db-join-entry row)
             :book (book-type/from-db-entry row)})
          rows)))
+
+(defn get-first-activity-date
+  "Query the date of the first activity"
+  []
+  (let [db (await (get-db))
+        row (first
+             (await
+              (.query db
+                      activities-table
+                      .columns ["date"]
+                      .orderBy "created_at ASC"
+                      .limit 1)))]
+    (if row
+      (-> (get row "date")
+          dart:core/DateTime.parse
+          (.toLocal))
+      (dart:core/DateTime.now))))
