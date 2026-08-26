@@ -1,4 +1,5 @@
 (ns paginae.book-search.query
+  {:no-dynamic true}
   (:require [paginae.types.book :as book]
             [clojure.string :as str]
             ["package:http/http.dart" :as http]
@@ -25,6 +26,8 @@
               "fields" "author_name,title,cover_i,first_publish_year,key,cover_edition_key,number_of_pages_median"
               "limit" "20"
               "offset" (str offset)})]
+    ;; TODO: Maybe add "author_key" to fields and query the author's API https://openlibrary.org/authors/{author_key}.json to get a more localized name
+
 
     (letfn [(handle-error [error]
               (dart:core/print (str "Error: " error))
@@ -43,6 +46,7 @@
             (handle-response [^http/Response response]
               (if (= (.-statusCode response) 200)
                 (let [json (convert/jsonDecode (.-body response))]
+                  (dart:core/print (distinct (mapcat #(get % "author_key" []) (get json "docs" []))))
                   (map->QueryResult
                    {:total (get json "num_found")
                     :offset (get json "offset")

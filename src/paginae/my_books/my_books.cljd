@@ -1,4 +1,5 @@
 (ns paginae.my-books.my-books
+  {:no-dynamic true}
   (:require
    ["package:flutter/material.dart" :as material]
    ["package:flutter/widgets.dart" :as widgets]
@@ -14,55 +15,69 @@
   "Dialog to delete a book from the database"
   [context
    book
-   refresh!
-   ^app-l10n/AppLocalizations locales
-   ^material/ColorScheme color-scheme
-   ^material/TextTheme text-theme]
+   refresh!]
+
   (material/showDialog
    .context context
 
    .builder
-   (fn [_context]
-     (material/AlertDialog
+   (fn [dialog-context]
+     (flutter/widget
+      :get {{{:flds [labelLarge]} .-textTheme
+             {:flds [secondary onSecondary]} .-colorScheme} material/Theme}
+      :let [locales (app-l10n/AppLocalizations.of dialog-context)]
 
-      .title
-      (material/Text ((.-deleteBookTitle locales) (:title book)))
+      (material/AlertDialog
 
-      .content
-      (material/Text "")
+       .title
+       (material/Text
+        ((.-deleteBookTitle locales) (:title book)))
 
-      .actions
-      [(material/TextButton
-        .child
-        (material/Text (.-cancel locales)
-                       .style (.-labelLarge text-theme))
+       .actions
+       [(material/TextButton
+         .child
 
-        .onPressed
-        (fn []
-          (.pop (widgets/Navigator.of context))))
+         (material/Text
+          (.-cancel locales)
 
-       (material/ElevatedButton
-        .style (material/ButtonStyle
-                .backgroundColor (material/WidgetStatePropertyAll (.-secondary color-scheme)))
+          .style
+          labelLarge)
 
-        .child
-        (material/Text (.-delete locales)
-                       .style (.copyWith
-                               (.-labelLarge text-theme)
-                               .color (.-onSecondary color-scheme)))
+         .onPressed
+         (fn []
+           (.pop (widgets/Navigator.of dialog-context))))
 
-        .onPressed
-        (fn []
-          (let [deletion-result (await (db/delete-book (:id book)))]
-            (when deletion-result
-              (.pop (widgets/Navigator.of context))
-              (refresh!)))))]))))
+        (material/ElevatedButton
+         .child
+         (material/Text
+          (.-delete locales)
+
+          .style
+          (.copyWith
+           labelLarge
+
+           .color
+           onSecondary))
+
+         .onPressed
+         (fn []
+           (let [deletion-result (await (db/delete-book (:id book)))]
+             (when deletion-result
+               (.pop (widgets/Navigator.of dialog-context))
+               (refresh!))))
+
+         .style
+         (material/ButtonStyle
+          .backgroundColor
+          (material/WidgetStatePropertyAll
+           secondary)))])))))
 
 (defn- book-card
   "Card that contains a book"
-  [book refresh!]
+  [book
+   refresh!]
   (flutter/widget
-   :get {{{:flds [titleLarge labelMedium]} .-textTheme
+   :get {{{:flds [titleSmall labelMedium]} .-textTheme
           {:flds [onSurfaceVariant]} .-colorScheme} material/Theme}
    :get [material/Navigator]
    :context context
@@ -74,86 +89,81 @@
       (remove-book-dialog
        context
        book
-       refresh!
-       locales
-       (.-colorScheme (material/Theme.of context))
-       (.-textTheme (material/Theme.of context))))
+       refresh!))
 
     .onTap (fn []
-             (.push
-              navigator
-              (#/(material/MaterialPageRoute Object)
-               .builder
-               (flutter/build (book-details/book-details book))))
-             nil)
+             (await
+              (.push
+               navigator
+               (#/(material/MaterialPageRoute Object)
+                .builder
+                (flutter/build (book-details/book-details book)))))
+             (refresh!)))
 
-    .child
-    (material/Card
+   (material/Card)
 
-     .child
-     (material/Column
+   (material/Column)
 
-      .children
-      [;; Cover
-       (material/Stack
+   .children
+   [;; Cover
+    (material/Stack
 
-        .children
-        [(image/cover-image
-          {:book book
-           :placeholder-text (.-noCover locales)
-           :bordered? false
-           :clickable? false
-           :width 200})
-         ;; badge
-         (material/Positioned
+     .children
+     [(image/cover-image
+       {:book book
+        :placeholder-text (.-noCover locales)
+        :bordered? false
+        :clickable? false
+        :width 200})
 
-          .top 0
+      ;; badge
+      (material/Positioned
 
-          .left 0
+       .top 0
 
-          .child
-          (if (:favorite book)
-            (badges/favorite-badge)
-            (case (:status book)
-              :done (badges/read-badge)
-              :reading (badges/reading-badge)
-              :to-read (badges/to-read-badge))))])
+       .left 0
 
-       (material/SizedBox
-        .height 8)
+       .child
+       (if (:favorite book)
+         (badges/favorite-badge)
+         (case (:status book)
+           :done (badges/read-badge)
+           :reading (badges/reading-badge)
+           :to-read (badges/to-read-badge))))])
 
-       ;; Title
-       (material/Text
-        (:title book)
+    (material/SizedBox
+     .height 8)
 
-        .style titleLarge
+    ;; Title
+    (material/Text
+     (:title book)
 
-        .textAlign material/TextAlign.center
+     .style titleSmall
 
-        .maxLines 2
+     .textAlign material/TextAlign.center
 
-        .overflow widgets/TextOverflow.ellipsis)
+     .maxLines 2
 
-       (material/SizedBox
-        .height 8)
+     .overflow widgets/TextOverflow.ellipsis)
 
-       ;; Author
-       (if (nil? (:author book))
-         (material/Container)
-         (material/Text
-          (:author book)
+    ;; Author
+    (material/Text
+     (:author book)
 
-          .maxLines 1
+     .maxLines 1
 
-          .overflow widgets/TextOverflow.ellipsis
+     .overflow widgets/TextOverflow.ellipsis
 
-          .style
-          (.copyWith labelMedium
-                     .color (.withOpacity onSurfaceVariant 0.75))))])))))
+     .style
+     (.copyWith
+      labelMedium
+
+      .color (.withOpacity onSurfaceVariant 0.75)))]))
 
 (defn- filter-button
   "Popup menu to select filter"
-  [filter-atom]
+  [filter-atom
+   refresh-atom]
   (flutter/widget
    :get {{{:flds [secondary onSecondary]} .-colorScheme} material/Theme}
    :context context
@@ -168,11 +178,13 @@
      .fill 1)
 
     .onSelected
-    #(reset! filter-atom %)
+    (fn [value]
+      (reset! filter-atom value)
+      (swap! refresh-atom inc))
 
     .itemBuilder
-    (fn [_context]
-      [       ;; title
+    (fn [_builder-context]
+      [ ;; Title
        (material/PopupMenuItem
         .enabled false
 
@@ -232,6 +244,7 @@
 
         .child
         (material/Container
+
          .padding
          (material/EdgeInsets.symmetric
           .horizontal 12
@@ -240,6 +253,7 @@
          .decoration
          (material/BoxDecoration
           .color secondary
+
           .borderRadius
           (material/BorderRadius.circular 10))
 
@@ -259,66 +273,97 @@
   [filter-by]
 
   (flutter/widget
-   :get {{{:flds [headlineSmall]} .-textTheme} material/Theme}
+   :get {{{:flds [headlineSmall titleMedium]} .-textTheme
+          {:flds [onBackground]} .-colorScheme} material/Theme}
    :context context
-   :let [portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)
-         locales (app-l10n/AppLocalizations.of context)]
    :watch [filter (atom filter-by) :as filter-atom
-           _refresh (atom 0) :as refresh-atom]
+           refresh (atom 0) :as refresh-atom
 
-   (material/FutureBuilder
-    .future
-    (cond
-      (or (= :reset filter) (nil? filter))
-      (db/get-all-books)
+           books (cond
+                   (or (= :reset filter) (nil? filter))
+                   (db/get-all-books)
 
-      (= :favorite filter)
-      (db/get-favorite-books)
+                   (= :favorite filter)
+                   (db/get-favorite-books)
 
-      :else
-      (db/get-books-by-status filter))
+                   :else
+                   (db/get-books-by-status filter)) :default [] :refresh-on refresh]
 
-    .builder
-    (fn [_context ^widgets/AsyncSnapshot snapshot]
-      (if (.-hasError snapshot)
-        (material/Text (str (.-error snapshot)))
+   :let [portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)
+         locales (app-l10n/AppLocalizations.of context)
+         book-count (count books)]
 
-        (if (.-hasData snapshot)
-          (let [books (.-data snapshot)
-                book-count (count books)]
-            (material/CustomScrollView
-             .slivers
-             [;; App bar
-              (material/SliverAppBar
-               .pinned false
 
-               .floating true
+   (material/CustomScrollView)
 
-               .centerTitle true
+   .slivers
+   [;; App bar
+    (material/SliverAppBar
+     .pinned false
 
-               .actions
-               [(filter-button filter-atom)]
+     .floating true
 
-               .title
-               (material/Text
-                (.-allMyBooks locales)
+     .centerTitle true
 
-                .style
-                (.copyWith headlineSmall
-                           .fontWeight material/FontWeight.bold)))
+     .actions
+     [(filter-button filter-atom refresh-atom)]
 
-              (material/SliverGrid.builder
-               .itemCount book-count
+     .title
+     (material/Text
+      (.-allMyBooks locales)
 
-               .gridDelegate
-               (material/SliverGridDelegateWithFixedCrossAxisCount
-                .crossAxisCount (if portrait? 2 4)
-                .crossAxisSpacing 10
-                .mainAxisSpacing 5
-                .childAspectRatio 0.45)
+      .style
+      (.copyWith
+       headlineSmall
 
-               .itemBuilder
-               (fn [_context index]
-                 (book-card (nth books index) #(swap! refresh-atom inc))))]))
+       .fontWeight
+       material/FontWeight.bold)))
 
-          (material/CircularProgressIndicator)))))))
+    (if (zero? book-count)
+      (flutter/widget
+       (material/SliverFillRemaining
+
+        .hasScrollBody
+        false)
+
+       (material/Center)
+
+       (material/Text
+        (case filter
+          :favorite "You have no favorite books"
+          :done "You have not finished a book"
+          :to-read "Your to-read list is empty"
+          :reading "You are currently not reading any book"
+          :reset "You have no books"
+          nil "You have no books")
+
+        .textAlign
+        material/TextAlign.center
+
+        .style
+        (.copyWith
+         titleMedium
+
+         .color
+         (.withOpacity onBackground 0.7)
+
+         .fontFamily
+         "Manrope")))
+
+
+      (material/SliverGrid.builder
+       .itemCount book-count
+
+       .gridDelegate
+       (material/SliverGridDelegateWithFixedCrossAxisCount
+        .crossAxisCount (if portrait? 2 4)
+        .crossAxisSpacing 10
+        .mainAxisSpacing 5
+        .childAspectRatio 0.45)
+
+       .itemBuilder
+       (fn [_context index]
+         (book-card
+          (nth books index)
+          (fn []
+            (swap! refresh-atom inc))))))]))

@@ -1,4 +1,5 @@
 (ns paginae.book-search.book-search
+  {:no-dynamic true}
   (:require [cljd.flutter :as flutter]
             [paginae.theme :as theme]
             [paginae.add-book.add-book :as add-book]
@@ -393,6 +394,25 @@
                (reset! query-atom (.-rawValue ^scanner/Barcode barcode))
                (reset! scanning false)))))))]))))
 
+(defn- load-books
+  [{:keys [query
+           loading-more
+           unknown-str
+           no-response-str
+           books-atom
+           total-atom
+           offset-atom
+           has-more]}]
+  (when (not @loading-more)
+    (reset! loading-more true)
+
+    (let [result (await (query/query-books query @offset-atom unknown-str no-response-str))]
+      (swap! books-atom into (:data result))
+      (reset! total-atom (:total result))
+      (swap! offset-atom + 20)
+      (reset! loading-more false)
+      (reset! has-more (not= (:total result) (count @books-atom))))))
+
 (defn book-search-widget
   "Widget for the add book screen. It allows to search for a book, scan its barcode or go to a manual entry"
   [{:keys [go-to-my-books]}]
@@ -401,129 +421,143 @@
           {:flds [headlineSmall]} .-textTheme} material/Theme}
 
    :watch [query (atom "") :as query-atom
-           offset (atom 0) :as offset-atom
-           books (atom []) :as books-atom
-           total-books (atom 0) :as total-atom
-           loading-more? (atom false) :as loading-more
+           _offset (atom 0) :as offset-atom
+           _books (atom []) :as books-atom
+           _total-books (atom 0) :as total-atom
+           _loading-more? (atom false) :as loading-more
            scanning? (atom false) :as scanning
-           show-fab? (atom false) :as show-fab
-           has-more? (atom true) :as has-more]
+           _show-fab? (atom false) :as show-fab
+           _has-more? (atom true) :as has-more]
 
    :context context
 
+   :managed [scroll-controller
+             (let [controller (material/ScrollController)
+                   handler (fn []
+                             (let [locales (app-l10n/AppLocalizations.of context)
+                                   unknown-str (.-unknown locales)
+                                   no-response-str (.-noServerResponse locales)
+                                   offset (.-offset controller)
+                                   position (.-position controller)]
+                               (dart:core/print (str "Position: " (.-pixels position)
+                                                     "\nMax scroll: " (.-maxScrollExtent position)
+                                                     "\nIf more books, should load now: " (> (.-pixels position)
+                                                                                             (- (.-maxScrollExtent position) 500))
+                                                     "\nLoading more? " @loading-more
+                                                     "\nHas more books? " @has-more))
+                               (when (and
+                                      @has-more
+                                      (not @loading-more)
+                                      (> (.-pixels position)
+                                         (- (.-maxScrollExtent position) 500)))
+                                 (dart:core/print "Loading more books")
+                                 (load-books {:query @query-atom
+                                              :loading-more loading-more
+                                              :unknown-str unknown-str
+                                              :no-response-str no-response-str
+                                              :books-atom books-atom
+                                              :total-atom total-atom
+                                              :offset-atom offset-atom
+                                              :has-more has-more}))
+
+                               (cond
+                                 (and (> 300 offset) @show-fab)
+                                 (reset! show-fab false)
+
+                                 (and (<= 300 offset) (not @show-fab))
+                                 (reset! show-fab true))))]
+               (.addListener controller handler)
+               controller)]
+
+
    :let [locales (app-l10n/AppLocalizations.of context)
-         portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)
-         unknown-str (.-unknown locales)
-         no-response-str (.-noServerResponse locales)] 
-   :managed [scroll-controller (material/ScrollController)]
+         portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)]
 
-   (letfn [(load-books [text]
-             (when (not loading-more?)
-               (reset! loading-more true)
+   (material/Scaffold
+    .floatingActionButton
+    (when @show-fab
+      (material/FloatingActionButton
 
-               (let [result (await (query/query-books text offset unknown-str no-response-str))]
-                 (swap! books-atom into (:data result))
-                 (reset! total-atom (:total result))
-                 (swap! offset-atom + 20)
-                 (reset! loading-more false)
-                 (reset! has-more (= total-books (count books))))))]
+       .onPressed
+       (fn []
+         (-> scroll-controller
+             (.animateTo
+              0
 
-     (do
-       (-> scroll-controller
-           (.addListener
-            (fn []
-              (let [offset (.-offset scroll-controller)
-                    position (.-position scroll-controller)
-                    pixels (.-pixels position)
-                    max-scroll (.-maxScrollExtent position)]
+              .duration (dart:core/Duration .milliseconds 400)
 
-                (when (and
-                       has-more?
-                       (not loading-more?)
-                       (> pixels (- max-scroll 300)))
-                  (dart:core/print "Load more")
-                  (load-books query))
+              .curve animation/Curves.easeInOut))
+         ())
 
-                (cond
-                  (and (> 300 offset) show-fab?)
-                  (reset! show-fab false)
+       .child
+       (material/Icon symbols/Symbols.keyboard_double_arrow_up)))
 
-                  (and (<= 300 offset) (not show-fab?))
-                  (reset! show-fab true))))))
+    .body
+    (material/Container
 
-       (material/Scaffold
-        .floatingActionButton
-        (when show-fab?
-          (material/FloatingActionButton
+     .decoration
+     (material/BoxDecoration
+      .color background)
 
-           .onPressed (fn []
-                        (-> scroll-controller
-                            (.animateTo 0
-                                        .duration (dart:core/Duration
-                                                   .milliseconds 400)
-                                        .curve animation/Curves.easeInOut))
-                        ())
+     .child
+     (material/CustomScrollView
+      .controller scroll-controller
 
-           .child
-           (material/Icon symbols/Symbols.keyboard_double_arrow_up)))
+      .slivers
+      [;; App bar
+       (material/SliverAppBar
+        .pinned portrait?
 
-        .body
-        (material/Container
+        .floating true
 
-         .decoration
-         (material/BoxDecoration
-          .color background)
-
+        .flexibleSpace
+        (material/Center
          .child
-         (material/CustomScrollView
-          .controller scroll-controller
+         (material/Text
+          (.-searchTitle locales)
 
-          .slivers
-          [;; App bar
-           (material/SliverAppBar
-            .pinned portrait?
+          .textAlign
+          material/TextAlign.center
 
-            .floating true
+          .style
+          (.copyWith
+           headlineSmall
 
-            .flexibleSpace
-            (material/Center
-             .child
-             (material/Text
-              (.-searchTitle locales)
+           .fontWeight
+           material/FontWeight.bold))))
 
-              .textAlign
-              material/TextAlign.center
+       ;; Either search or barcode scanner
+       (material/SliverToBoxAdapter
+        .child
+        (if scanning?
+          (barcode-scanner scanning query-atom)
 
-              .style
-              (.copyWith
-               headlineSmall
+          (search-widget {:on-submitted (fn [text]
+                                          (let [locales (app-l10n/AppLocalizations.of context)]
+                                            (reset! query-atom text)
+                                            (reset! books-atom [])
+                                            (reset! offset-atom 0)
+                                            (reset! total-atom 0)
+                                            (load-books {:query text
+                                                         :loading-more loading-more
+                                                         :unknown-str (.-unknown locales)
+                                                         :no-response-str (.-noServerResponse locales)
+                                                         :books-atom books-atom
+                                                         :total-atom total-atom
+                                                         :offset-atom offset-atom
+                                                         :has-more has-more})))
+                          :scanning scanning
+                          :go-to-my-books go-to-my-books})))
 
-               .fontWeight
-               material/FontWeight.bold))))
-
-           ;; Either search or barcode scanner
-           (material/SliverToBoxAdapter
-            .child
-            (if scanning?
-              (barcode-scanner scanning query-atom)
-
-              (search-widget {:on-submitted (fn [text]
-                                              (reset! query-atom text)
-                                              (reset! books-atom [])
-                                              (reset! offset-atom 0)
-                                              (reset! total-atom 0)
-                                              (load-books text))
-                              :scanning scanning
-                              :go-to-my-books go-to-my-books})))
-
-           (if (and (not scanning?) (not (empty? query)))
-             (book-list {:books books
-                         :total-books total-books
-                         :loading? (empty? books)
-                         :as-list? portrait?
-                         :loading-more? loading-more?
-                         :go-to-my-books go-to-my-books})
-             (material/SliverToBoxAdapter
-              .child
-              (material/Container)))])))))))
+       (if (and (not scanning?)
+                (seq query))
+         (book-list {:books @books-atom
+                     :total-books @total-atom
+                     :loading? (empty? @books-atom)
+                     :as-list? portrait?
+                     :loading-more? @loading-more
+                     :go-to-my-books go-to-my-books})
+         (material/SliverToBoxAdapter
+          .child
+          (material/Container)))])))))
 

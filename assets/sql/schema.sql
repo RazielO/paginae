@@ -1,7 +1,7 @@
 CREATE TABLE books (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
-    author TEXT,
+    author TEXT NOT NULL,
     pages INTEGER,
     /* Values "reading", "done", "to-read" */
     status TEXT NOT NULL,

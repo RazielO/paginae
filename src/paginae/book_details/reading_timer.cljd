@@ -1,4 +1,5 @@
 (ns paginae.book-details.reading-timer
+  {:no-dynamic true}
   (:require
    ["../l10n/app_localizations.dart" :as app-l10n]
    ["dart:async" :as dart:async]
@@ -41,7 +42,6 @@
     (.cancel timer)
     (reset! timer-atom nil)))
 
-
 (defn- timer-widget
   "Widget that shows the reading time"
   [{:keys [start-time
@@ -60,7 +60,6 @@
             secs (.padLeft (.toString (mod seconds 60)) 2 "0")]
 
         (str hours ":" mins ":" secs)))
-
 
     .style
     (.copyWith
@@ -159,7 +158,7 @@
    :context context
    :managed [note-controller (material/TextEditingController)
              progress-controller (material/TextEditingController)
-             timer-atom (atom nil) :dispose nil
+             timer-atom (atom nil) :dispose pause-timer
              running-atom (atom false) :dispose nil
              start-time-atom (atom (now-in-seconds)) :dispose nil
              elapsed-time-atom (atom 0) :dispose nil
@@ -198,10 +197,11 @@
                              :book book
                              :on-confirm
                              (fn [progress]
-                               (db/insert-book-activity
-                                {:book-id (:id book)
-                                 :progress progress
-                                 :reading-time (+ elapsed-time (elapsed-seconds start-time))}))}))]
+                               (await
+                                (db/insert-book-activity
+                                 {:book-id (:id book)
+                                  :progress progress
+                                  :reading-time (+ elapsed-time (elapsed-seconds start-time))})))}))]
            (when data
              (.pop (widgets/Navigator.of context) data)))))])
 
@@ -216,7 +216,7 @@
       .child
       (letfn [(on-note-save []
                 (let [note (.trim (.-text note-controller))]
-                  (when (not (empty? note))
+                  (when (seq note)
                     (await (db/insert-book-note note (:id book)))
                     (.-text! note-controller "")
                     nil)))]

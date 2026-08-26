@@ -1,4 +1,5 @@
 (ns paginae.common.number-input
+  {:no-dynamic true}
   (:require ["../l10n/app_localizations.dart" :as app-l10n]
             ["package:flutter/material.dart" :as material]
             ["package:flutter/services.dart" :as services]
@@ -19,9 +20,11 @@
    (material/TextField
     .controller controller
 
-    .keyboardType material/TextInputType.number
+    .keyboardType
+    material/TextInputType.number
 
-    .inputFormatters [services/FilteringTextInputFormatter.digitsOnly]
+    .inputFormatters
+    [services/FilteringTextInputFormatter.digitsOnly]
 
     .decoration
     (material/InputDecoration
@@ -50,15 +53,18 @@
   (flutter/widget
    ;; :managed [float-ctrl (material/TextEditingController)]
    :watch [float-text controller :> .-text]
-   :let [float-val (parse-double float-text)
+   :let [float-val (try (parse-double float-text)
+                        (catch dart:core/Object _ nil))
          float-ok? (and float-val (>= float-val lower-limit) (<= float-val upper-limit))]
 
    (material/TextField
     .controller controller
 
-    .keyboardType (material/TextInputType.numberWithOptions .decimal true)
+    .keyboardType
+    (material/TextInputType.numberWithOptions .decimal true)
 
-    .inputFormatters [(float-formatter)]
+    .inputFormatters
+    [(float-formatter)]
 
     .decoration
     (material/InputDecoration

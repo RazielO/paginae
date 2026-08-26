@@ -1,4 +1,5 @@
 (ns paginae.book-details.book-details
+  {:no-dynamic true}
   (:require ["../l10n/app_localizations.dart" :as app-l10n]
             ["package:flutter/material.dart" :as material]
             ["package:flutter/widgets.dart" :as widgets]
@@ -110,7 +111,7 @@
           .onPressed
           (fn []
             (let [note (.trim (.-text controller))]
-              (when (not (empty? note))
+              (when (seq note)
                 (.-text! controller "")
                 (.pop (widgets/Navigator.of dialog-context) note)))))])]))))
 
@@ -161,6 +162,7 @@
    :let [locales (app-l10n/AppLocalizations.of context)]
    :get {{{:flds [labelLarge bodyLarge]} .-textTheme
           {:flds [secondary onSurface]} .-colorScheme} material/Theme}
+   :key (:id note)
 
    (material/Card
     .margin
@@ -210,7 +212,7 @@
         labelLarge
 
         .color
-        (.withAlpha onSurface 180)))])
+        (.withOpacity onSurface 0.7)))])
 
     ;; Note's contents
     (material/Text
@@ -251,7 +253,7 @@
        (fn []
          (.-text! note-controller (:contents note))
          (let [new-contents (await (add-note-dialog context note-controller))]
-           (when note
+           (when new-contents
              (await (db/update-book-note
                      (note-type/update-contents note new-contents)))
              (swap! notes-revisions inc)))))
@@ -363,7 +365,7 @@
        (fn []
          (let [new-status (not (:favorite @book-atom))]
            (swap! book-atom #(book-type/update-favorite-status % new-status))
-           (db/update-book @book-atom))))])))
+           (await (db/update-book @book-atom)))))])))
 
 (defn- activity-card
   "Card for displaying a reading activity"
@@ -374,6 +376,7 @@
    :context context
    :let [locales (app-l10n/AppLocalizations.of context)
          locale (material/Localizations.localeOf context)]
+   :key (:id activity)
 
    (material/Card)
 
@@ -415,7 +418,7 @@
       labelLarge
 
       .color
-      (.withAlpha onSurface 180)))
+      (.withOpacity onSurface 0.7)))
     ;; Activity
     (material/Text
      (activity-type/activity-string activity book locales)
@@ -488,9 +491,10 @@
      ;; Progress circle
      (book-details.reading-progress/reading-progress
       {:book book
-       :mark-as-started  (fn []
-                           (reset! book-atom (book-type/update-status book :reading))
-                           (db/update-book @book-atom))})
+       :mark-as-started
+       (fn []
+         (reset! book-atom (book-type/update-status book :reading))
+         (await (db/update-book @book-atom)))})
 
      (material/SizedBox .height 20)
      ;; Action buttons
@@ -519,8 +523,9 @@
                                            :book book
                                            :on-confirm
                                            (fn [progress]
-                                             (db/insert-book-activity {:book-id (:id book)
-                                                                       :progress progress}))}))]
+                                             (await
+                                              (db/insert-book-activity {:book-id (:id book)
+                                                                        :progress progress})))}))]
                          (when data
                            (swap! book-atom #(book-type/update-current-progress % data))
                            (swap! data-revisions inc))))
@@ -543,26 +548,33 @@
        :foreground onTertiary})
      (material/SizedBox .height 20)
      ;; Notes
-     (if (not (empty? notes))
-       (material/Text (.-notesSection locales) .style titleLarge)
-       (material/SizedBox.shrink))
+     (flutter/widget
+      :when (seq notes)
 
-     (material/ListView .shrinkWrap
-                        true
-                        .physics
-                        (widgets/NeverScrollableScrollPhysics)
-                        .children
-                        (map #(note-card
-                               {:context context
-                                :note %
-                                :book-name (:title book)
-                                :notes-revisions data-revisions
-                                :note-controller note-controller})
-                             notes))
+      (material/Text (.-notesSection locales) .style titleLarge))
+
+     (material/ListView
+
+      .shrinkWrap
+      true
+
+      .physics
+      (widgets/NeverScrollableScrollPhysics)
+
+      .children
+      (map #(note-card
+             {:context context
+              :note %
+              :book-name (:title book)
+              :notes-revisions data-revisions
+              :note-controller note-controller})
+           notes))
+
      ;; Activities
-     (if (not (empty? activities))
-       (material/Text (.-activitySection locales) .style titleLarge)
-       (material/SizedBox.shrink))
+     (flutter/widget
+      :when (seq activities)
+
+      (material/Text (.-activitySection locales) .style titleLarge))
 
      (material/ListView .shrinkWrap
                         true

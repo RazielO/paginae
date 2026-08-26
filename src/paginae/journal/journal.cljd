@@ -1,4 +1,5 @@
 (ns paginae.journal.journal
+  {:no-dynamic true}
   (:require
    ["../l10n/app_localizations.dart" :as app-l10n]
    ["package:flutter/material.dart" :as material]
@@ -29,7 +30,8 @@
     .spacing 10)
 
    .children
-   [(image/cover-image
+   [ ;; Cover image
+    (image/cover-image
      {:book book
       :placeholder-text (.-noCover locales)
       :bordered? false
@@ -45,7 +47,8 @@
       material/CrossAxisAlignment.start
 
       .children
-      [(material/Text
+      [;; Read date
+       (material/Text
         (str
          (.format
           (intl/DateFormat.yMMMd (.toString locale))
@@ -62,12 +65,14 @@
 
         .height 20)
 
+       ;; Title
        (material/Text
         (:title book)
 
         .style
         titleMedium)
 
+       ;; Activity
        (material/Text
         (activity-type/activity-string (:activity data) (:book data) locales)
 
@@ -97,12 +102,12 @@
            ^dart:core/DateTime today
            first-day
            locale
-           activities
-           landscape?]}]
+           activities]}]
   (flutter/widget
    :get {{{:flds [labelLarge]} .-textTheme
           {:flds [primary secondary onSecondary]} .-colorScheme} material/Theme}
 
+   ;; TODO: Check why it in the emulator is not show first time
    (calendar/TableCalendar
     .focusedDay
     @focused-day-atom
@@ -111,7 +116,7 @@
     today
 
     .selectedDayPredicate
-    (fn [^dart:core/DateTime day]
+    (fn [day]
       (calendar/isSameDay day @selected-day-atom))
 
     .firstDay
@@ -124,7 +129,7 @@
     calendar/CalendarFormat.month
 
     .shouldFillViewport
-    landscape?
+    false
 
     .startingDayOfWeek
     (starting-day-of-week locale)
@@ -150,11 +155,13 @@
      .selectedDecoration
      (material/BoxDecoration
       .color secondary
+
       .shape material/BoxShape.circle)
 
      .markerDecoration
      (material/BoxDecoration
       .color primary
+
       .shape material/BoxShape.circle))
 
     .locale
@@ -182,8 +189,8 @@
      (let [^dart:core/DateTime focused-day @focused-day-atom
            same-month (= (.-month today) (.-month focused-day))
            same-year (= (.-year today) (.-year focused-day))]
-       (if
-        (not (and same-month same-year))
+
+       (if (not (and same-month same-year))
          (material/Icon symbols/Symbols.chevron_right)
          (material/Container))))
 
@@ -208,7 +215,10 @@
          (.-bodyMedium (.-textTheme theme))
 
          .color
-         (.withAlpha (.-onSurface (.-colorScheme  theme)) 150)))]
+         (.withOpacity
+          (.-onSurface (.-colorScheme  theme))
+          0.6)))]
+
       (map activity-card filtered))))
 
 (defn journal-widget
@@ -227,9 +237,11 @@
            first-day  (db/get-first-activity-date) :default (dart:core/DateTime.now)]
 
    (material/Scaffold
+
     .appBar
     (if portrait?
       (material/AppBar
+
        .title
        (material/Text
         (.-journalTitle locales)
@@ -260,8 +272,7 @@
            :today today
            :first-day first-day
            :locale locale
-           :activities activities
-           :landscape? false})]
+           :activities activities})]
         (activities-by-day activities selected-day context))))
 
      (material/Row
@@ -274,8 +285,7 @@
           :today today
           :first-day first-day
           :locale locale
-          :activities activities
-          :landscape? true}))
+          :activities activities}))
 
        (material/Expanded
         .child

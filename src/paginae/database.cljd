@@ -1,4 +1,5 @@
 (ns paginae.database
+  {:no-dynamic true}
   (:require ["dart:async" :as dart:async]
             ["package:flutter/services.dart" :as services]
             ["package:path/path.dart" :as path]
@@ -15,6 +16,7 @@
 (def notes-table "notes")
 (def activities-table "activities")
 (def schema-path "assets/sql/schema.sql")
+(def database-file "paginae.db")
 
 (defn run-schema
   "Execute a SQL schema in the database"
@@ -31,33 +33,36 @@
 (defn ^#/(dart:async/Future sqlite/Database) init-db
   "Initialize the database"
   []
-  (letfn [(on-configure [^sqlite/Database db]
-            (.execute db "PRAGMA foreign_keys = ON"))
+  (let [path (await (sqlite/getDatabasesPath))
+        db-path (path/join path database-file)]
 
-          (on-create [^sqlite/Database db _version]
-            (let [schema (await (load-schema))]
-              (await (run-schema db schema))))]
+    (await
+     ^#/(dart:async/Future sqlite/Database)
+     (sqlite/openDatabase
+      db-path
 
-    (let [path (await (sqlite/getDatabasesPath))
-          db-path (path/join path "paginae.db")]
-      (await
-       ^#/(dart:async/Future sqlite/Database)
-       (sqlite/openDatabase
-        db-path
+      .version 1
 
-        .version 1
+      .onConfigure
+      (fn [^sqlite/Database db]
+        (.execute db "PRAGMA foreign_keys = ON"))
 
-        .onConfigure on-configure
-
-        .onCreate on-create)))))
+      .onCreate
+      (fn [^sqlite/Database db _version]
+        (let [schema (await (load-schema))]
+          (await (run-schema db schema))))))))
 
 (defonce db-instance
-  (init-db))
+  (atom nil))
 
-(defn  ^#/(dart:async/Future sqlite/Database) get-db
-  "Return the database instance, if not initialized, initialize it first"
+(defn ^#/(dart:async/Future sqlite/Database) get-db
+  "Return the database instance, if not initialized, initialize it first.
+   Failures are never cached: the next call will retry initialization."
   []
-  db-instance)
+  (or @db-instance
+      (let [db (await (init-db))]
+        (reset! db-instance db)
+        db)))
 
 ;; ************************************************
 ;; * Books queries                                *
@@ -65,41 +70,29 @@
 (defn get-all-books
   "Query all books"
   []
-  (let [db (await (get-db))
-        rows (await (.query db
-                            books-table
-                            .orderBy "created_at DESC"))]
-    (map book-type/from-db-entry rows)))
-
-(defn get-book
-  "Query for a book by id"
-  [id]
-  (let [db (await (get-db))
-        rows (await
-              (.query db
-                      books-table
-                      .where "id = ?"
-                      .whereArgs [id]
-                      .limit 1))]
-    (when (> (count rows) 0)
-      (book-type/from-db-entry (first rows)))))
+  (let [db (await (get-db))]
+    (->>
+     (await
+      (.query db
+              books-table
+              .orderBy "created_at DESC"))
+     (map book-type/from-db-entry))))
 
 (defn get-book-counts
   "Query the book counts by status"
   []
-  (let [db (await (get-db))
-        data (await
-              (.rawQuery db
-                         "SELECT status, COUNT(*) as count
+  (let [db (await (get-db))]
+    (->>
+     (await
+      (.rawQuery db
+                 "SELECT status, COUNT(*) as count
                               FROM books
                               GROUP BY status
                           UNION
                           SELECT 'favorite' AS status,
                                  COUNT(*) as count
                               FROM books
-                              WHERE favorite = 1"))]
-    (->>
-     data
+                              WHERE favorite = 1"))
      (map #(into {} %))
      (map (fn [row]
             [(keyword (get row "status")) (get row "count")]))
@@ -113,23 +106,27 @@
 (defn get-books-by-status
   "Query books that have a certain status"
   [status]
-  (let [db (await (get-db))
-        rows (await (.query db
-                            books-table
-                            .where "status = ?"
-                            .whereArgs [(name status)]
-                            .orderBy "created_at DESC"))]
-    (map book-type/from-db-entry rows)))
+  (let [db (await (get-db))]
+    (->>
+     (await
+      (.query db
+              books-table
+              .where "status = ?"
+              .whereArgs [(name status)]
+              .orderBy "created_at DESC"))
+     (map book-type/from-db-entry))))
 
 (defn get-favorite-books
   "Query favorite books"
   []
-  (let [db (await (get-db))
-        rows (await (.query db
-                            books-table
-                            .where "favorite = 1"
-                            .orderBy "created_at DESC"))]
-    (map book-type/from-db-entry rows)))
+  (let [db (await (get-db))]
+    (->>
+     (await
+      (.query db
+              books-table
+              .where "favorite = 1"
+              .orderBy "created_at DESC"))
+     (map book-type/from-db-entry))))
 
 (defn insert-book
   "Insert a book into the database"
@@ -189,15 +186,16 @@
 (defn get-book-notes
   "Get the notes of a book"
   [book-id]
-  (let [db (await (get-db))
-        rows (await
-              (.query db
-                      notes-table
-                      .columns ["id" "book_id" "contents" "created_at"]
-                      .where "book_id = ?"
-                      .whereArgs [book-id]
-                      .orderBy "created_at ASC"))]
-    (map note-type/from-db-entry rows)))
+  (let [db (await (get-db))]
+    (->>
+     (await
+      (.query db
+              notes-table
+              .columns ["id" "book_id" "contents" "created_at"]
+              .where "book_id = ?"
+              .whereArgs [book-id]
+              .orderBy "created_at ASC"))
+     (map note-type/from-db-entry))))
 
 (defn delete-note
   "Delete a book from the database by id"
@@ -215,35 +213,36 @@
 (defn get-book-activities
   "Get the activities of a book"
   [book-id]
-  (let [db (await (get-db))
-        rows (await
-              (.query db
-                      activities-table
-                      .columns ["id" "book_id" "reading_time" "progress" "date" "created_at"]
-                      .where "book_id = ?"
-                      .whereArgs [book-id]
-                      .orderBy "date DESC"))]
-    (map activity-type/from-db-entry rows)))
+  (let [db (await (get-db))]
+    (->>
+     (await
+      (.query db
+              activities-table
+              .columns ["id" "book_id" "reading_time" "progress" "date" "created_at"]
+              .where "book_id = ?"
+              .whereArgs [book-id]
+              .orderBy "date DESC"))
+     (map activity-type/from-db-entry))))
 
 (defn get-recent-activity
   "Query the last n activity items, each paired with its book"
   [n]
-  (let [db (await (get-db))
-        rows (await
-              (.rawQuery db
-                         (str "SELECT a.id AS activity_id, a.book_id, a.reading_time, "
-                              "a.progress, a.date, "
-                              "b.id, b.title, b.author, b.pages, b.status, b.format, "
-                              "b.current_progress, b.favorite, b.created_at "
-                              "FROM activities a "
-                              "JOIN books b ON a.book_id = b.id "
-                              "ORDER BY a.date DESC "
-                              "LIMIT ?")
-                         [n]))]
-    (map (fn [row]
-           {:activity (activity-type/from-db-join-entry row)
-            :book (book-type/from-db-entry row)})
-         rows)))
+  (let [db (await (get-db))]
+    (->>
+     (await
+      (.rawQuery db
+                 (str "SELECT a.id AS activity_id, a.book_id, a.reading_time, "
+                      "a.progress, a.date, "
+                      "b.id, b.title, b.author, b.pages, b.status, b.format, "
+                      "b.current_progress, b.favorite, b.created_at "
+                      "FROM activities a "
+                      "JOIN books b ON a.book_id = b.id "
+                      "ORDER BY a.date DESC "
+                      "LIMIT ?")
+                 [n]))
+     (map (fn [row]
+            {:activity (activity-type/from-db-join-entry row)
+             :book (book-type/from-db-entry row)})))))
 
 (defn insert-book-activity
   "Insert a new activity on a book and update its progress"
@@ -268,22 +267,22 @@
   [month year]
   (let [db (await (get-db))
         start-date (str year "-" (.padLeft (.toString month) 2 "0") "-01")
-        end-date (str year "-" (.padLeft (.toString (inc month)) 2 "0") "-01")
-        rows (await
-              (.rawQuery db
-                         (str "SELECT a.id AS activity_id, a.book_id, a.reading_time, "
-                              "a.progress, a.date, "
-                              "b.id, b.title, b.author, b.pages, b.status, b.format, "
-                              "b.current_progress, b.favorite, b.created_at "
-                              "FROM activities a "
-                              "JOIN books b ON a.book_id = b.id "
-                              "WHERE a.date >= ? AND a.date < ? "
-                              "ORDER BY a.date DESC")
-                         [start-date end-date]))]
-    (map (fn [row]
-           {:activity (activity-type/from-db-join-entry row)
-            :book (book-type/from-db-entry row)})
-         rows)))
+        end-date (str year "-" (.padLeft (.toString (inc month)) 2 "0") "-01")]
+    (->>
+     (await
+      (.rawQuery db
+                 (str "SELECT a.id AS activity_id, a.book_id, a.reading_time, "
+                      "a.progress, a.date, "
+                      "b.id, b.title, b.author, b.pages, b.status, b.format, "
+                      "b.current_progress, b.favorite, b.created_at "
+                      "FROM activities a "
+                      "JOIN books b ON a.book_id = b.id "
+                      "WHERE a.date >= ? AND a.date < ? "
+                      "ORDER BY a.date DESC")
+                 [start-date end-date]))
+     (map (fn [row]
+            {:activity (activity-type/from-db-join-entry row)
+             :book (book-type/from-db-entry row)})))))
 
 (defn get-first-activity-date
   "Query the date of the first activity"

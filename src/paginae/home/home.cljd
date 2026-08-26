@@ -1,4 +1,5 @@
 (ns paginae.home.home
+  {:no-dynamic true}
   (:require ["../l10n/app_localizations.dart" :as app-l10n]
             ["package:carousel_slider/carousel_slider.dart" :as carousel]
             ["package:flutter/material.dart" :as material]
@@ -29,68 +30,86 @@
                       (#/(material/MaterialPageRoute Object)
                        .builder
                        (flutter/build (book-details/book-details book)))))]
-        (update-books)))
+        (update-books))))
 
-    .child
-    (material/Card
-     .child
-     (material/Container
+   .child
+   (material/Card)
 
-      .padding
-      (material/EdgeInsets.all 10)
+   .child
+   (material/Container
 
-      .child
+    .padding
+    (material/EdgeInsets.all 10))
+
+   .child
+   (material/Column
+    .crossAxisAlignment
+    material/CrossAxisAlignment.center
+
+    .mainAxisAlignment
+    material/MainAxisAlignment.spaceBetween)
+
+   .children
+   [;; Cover image
+    (image/cover-image
+     {:book book
+      :placeholder-text (.-noCover locales)
+      :bordered? false
+      :clickable? false
+      :on-click nil
+      :width 175})
+
+    (material/Column
+
+     .children
+     [ ;; Title
+      (material/Text
+       (:title book)
+
+       .style
+       (.copyWith
+        titleLarge
+
+        .fontWeight
+        material/FontWeight.bold)
+
+       .overflow
+       material/TextOverflow.ellipsis)
+
+      ;; Author
+      (material/Text
+       (:author book)
+
+       .style
+       bodyMedium
+
+       .overflow
+       material/TextOverflow.ellipsis)])
+
+    ;; Progress
+    (let [progress (:current-progress book)
+          pages (:pages book)]
       (material/Column
-       .crossAxisAlignment material/CrossAxisAlignment.center
-
-       .mainAxisAlignment material/MainAxisAlignment.spaceBetween
+       .spacing 10
 
        .children
-       [(image/cover-image
-         {:book book
-          :placeholder-text (.-noCover locales)
-          :bordered? false
-          :clickable? false
-          :on-click nil
-          :width 175})
+       [(material/Row
 
-        (material/Column
+         .mainAxisAlignment
+         material/MainAxisAlignment.spaceBetween
 
-         .children [(material/Text
-                     (:title book)
+         .children
+         [(material/Text
+           (.toUpperCase (.percentComplete locales (.round (* 100 progress)))))
 
-                     .style
-                     (.copyWith titleLarge
-                                .fontWeight material/FontWeight.bold)
+          (material/Text
+           (if (nil? pages)
+             ""
+             (.toUpperCase (.pageCount locales (.round (* pages progress))))))])
 
-                     .overflow material/TextOverflow.ellipsis)
-
-                    (material/Text
-                     (if (nil? (:author book))
-                       ""
-                       (:author book))
-
-                     .style bodyMedium
-
-                     .overflow material/TextOverflow.ellipsis)])
-
-        (let [progress (:current-progress book)
-              pages (:pages book)]
-          (material/Column
-           .spacing 10
-
-           .children [(material/Row
-
-                       .mainAxisAlignment material/MainAxisAlignment.spaceBetween
-
-                       .children
-                       [(material/Text (.toUpperCase (.percentComplete locales (.round (* 100 progress)))))
-                        (material/Text (if (nil? pages)
-                                         ""
-                                         (.toUpperCase (.pageCount locales (.round (* pages progress))))))])
-
-                      (material/LinearProgressIndicator
-                       .value progress)]))]))))))
+        ;; Progress bar
+        (material/LinearProgressIndicator
+         .value progress)]))]))
 
 (defn- books-reading
   "Widget to display currently reading books"
@@ -120,21 +139,22 @@
       [(material/Text
         (.-noBooks locales)
 
-        .style (.copyWith titleLarge
-                          .fontFamily "Manrope"))
+        .style
+        (.copyWith titleLarge
+                   .fontFamily "Manrope"))
 
        (material/FilledButton
-
         .onPressed go-to-add
 
         .child
         (material/Text
          (.toUpperCase (.-addNewBook locales))
 
-         .style (.copyWith titleMedium
-                           .color onPrimary
-                           .fontFamily "Manrope"
-                           .fontWeight material/FontWeight.bold)))])
+         .style
+         (.copyWith titleMedium
+                    .color onPrimary
+                    .fontFamily "Manrope"
+                    .fontWeight material/FontWeight.bold)))])
 
      ;; List the reading books 
      (material/Column
@@ -143,7 +163,8 @@
 
       .children
       [(material/Row
-        .mainAxisAlignment material/MainAxisAlignment.spaceBetween
+        .mainAxisAlignment
+        material/MainAxisAlignment.spaceBetween
 
         .children
         [;; Section title
@@ -156,11 +177,15 @@
          ;; Book count 
          (material/Text
           (.toUpperCase ^String ((.-booksInProgress locales) (count books)))
+
           .softWrap true
+
           .maxLines 2
-          .style (.copyWith bodyMedium
-                            .fontWeight material/FontWeight.bold
-                            .color primary))])
+
+          .style
+          (.copyWith bodyMedium
+                     .fontWeight material/FontWeight.bold
+                     .color primary))])
 
        ;; Book carousel
        (carousel/CarouselSlider.builder

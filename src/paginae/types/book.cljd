@@ -1,5 +1,7 @@
 (ns paginae.types.book
-  (:require ["package:uuid/uuid.dart" :as uuid]))
+  {:no-dynamic true}
+  (:require ["package:uuid/uuid.dart" :as uuid]
+            [clojure.string :as str]))
 
 (defrecord Book
            [id
@@ -44,7 +46,7 @@
     (map->Book
      {:id (uuid/.v4 (uuid/Uuid))
       :title (get json "title")
-      :author (first (get json "author_name" [unknown-str]))
+      :author (str/join ", " (get json "author_name" [unknown-str]))
       :first-published (str (get json "first_publish_year" unknown-str))
       :pages (maybe-string-to-int (get json "number_of_pages_median" 0))
       :status :to-read

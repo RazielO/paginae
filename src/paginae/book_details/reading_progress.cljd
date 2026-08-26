@@ -1,4 +1,5 @@
 (ns paginae.book-details.reading-progress
+  {:no-dynamic true}
   (:require
    ["../l10n/app_localizations.dart" :as app-l10n]
    ["package:material_symbols_icons/symbols.dart" :as symbols]

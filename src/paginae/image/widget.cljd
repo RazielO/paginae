@@ -1,4 +1,5 @@
 (ns paginae.image.widget
+  {:no-dynamic true}
   (:require [cljd.flutter :as flutter]
             ["package:flutter/material.dart" :as material]
             [paginae.image.utils :as img-utils]
@@ -13,35 +14,41 @@
    :get {{{:flds [surfaceVariant onSurfaceVariant]} .-colorScheme} material/Theme}
 
    (material/ClipRRect
-    .borderRadius (material/BorderRadiusGeometry.circular 16)
+    .borderRadius
+    (material/BorderRadiusGeometry.circular 16))
 
-    .child
-    (material/Container
-     .width width
-     .height height
-     .color surfaceVariant
+   .child
+   (material/Container
+    .width width
+    .height height
+    .color surfaceVariant)
 
-     .child
-     (material/Column
-      .mainAxisAlignment material/MainAxisAlignment.center
+   .child
+   (material/Column
+    .mainAxisAlignment
+    material/MainAxisAlignment.center)
 
-      .children
-      [;; No image icon
-       (material/Icon
-        material/Icons.image_outlined
-        .size 40
-        .color (.withOpacity onSurfaceVariant 0.5))
+   .children
+   [;; No image icon
+    (material/Icon
+     material/Icons.image_outlined
 
-       (material/SizedBox
-        .height 8)
+     .size 40
 
-       ;; Placeholder text
-       (material/Text
-        text
+     .color
+     (.withOpacity onSurfaceVariant 0.5))
 
-        .style
-        (material/TextStyle
-         .color (.withOpacity onSurfaceVariant 0.7)))])))))
+    (material/SizedBox
+     .height 8)
+
+    ;; Placeholder text
+    (material/Text
+     text
+
+     .style
+     (material/TextStyle
+      .color
+      (.withOpacity onSurfaceVariant 0.7)))]))
 
 (defn- bordered-wrapper
   "Wrapper widget for dotted border"
@@ -51,22 +58,21 @@
    :get {{{:flds [onSurface]} .-colorScheme} material/Theme}
 
    (dotted/DottedBorder
+    .child child
+
     .options
     (dotted/RoundedRectDottedBorderOptions
      .radius (material/Radius.circular 16)
      .color onSurface
      .dashPattern [10.0 5.0]
-     .strokeWidth 2.0)
-    .child
-    child)))
+     .strokeWidth 2.0))))
 
 (defn- clickable-wrapper
   "Wrapper for when the cover is clickable"
   [on-click child]
-  (flutter/widget
-   (material/InkWell
-    .onTap on-click
-    .child child)))
+  (material/InkWell
+   .onTap on-click
+   .child child))
 
 (defn cover-image
   "Widget that shows the cover image of a book"

@@ -1,6 +1,12 @@
 (ns paginae.theme
+  {:no-dynamic true}
   (:require ["package:flutter/material.dart" :as material]))
 
+(defonce serif-font
+  "NotoSerif")
+
+(defonce sans-serif-font
+  "Manrope")
 
 (def primary
   "Material palette based on #8A9A5B as primary color"
@@ -72,21 +78,21 @@
    ;; DISPLAY (NotoSerif)
    .displayLarge
    (material/TextStyle
-    .fontFamily "NotoSerif"
+    .fontFamily serif-font
     .fontSize 96.0
     .fontWeight material/FontWeight.w300
     .letterSpacing -1.5)
-   
+
    .displayMedium
    (material/TextStyle
-    .fontFamily "NotoSerif"
+    .fontFamily serif-font
     .fontSize 60.0
     .fontWeight material/FontWeight.w300
     .letterSpacing -0.5)
-  
+
    .displaySmall
    (material/TextStyle
-    .fontFamily "NotoSerif"
+    .fontFamily serif-font
     .fontSize 48.0,
     .fontWeight material/FontWeight.w400
     .letterSpacing 0.0)
@@ -94,14 +100,14 @@
    ;; HEADLINES (NotoSerif)
    .headlineMedium
    (material/TextStyle
-    .fontFamily "NotoSerif"
+    .fontFamily serif-font
     .fontSize 34.0
     .fontWeight material/FontWeight.w400
     .letterSpacing 0.25)
-  
+
    .headlineSmall
    (material/TextStyle
-    .fontFamily "NotoSerif"
+    .fontFamily serif-font
     .fontSize 24.0
     .fontWeight material/FontWeight.w400
     .letterSpacing 0.0)
@@ -109,21 +115,21 @@
    ;; TITLES (NotoSerif)
    .titleLarge
    (material/TextStyle
-    .fontFamily "NotoSerif"
+    .fontFamily serif-font
     .fontSize 20.0
     .fontWeight material/FontWeight.w500
     .letterSpacing 0.15)
-  
+
    .titleMedium
    (material/TextStyle
-    .fontFamily "NotoSerif"
+    .fontFamily serif-font
     .fontSize 16.0
     .fontWeight material/FontWeight.w400
     .letterSpacing 0.15)
-  
+
    .titleSmall
    (material/TextStyle
-    .fontFamily "NotoSerif"
+    .fontFamily serif-font
     .fontSize 14.0
     .fontWeight material/FontWeight.w500
     .letterSpacing 0.1)
@@ -131,21 +137,21 @@
    ;; BODY (Manrope)
    .bodyLarge
    (material/TextStyle
-    .fontFamily "Manrope"
+    .fontFamily sans-serif-font
     .fontSize 16.0
     .fontWeight material/FontWeight.w400
     .letterSpacing 0.5)
-  
+
    .bodyMedium
    (material/TextStyle
-    .fontFamily "Manrope"
+    .fontFamily sans-serif-font
     .fontSize 14.0
     .fontWeight material/FontWeight.w400
     .letterSpacing 0.25)
-  
+
    .bodySmall
    (material/TextStyle
-    .fontFamily "Manrope"
+    .fontFamily sans-serif-font
     .fontSize 12.0
     .fontWeight material/FontWeight.w400
     .letterSpacing 0.4)
@@ -153,175 +159,228 @@
    ;; LABELS (Manrope)
    .labelLarge
    (material/TextStyle
-    .fontFamily "Manrope"
+    .fontFamily sans-serif-font
     .fontSize 14.0
     .fontWeight material/FontWeight.w500
     .letterSpacing 1.25)
-  
+
    .labelSmall
    (material/TextStyle
-    .fontFamily "Manrope"
+    .fontFamily sans-serif-font
     .fontSize 10.0
     .fontWeight material/FontWeight.w400
     .letterSpacing 1.5)))
 
 (defn card-theme
+  "Theme for the card"
   [{:keys [color]}]
   (material/CardThemeData
    .color color
+
    .elevation 2.0
+
    .shape
    (material/RoundedRectangleBorder
     .borderRadius (material/BorderRadius.circular 20.0))))
 
 (defn list-tile-theme
+  "Theme for a list tile"
   [{:keys [color]}]
   (material/ListTileThemeData
    .tileColor color
+
    .shape
    (material/RoundedRectangleBorder
-    .borderRadius (material/BorderRadius.circular 16.0))))
+    .borderRadius
+    (material/BorderRadius.circular 16.0))))
 
 (defn app-bar-theme
-  [{:keys [background foreground]}]
+  "Theme for the app bar"
+  [{:keys [background
+           foreground]}]
   (material/AppBarTheme
-      .backgroundColor background
-      .foregroundColor foreground
-      .elevation 0))
+   .backgroundColor background
+
+   .foregroundColor foreground
+
+   .elevation 0))
 
 (defn filled-button-theme
-  [{:keys [background foreground]}]
+  "Theme for filled buttons"
+  [{:keys [background
+           foreground]}]
   (material/FilledButtonThemeData
-      .style
-      (material/ButtonStyle
-       .backgroundColor (material/WidgetStatePropertyAll
-                         ^material/Color background)
-       .foregroundColor (material/WidgetStatePropertyAll
-                         ^material/Color foreground)
-       .shape
-       (material/WidgetStatePropertyAll
-        (material/RoundedRectangleBorder
-         .borderRadius (material/BorderRadius.circular 16.0))))))
+   .style
+   (material/ButtonStyle
+    .backgroundColor
+    (material/WidgetStatePropertyAll
+     ^material/Color background)
+
+    .foregroundColor
+    (material/WidgetStatePropertyAll
+     ^material/Color foreground)
+
+    .shape
+    (material/WidgetStatePropertyAll
+     (material/RoundedRectangleBorder
+      .borderRadius
+      (material/BorderRadius.circular 16.0))))))
 
 (defn bottom-navigation-theme
+  "Theme for the bottom navigation bar"
   [{:keys [background selected unselected]}]
   (material/BottomNavigationBarThemeData
    .backgroundColor background
+
    .selectedItemColor selected
+
    .unselectedItemColor unselected))
 
 (defn dialog-theme
+  "Theme for dialogs"
   [{:keys [background]}]
   (material/DialogThemeData
+
    .backgroundColor background
+
    .shape
    (material/RoundedRectangleBorder
-    .borderRadius (material/BorderRadius.circular 20.0))))
+    .borderRadius
+    (material/BorderRadius.circular 20.0))))
 
 (defn theme
+  "Generate a theme based on the given color scheme and shadow color"
   [^material/ColorScheme color-scheme
    shadow-color]
   (material/ThemeData
-     .useMaterial3 true
-     .colorScheme color-scheme
+   .useMaterial3
+   true
 
-     ;; BACKGROUND
-     .scaffoldBackgroundColor (.-background color-scheme)
-     .canvasColor (.-surface color-scheme)
+   .colorScheme
+   color-scheme
 
-     ;; TYPOGRAPHY
-     .fontFamily "Manrope"
-     .textTheme text-theme
+   ;; BACKGROUND
+   .scaffoldBackgroundColor
+   (.-background color-scheme)
 
-     ;; CARD
-     .cardTheme
-     (material/CardThemeData
-      .color (.-surface color-scheme)
-      .shadowColor shadow-color
-      .elevation 2.0
-      .shape
-      (material/RoundedRectangleBorder
-       .borderRadius (material/BorderRadius.circular 20.0)))
-     ;; (card-theme {:color (.-surface color-scheme)})
+   .canvasColor
+   (.-surface color-scheme)
 
-     ;; LIST TILES
-     .listTileTheme (list-tile-theme {:color (.-surface color-scheme)})
+   ;; TYPOGRAPHY
+   .fontFamily
+   sans-serif-font
 
-     ;; APP BAR
-     .appBarTheme (app-bar-theme {:background (.-background color-scheme)
-                                  :foreground (.-onBackground color-scheme)})
+   .textTheme
+   text-theme
 
-     ;; BUTTONS
-     .filledButtonTheme (filled-button-theme {:background (.-primary color-scheme)
-                                              :foreground (.-onPrimary color-scheme)})
+   ;; CARD
+   .cardTheme
+   (material/CardThemeData
+    .color
+    (.-surface color-scheme)
 
-     ;; BOTTOM NAV
-     .bottomNavigationBarTheme (bottom-navigation-theme {:background (.-surface color-scheme)
-                                                         :selected (.-primary color-scheme)
-                                                         :unselected (.-onSurfaceVariant color-scheme)})
+    .shadowColor
+    shadow-color
 
-     ;; DIALOGS
-     .dialogTheme (dialog-theme {:background (.-surface color-scheme)})
+    .elevation
+    2.0
 
-     ;; DIVIDERS and BORDERS
-     .dividerColor (.-outline color-scheme)))
+    .shape
+    (material/RoundedRectangleBorder
+     .borderRadius
+     (material/BorderRadius.circular 20.0)))
+
+   ;; LIST TILES
+   .listTileTheme
+   (list-tile-theme
+    {:color (.-surface color-scheme)})
+
+   ;; APP BAR
+   .appBarTheme
+   (app-bar-theme
+    {:background (.-background color-scheme)
+     :foreground (.-onBackground color-scheme)})
+
+   ;; BUTTONS
+   .filledButtonTheme
+   (filled-button-theme
+    {:background (.-primary color-scheme)
+     :foreground (.-onPrimary color-scheme)})
+
+   ;; BOTTOM NAV
+   .bottomNavigationBarTheme
+   (bottom-navigation-theme
+    {:background (.-surface color-scheme)
+     :selected (.-primary color-scheme)
+     :unselected (.-onSurfaceVariant color-scheme)})
+
+   ;; DIALOGS
+   .dialogTheme
+   (dialog-theme
+    {:background (.-surface color-scheme)})
+
+   ;; DIVIDERS and BORDERS
+   .dividerColor
+   (.-outline color-scheme)))
 
 
 (def light-theme
-  (let [cs (material/ColorScheme
-            .brightness material/Brightness.light
-            .primary (material/Color 0xFF8A9A5B)
-            .onPrimary (material/Color 0xFFFFFFFF)
+  "Light theme"
+  (theme
+   (material/ColorScheme
+    .brightness material/Brightness.light
+    .primary (material/Color 0xFF8A9A5B)
+    .onPrimary (material/Color 0xFFFFFFFF)
 
-            .secondary (material/Color 0xFFB35A44)
-            .onSecondary (material/Color 0xFFFFFFFF)
+    .secondary (material/Color 0xFFB35A44)
+    .onSecondary (material/Color 0xFFFFFFFF)
 
-            .tertiary (material/Color 0xFFB384B1)
-            .onTertiary (material/Color 0xFFFFFFFF)
-            
-            .surface (:90 neutral)
-            .onSurface (material/Color 0xFF2B2B2B)
+    .tertiary (material/Color 0xFFB384B1)
+    .onTertiary (material/Color 0xFFFFFFFF)
 
-            .background (material/Color 0xFFF5F2ED)
-            .onBackground (material/Color 0xFF2B2B2B)
+    .surface (:90 neutral)
+    .onSurface (material/Color 0xFF2B2B2B)
 
-            .surfaceVariant (material/Color 0xFFEAE6E0)
-            .onSurfaceVariant (material/Color 0xFF5A5A5A)
+    .background (material/Color 0xFFF5F2ED)
+    .onBackground (material/Color 0xFF2B2B2B)
 
-            .outline (material/Color 0xFFD0CBC5)
+    .surfaceVariant (material/Color 0xFFEAE6E0)
+    .onSurfaceVariant (material/Color 0xFF5A5A5A)
 
-            .error (material/Color 0xFFB00020)
-            .onError (material/Color 0xFFFFFFFF))]
-    
-    (theme cs
-           (material/Color 0x1A000000))))
+    .outline (material/Color 0xFFD0CBC5)
+
+    .error (material/Color 0xFFB00020)
+    .onError (material/Color 0xFFFFFFFF))
+
+   (material/Color 0x1A000000)))
 
 (def dark-theme
-  (let [cs (material/ColorScheme
-            .brightness material/Brightness.dark
+  "Dark theme"
+  (theme
+   (material/ColorScheme
+    .brightness material/Brightness.dark
 
-            .primary (material/Color 0xFFA3B86C)
-            .onPrimary (material/Color 0xFF1E1E1E)
+    .primary (material/Color 0xFFA3B86C)
+    .onPrimary (material/Color 0xFF1E1E1E)
 
-            .secondary (material/Color 0xFFD07A63)
-            .onSecondary (material/Color 0xFF1E1E1E)
+    .secondary (material/Color 0xFFD07A63)
+    .onSecondary (material/Color 0xFF1E1E1E)
 
-            .tertiary (material/Color 0xFFC59BC2)
-            .onTertiary (material/Color 0xFF1E1E1E)
+    .tertiary (material/Color 0xFFC59BC2)
+    .onTertiary (material/Color 0xFF1E1E1E)
 
-            .surface (:20 neutral)
-            .onSurface (material/Color 0xFFEAEAEA)
+    .surface (:20 neutral)
+    .onSurface (material/Color 0xFFEAEAEA)
 
-            .background (material/Color 0xFF1E1E1E)
-            .onBackground (material/Color 0xFFEAEAEA)
+    .background (material/Color 0xFF1E1E1E)
+    .onBackground (material/Color 0xFFEAEAEA)
 
-            .surfaceVariant (material/Color 0xFF2A2A2A)
-            .onSurfaceVariant (material/Color 0xFFBDBDBD)
+    .surfaceVariant (material/Color 0xFF2A2A2A)
+    .onSurfaceVariant (material/Color 0xFFBDBDBD)
 
-            .outline (material/Color 0xFF444444)
+    .outline (material/Color 0xFF444444)
 
-            .error (material/Color 0xFFCF6679)
-            .onError (material/Color 0xFF000000))]
+    .error (material/Color 0xFFCF6679)
+    .onError (material/Color 0xFF000000))
 
-    (theme cs
-           (material/Color 0x1AFFFFFF))))
+   (material/Color 0x1AFFFFFF)))

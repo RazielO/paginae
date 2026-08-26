@@ -1,4 +1,5 @@
 (ns paginae.common.confirm-dialog
+  {:no-dynamic true}
   (:require
    ["../l10n/app_localizations.dart" :as app-l10n]
    ["package:flutter/material.dart" :as material]
@@ -30,22 +31,31 @@
         .actions
         [(material/TextButton
           .child
-          (material/Text (.-cancel locales)
-                         .style (.-labelLarge text-theme))
+          (material/Text
+           (.-cancel locales)
+
+           .style
+           (.-labelLarge text-theme))
 
           .onPressed
           (fn []
             (.pop (widgets/Navigator.of dialog-context))))
 
          (material/ElevatedButton
-          .style (material/ButtonStyle
-                  .backgroundColor (material/WidgetStatePropertyAll (.-secondary color-scheme)))
+          .style
+          (material/ButtonStyle
+           .backgroundColor
+           (material/WidgetStatePropertyAll (.-secondary color-scheme)))
 
           .child
-          (material/Text (.-delete locales)
-                         .style (.copyWith
-                                 (.-labelLarge text-theme)
-                                 .color (.-onSecondary color-scheme)))
+          (material/Text
+           (.-delete locales)
+
+           .style (.copyWith
+                   (.-labelLarge text-theme)
+
+                   .color
+                   (.-onSecondary color-scheme)))
 
           .onPressed
           (fn []

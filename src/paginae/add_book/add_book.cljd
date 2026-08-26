@@ -1,4 +1,5 @@
 (ns paginae.add-book.add-book
+  {:no-dynamic true}
   (:require [cljd.flutter :as flutter]
             ["package:flutter/material.dart" :as material]
             [paginae.image.utils :as img-utils]
@@ -27,8 +28,8 @@
 
 (defn- ^material/PreferredSizeWidget app-bar
   "App bar"
-  [context
-   {:keys [on-cancel
+  [{:keys [context
+           on-cancel
            on-save]}]
 
   (let [locales (app-l10n/AppLocalizations.of context)
@@ -38,25 +39,26 @@
      .centerTitle true
 
      .leading
-     (material/IconButton
+     (material/IconButton ;; Cancel button
+
       .icon
       (material/Icon material/Icons.close)
-      .onPressed on-cancel
-      .tooltip (.-cancel locales))
+
+      .onPressed
+      on-cancel
+
+      .tooltip
+      (.-cancel locales))
 
      .actions
-     [(material/FilledButton
+     [;; Save book
+      (material/FilledButton
        .onPressed
        on-save
 
        .child
        (material/Text
-        (.-save locales)
-
-        .style
-        (material/TextStyle
-         .fontSize 16
-         .color (.-onSurface colorScheme)))
+        (.-save locales))
 
        .style
        (material/ButtonStyle
@@ -192,15 +194,16 @@
 
    (material/Scaffold
     .appBar
-    (app-bar context {:on-cancel #(.pop navigator)
-                      :on-save (fn []
-                                 (save-book {:context context
-                                             :book-atom book-atom
-                                             :title-controller title-controller
-                                             :author-controller author-controller
-                                             :pages-controller pages-controller
-                                             :go-to-my-books go-to-my-books
-                                             :navigator navigator}))})
+    (app-bar  {:context context
+               :on-cancel #(.pop navigator)
+               :on-save (fn []
+                          (save-book {:context context
+                                      :book-atom book-atom
+                                      :title-controller title-controller
+                                      :author-controller author-controller
+                                      :pages-controller pages-controller
+                                      :go-to-my-books go-to-my-books
+                                      :navigator navigator}))})
 
     .body
     (add-book-widget {:book-atom book-atom

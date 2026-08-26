@@ -1,4 +1,5 @@
 (ns paginae.book-details.activity-dialog
+  {:no-dynamic true}
   (:require
    ["../l10n/app_localizations.dart" :as app-l10n]
    ["package:flutter/material.dart" :as material]
@@ -124,13 +125,13 @@
             .color
             (.-primary color-scheme)))
 
-          .onPressed
-          (fn []
-            (let [data (.trim (.-text controller))
-                  value (parse-double data)
-                  progress (if as-pages?
-                             (/ value pages)
-                             (/ value 100.0))]
-              (on-confirm progress)
-              (.-text! controller "")
-              (.pop (widgets/Navigator.of dialog-context) progress))))])]))))
+         .onPressed
+         (fn []
+           (let [value (parse-double (.trim (.-text controller)))]
+             (when (and value (pos? value))
+               (let [progress (if as-pages?
+                                (/ value pages)
+                                (/ value 100.0))]
+                 (await (on-confirm progress))
+                 (.-text! controller "")
+                 (.pop (widgets/Navigator.of dialog-context) progress))))))])]))))
