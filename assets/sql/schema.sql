@@ -9,8 +9,10 @@ CREATE TABLE books (
     format TEXT,
     current_progress REAL DEFAULT 0.0,
     favorite INTEGER DEFAULT 0,
+    has_cover INTEGER DEFAULT 0,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE activities (
     id INTEGER NOT NULL PRIMARY KEY,
     book_id TEXT NOT NULL,
@@ -20,6 +22,7 @@ CREATE TABLE activities (
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE
 );
+
 CREATE TABLE notes (
     id INTEGER NOT NULL PRIMARY KEY,
     book_id TEXT NOT NULL,

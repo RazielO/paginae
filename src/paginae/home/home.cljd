@@ -432,7 +432,7 @@
       {:counts counts
        :go-to-to-read-shelf
        (fn []
-         (await (go-to-to-read-shelf))
+         (go-to-to-read-shelf)
          (swap! data-revision inc))
        :go-to-reading-shelf
        (fn []

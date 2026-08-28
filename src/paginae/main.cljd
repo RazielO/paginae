@@ -188,7 +188,10 @@
         3 (book-search/book-search-widget
            {:go-to-my-books (fn []
                               (reset! filter-atom nil)
-                              (reset! current-tab 2))})))
+                              (reset! current-tab 2))
+            :on-image-saved (fn []
+                              (dart:core/print "REFRESH BOOKS")
+                              (swap! my-books/refresh-atom inc))})))
 
      .bottomNavigationBar
      (bottom-sheet

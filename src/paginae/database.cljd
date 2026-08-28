@@ -159,6 +159,16 @@
               .where "id = ?"
               .whereArgs [(:id book)]))))
 
+(defn set-book-has-cover
+  "Set to true the has_cover field"
+  [book-id]
+  (let [db (await (get-db))]
+    (.update db
+             books-table
+             {"has_cover" true}
+             .where "id = ?"
+             .whereArgs [book-id])))
+
 (defn delete-book
   "Delete a book from the database by id"
   [id]
@@ -248,19 +258,21 @@
   "Insert a new activity on a book and update its progress"
   [activity]
   (let [db (await (get-db))]
-    (await
-     (.insert db
-              activities-table
-              (activity-type/to-db-map activity)))
-    (await
-     (.update db
-              books-table
-              {"current_progress" (:progress activity)
-               "status" (if (= 1.0 (:progress activity))
-                          "done"
-                          "reading")}
-              .where "id = ?"
-              .whereArgs [(:book-id activity)]))))
+    (.transaction db
+                  (fn [^sqlite/Transaction transaction]
+                    (await
+                     (.insert transaction
+                              activities-table
+                              (activity-type/to-db-map activity)))
+                    (await
+                     (.update transaction
+                              books-table
+                              {"current_progress" (:progress activity)
+                               "status" (if (= 1.0 (:progress activity))
+                                          "done"
+                                          "reading")}
+                              .where "id = ?"
+                              .whereArgs [(:book-id activity)]))))))
 
 (defn get-activities-by-month
   "Query the activities done in a given month"

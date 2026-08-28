@@ -14,7 +14,9 @@
 
 (defn- book-card
   "Card that displays a result book after a search"
-  [book go-to-my-books]
+  [book
+   go-to-my-books
+   on-image-saved]
 
   (flutter/widget
    :get {{{:flds [titleLarge]} .-textTheme} material/Theme}
@@ -28,7 +30,7 @@
               navigator
               (#/(material/MaterialPageRoute Object)
                .builder
-               (flutter/build (add-book/add-book-screen book go-to-my-books))))
+               (flutter/build (add-book/add-book-screen book go-to-my-books on-image-saved))))
              nil)
 
     .child
@@ -88,14 +90,45 @@
            loading?
            as-list?
            loading-more?
-           go-to-my-books]}]
+           go-to-my-books
+           on-image-saved
+           error]}]
+
+  (dart:core/print (str "BOOK SEARCH ERROR: " error))
 
   (flutter/widget
-   :get {{{:flds [titleLarge]} .-textTheme} material/Theme
+   :get {{{:flds [titleLarge labelLarge]} .-textTheme} material/Theme
          {{:flds [onBackground]} .-colorScheme} material/Theme}
    :context context
 
    (cond
+     error
+     (material/SliverToBoxAdapter
+      .child
+      (material/Padding
+       .padding
+       (material/EdgeInsets.only .top 20)
+
+       .child
+       (material/Center
+        .child
+        (material/Text
+         error
+
+         .textAlign
+         material/TextAlign.center
+
+         .style
+         (.copyWith
+          labelLarge
+
+          .color
+          (.withOpacity onBackground 0.7)
+
+          .letterSpacing
+          2.0)))))
+
+
      ;; Results are loading
      loading?
      (material/SliverToBoxAdapter
@@ -157,7 +190,7 @@
                .child
                (material/LinearProgressIndicator))
 
-              (book-card (nth books index) go-to-my-books))))
+              (book-card (nth books index) go-to-my-books on-image-saved))))
 
          (material/SliverGrid.builder
           .itemCount item-count
@@ -182,7 +215,7 @@
                .child
                (material/LinearProgressIndicator))
 
-              (book-card (nth books index) go-to-my-books)))))))))
+              (book-card (nth books index) go-to-my-books on-image-saved)))))))))
 
 (defn- pill-button
   "Button for adding actions"
@@ -271,7 +304,10 @@
 
 (defn- search-widget
   "Widget that shows text input and options to add a book"
-  [{:keys [on-submitted scanning go-to-my-books]}]
+  [{:keys [on-submitted
+           scanning
+           go-to-my-books
+           on-image-saved]}]
   (flutter/widget
    :get {{{:flds [primary onPrimary secondary onSecondary]} .-colorScheme} material/Theme}
    :get [material/Navigator]
@@ -297,7 +333,7 @@
                                      navigator
                                      (#/(material/MaterialPageRoute Object)
                                       .builder
-                                      (flutter/build (add-book/add-book-screen (book/empty-book) go-to-my-books))))
+                                      (flutter/build (add-book/add-book-screen (book/empty-book) go-to-my-books on-image-saved))))
                                     nil)
                       :background-color secondary
                       :foreground-color onSecondary})]
@@ -402,20 +438,24 @@
            books-atom
            total-atom
            offset-atom
-           has-more]}]
+           has-more
+           error-atom]}]
   (when (not @loading-more)
     (reset! loading-more true)
 
     (let [result (await (query/query-books query @offset-atom unknown-str no-response-str))]
-      (swap! books-atom into (:data result))
-      (reset! total-atom (:total result))
-      (swap! offset-atom + 20)
+      (when-not (:error result)
+        (swap! books-atom into (:data result))
+        (reset! total-atom (:total result))
+        (swap! offset-atom + 20)
+        (reset! has-more (not= (:total result) (count @books-atom))))
       (reset! loading-more false)
-      (reset! has-more (not= (:total result) (count @books-atom))))))
+      (reset! error-atom (:error result)))))
 
 (defn book-search-widget
   "Widget for the add book screen. It allows to search for a book, scan its barcode or go to a manual entry"
-  [{:keys [go-to-my-books]}]
+  [{:keys [go-to-my-books
+           on-image-saved]}]
   (flutter/widget
    :get {{{:flds [background]} .-colorScheme
           {:flds [headlineSmall]} .-textTheme} material/Theme}
@@ -427,7 +467,8 @@
            _loading-more? (atom false) :as loading-more
            scanning? (atom false) :as scanning
            _show-fab? (atom false) :as show-fab
-           _has-more? (atom true) :as has-more]
+           _has-more? (atom true) :as has-more
+           error (atom nil) :as error-atom]
 
    :context context
 
@@ -439,18 +480,12 @@
                                    no-response-str (.-noServerResponse locales)
                                    offset (.-offset controller)
                                    position (.-position controller)]
-                               (dart:core/print (str "Position: " (.-pixels position)
-                                                     "\nMax scroll: " (.-maxScrollExtent position)
-                                                     "\nIf more books, should load now: " (> (.-pixels position)
-                                                                                             (- (.-maxScrollExtent position) 500))
-                                                     "\nLoading more? " @loading-more
-                                                     "\nHas more books? " @has-more))
                                (when (and
                                       @has-more
                                       (not @loading-more)
                                       (> (.-pixels position)
                                          (- (.-maxScrollExtent position) 500)))
-                                 (dart:core/print "Loading more books")
+
                                  (load-books {:query @query-atom
                                               :loading-more loading-more
                                               :unknown-str unknown-str
@@ -458,7 +493,8 @@
                                               :books-atom books-atom
                                               :total-atom total-atom
                                               :offset-atom offset-atom
-                                              :has-more has-more}))
+                                              :has-more has-more
+                                              :error-atom error-atom}))
 
                                (cond
                                  (and (> 300 offset) @show-fab)
@@ -538,6 +574,7 @@
                                             (reset! books-atom [])
                                             (reset! offset-atom 0)
                                             (reset! total-atom 0)
+                                            (reset! error-atom nil)
                                             (load-books {:query text
                                                          :loading-more loading-more
                                                          :unknown-str (.-unknown locales)
@@ -545,9 +582,11 @@
                                                          :books-atom books-atom
                                                          :total-atom total-atom
                                                          :offset-atom offset-atom
-                                                         :has-more has-more})))
+                                                         :has-more has-more
+                                                         :error-atom error-atom})))
                           :scanning scanning
-                          :go-to-my-books go-to-my-books})))
+                          :go-to-my-books go-to-my-books
+                          :on-image-saved on-image-saved})))
 
        (if (and (not scanning?)
                 (seq query))
@@ -556,7 +595,9 @@
                      :loading? (empty? @books-atom)
                      :as-list? portrait?
                      :loading-more? @loading-more
-                     :go-to-my-books go-to-my-books})
+                     :go-to-my-books go-to-my-books
+                     :on-image-saved on-image-saved
+                     :error error})
          (material/SliverToBoxAdapter
           .child
           (material/Container)))])))))

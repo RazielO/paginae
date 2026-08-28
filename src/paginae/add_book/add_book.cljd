@@ -54,7 +54,9 @@
      [;; Save book
       (material/FilledButton
        .onPressed
-       on-save
+       (fn []
+         (dart:core/print "APP BAR ON SAVE")
+         (on-save))
 
        .child
        (material/Text
@@ -129,7 +131,8 @@
       :clickable? true
       :on-click (fn []
                   (let [cover (await (add-cover))]
-                    (swap! book-atom book-type/update-local-cover cover)))})
+                    (when cover
+                      (swap! book-atom book-type/update-local-cover cover))))})
 
     ;; Form
     (book-form/form-card title-controller author-controller pages-controller)
@@ -152,36 +155,51 @@
 
 (defn- save-book
   "Validate and save book to database"
-  [{:keys [context
+  [{:keys [^widgets/BuildContext context
            book-atom
+           saving
            ^material/TextEditingController title-controller
            ^material/TextEditingController author-controller
            ^material/TextEditingController pages-controller
            go-to-my-books
-           ^widgets/NavigatorState navigator]}]
-  (let [new-title (.trim (.-text title-controller))
-        new-author (.trim (.-text author-controller))
-        empty-title? (not (seq new-title))
-        empty-author? (not (seq new-author))
-        locales (app-l10n/AppLocalizations.of context)]
-    (cond
-      empty-title?  (show-snackbar context (.-titleRequired locales))
-      empty-author?  (show-snackbar context (.-authorRequired locales))
-      :else (do
-              (swap! book-atom #(assoc % :title new-title
-                                       :author new-author
-                                       :pages (parse-long (.trim (.-text pages-controller)))))
-              (await (db/insert-book @book-atom))
-              (await (img-utils/save-book-cover @book-atom))
-              (go-to-my-books)
-              (.pop navigator)))))
+           on-image-saved]}]
+  (when (not @saving)
+    (reset! saving true)
+    (try
+      (let [new-title (.trim (.-text title-controller))
+            new-author (.trim (.-text author-controller))
+            empty-title? (not (seq new-title))
+            empty-author? (not (seq new-author))
+            locales (app-l10n/AppLocalizations.of context)]
+        (cond
+          empty-title?  (show-snackbar context (.-titleRequired locales))
+          empty-author?  (show-snackbar context (.-authorRequired locales))
+          :else (do
+                  (swap! book-atom #(assoc %
+                                           :title new-title
+                                           :author new-author
+                                           :pages (parse-long (.trim (.-text pages-controller)))
+                                           :has-cover? false))
+                  (await (db/insert-book @book-atom))
+                  (when (.-mounted context)
+                    (go-to-my-books)
+                    (.pop (material/Navigator.of context)))
+                  (.then ^Future (img-utils/save-book-cover @book-atom)
+                         (fn [_result]
+                           (on-image-saved)
+                           (db/set-book-has-cover (:id @book-atom)))))))
+      (finally
+        (reset! saving false)))))
 
 (defn add-book-screen
   [^book-type/Book book
-   go-to-my-books]
+   go-to-my-books
+   on-image-saved]
 
   (flutter/widget
-   :watch [_book-val (atom book) :as book-atom]
+   :watch [_book-val (atom book) :as book-atom
+           _saving? (atom false) :as saving]
+
    :managed [title-controller (material/TextEditingController
                                .text (:title book))
              author-controller (material/TextEditingController
@@ -189,21 +207,26 @@
 
              pages-controller (material/TextEditingController
                                .text (str (:pages @book-atom)))]
+
    :get [material/Navigator]
+
    :context context
 
    (material/Scaffold
     .appBar
     (app-bar  {:context context
-               :on-cancel #(.pop navigator)
+               :on-cancel (fn []
+                            (.pop navigator))
                :on-save (fn []
+                          (dart:core/print "ON SAVE FUNCTION")
                           (save-book {:context context
                                       :book-atom book-atom
+                                      :saving saving
                                       :title-controller title-controller
                                       :author-controller author-controller
                                       :pages-controller pages-controller
                                       :go-to-my-books go-to-my-books
-                                      :navigator navigator}))})
+                                      :on-image-saved on-image-saved}))})
 
     .body
     (add-book-widget {:book-atom book-atom

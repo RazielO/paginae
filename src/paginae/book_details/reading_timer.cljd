@@ -160,7 +160,7 @@
              progress-controller (material/TextEditingController)
              timer-atom (atom nil) :dispose pause-timer
              running-atom (atom false) :dispose nil
-             start-time-atom (atom (now-in-seconds)) :dispose nil
+             start-time-atom (atom nil) :dispose nil
              elapsed-time-atom (atom 0) :dispose nil
              ticker-atom (atom 0) :dispose nil]
    :watch [_ticker ticker-atom
@@ -191,19 +191,23 @@
 
        .onPressed
        (fn []
-         (let [data (await (book-details.activity-dialog/add-activity-dialog
-                            {:context context
-                             :controller progress-controller
-                             :book book
-                             :on-confirm
-                             (fn [progress]
-                               (await
-                                (db/insert-book-activity
-                                 {:book-id (:id book)
-                                  :progress progress
-                                  :reading-time (+ elapsed-time (elapsed-seconds start-time))})))}))]
-           (when data
-             (.pop (widgets/Navigator.of context) data)))))])
+         (if (nil? start-time)
+           (let [data (await (book-details.activity-dialog/add-activity-dialog
+                              {:context context
+                               :controller progress-controller
+                               :book book
+                               :on-confirm
+                               (fn [progress]
+                                 (await
+                                  (db/insert-book-activity
+                                   {:book-id (:id book)
+                                    :progress progress
+                                    :reading-time (if (nil? start-time)
+                                                    nil
+                                                    (+ elapsed-time (elapsed-seconds start-time)))})))}))]
+             (when (and data (.-mounted context))
+               (.pop (widgets/Navigator.of context) data)))
+           (.pop (widgets/Navigator.of context)))))])
 
     .body
     (material/Padding

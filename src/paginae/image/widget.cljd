@@ -90,9 +90,8 @@
          img-width (or width 140)
          img-height (* img-width (/ 10 7))
 
-         local-path (if (nil? (:cover-uri book))
-                      (img-utils/cover-path (:id book))
-                      (:cover-uri book))
+         local-path (when (and (:local-cover? book) (:has-cover? book))
+                      (img-utils/cover-path (:id book)))
 
          placeholder
          (cover-placeholder {:text placeholder-text
@@ -101,16 +100,23 @@
 
          image-widget
          (cond
-           (and
-            local-path
-            (not-empty local-path)
-            (.existsSync (io/File. local-path)))
-           (material/Image.file (io/File. local-path)
-                                .width img-width
-                                .height img-height
-                                .fit material/BoxFit.cover)
+           (and local-path (not-empty local-path))
+           (material/Image.file
+            (io/File. local-path)
 
-           (not (:local-cover? book))
+            .width img-width
+
+            .height img-height
+
+            .fit material/BoxFit.cover
+
+            .errorBuilder
+            (fn [_context _error _stack-trace]
+              (cover-placeholder {:text placeholder-text
+                                  :width img-width
+                                  :height img-height})))
+
+           (and (not (:local-cover? book)) (:cover-uri book))
            (material/Image.network
             (:cover-uri book)
             .width img-width

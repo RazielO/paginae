@@ -24,26 +24,38 @@
   "Maximum width in pixels for a saved image"
   300)
 
-(defn- ^async/Future resize-and-save-image
-  "Resize an image to a set width and save it to disk"
-  [input-bytes output-path]
-  (when-let [decoded (img/decodeImage input-bytes)]
-    ;; let [resized (img/copyResize decoded .width IMAGE-MAX-WIDTH)
-    ;;      jpg (img/encodeJpg resized)]
-    ;; (await (.writeAsBytes (io/File. output-path) jpg))
-    (await
-     (->> (img/copyResize decoded
-                          .width IMAGE-MAX-WIDTH)
-          img/encodeJpg
-          (.writeAsBytes (io/File. output-path))))))
+(defn resize-and-save-image-worker
+  "Runs in a background isolate."
+  [args]
+  (let [input-bytes  (:input-bytes args)
+        output-path  (:output-path args)]
+    (when-let [decoded (img/decodeImage input-bytes)]
+      (let [resized (img/copyResize decoded
+                                    .width IMAGE-MAX-WIDTH)
+            encoded (img/encodeJpg resized)]
+        (await
+         (.writeAsBytes (io/File. output-path) encoded)))
+      true)))
+
+(defn resize-and-save-image
+  [input-bytes
+   output-path]
+  (await
+   (foundation/compute
+    resize-and-save-image-worker
+    {:input-bytes input-bytes
+     :output-path output-path})))
 
 (defn- ^async/Future download-image-bytes
-  "Download an image from the internet"
   [url]
-  (let [client (io/HttpClient.)
-        ^io/HttpClientRequest request (await (.getUrl client (Uri/parse url)))
-        response (await (.close request))]
-    (foundation/consolidateHttpClientResponseBytes response)))
+  (let [client (io/HttpClient.)]
+    (try
+      (let [^io/HttpClientRequest request
+            (await (.getUrl client (Uri/parse url)))
+            response (await (.close request))]
+        (await (foundation/consolidateHttpClientResponseBytes response)))
+      (finally
+        (.close client)))))
 
 (defn- ^async/Future read-local-image-bytes
   "Read the bytes of a local image"

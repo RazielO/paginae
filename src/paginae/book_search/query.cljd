@@ -9,7 +9,7 @@
            [total ;; Number of results
             offset ;; Current offset
             data ;; Result data
-            ])
+            error])
 
 (defn query-books
   "Query the Open Library to search for books"
@@ -29,12 +29,12 @@
     ;; TODO: Maybe add "author_key" to fields and query the author's API https://openlibrary.org/authors/{author_key}.json to get a more localized name
 
 
-    (letfn [(handle-error [error]
-              (dart:core/print (str "Error: " error))
+    (letfn [(handle-error [_error]
               (map->QueryResult
                {:total 0
                 :offset 0
-                :data []})) ;; TODO: Send a message to the user, especially on timeout
+                :data []
+                :error "Couldn't retrieve data from OpenLibrary. Please try again."}))
 
             (filter-fn [book]
               (let [title (get book "title")]
@@ -46,7 +46,6 @@
             (handle-response [^http/Response response]
               (if (= (.-statusCode response) 200)
                 (let [json (convert/jsonDecode (.-body response))]
-                  (dart:core/print (distinct (mapcat #(get % "author_key" []) (get json "docs" []))))
                   (map->QueryResult
                    {:total (get json "num_found")
                     :offset (get json "offset")
@@ -58,4 +57,11 @@
       (-> (http/get uri)
           (.timeout (Duration .seconds 10))
           (.then handle-response)
-          (.catchError handle-error)))))
+          (.catchError (fn [error]
+                         (dart:core/print (str "ERROR: " error))
+                         ;; (handle-error error)
+                         (map->QueryResult
+                          {:total 0
+                           :offset 0
+                           :data []
+                           :error "Couldn't retrieve data from OpenLibrary. Please try again."})))))))

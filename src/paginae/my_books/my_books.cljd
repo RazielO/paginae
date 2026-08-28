@@ -21,7 +21,7 @@
    .context context
 
    .builder
-   (fn [dialog-context]
+   (fn [^widgets/BuildContext dialog-context]
      (flutter/widget
       :get {{{:flds [labelLarge]} .-textTheme
              {:flds [secondary onSecondary]} .-colorScheme} material/Theme}
@@ -63,7 +63,8 @@
          (fn []
            (let [deletion-result (await (db/delete-book (:id book)))]
              (when deletion-result
-               (.pop (widgets/Navigator.of dialog-context))
+               (when (.-mounted dialog-context)
+                 (.pop (widgets/Navigator.of dialog-context)))
                (refresh!))))
 
          .style
@@ -268,16 +269,21 @@
            (material/TextStyle
             .color onSecondary)))))]))))
 
+(def refresh-atom (atom 0))
+
 (defn my-books-widget
   "Widget that shows the user's books"
   [filter-by]
+
+  (reset! refresh-atom 0)
 
   (flutter/widget
    :get {{{:flds [headlineSmall titleMedium]} .-textTheme
           {:flds [onBackground]} .-colorScheme} material/Theme}
    :context context
    :watch [filter (atom filter-by) :as filter-atom
-           refresh (atom 0) :as refresh-atom
+           ;; refresh (atom 0) :as refresh-atom
+           refresh refresh-atom
 
            books (cond
                    (or (= :reset filter) (nil? filter))

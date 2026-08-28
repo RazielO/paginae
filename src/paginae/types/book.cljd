@@ -15,7 +15,8 @@
             favorite
             current-progress
             created-at
-            local-cover?])
+            local-cover?
+            has-cover?])
 
 (defn empty-book
   "Create an empty book"
@@ -30,7 +31,8 @@
     :format :hardcover
     :current-progress 0.0
     :cover-uri ""
-    :local-cover? true}))
+    :local-cover? true
+    :has-cover? false}))
 
 (defn- maybe-string-to-int
   "Parse a value into an int, it might be string or int"
@@ -56,7 +58,8 @@
       :current-progress 0.0
       :cover-uri (when has-cover?
                    (str "https://covers.openlibrary.org/b/olid/" (get json "cover_edition_key") "-M.jpg"))
-      :local-cover? (not has-cover?)})))
+      :local-cover? false
+      :has-cover? has-cover?})))
 
 (defn to-db-map
   "Convert a book to a map to store on the database"
@@ -68,7 +71,8 @@
    "status" (name (:status book))
    "format" (name (:format book))
    "current_progress" (:current-progress book)
-   "favorite" (if (:favorite book) 1 0)})
+   "favorite" (if (:favorite book) 1 0)
+   "has_cover" (if (:has-cover? book) 1 0)})
 
 (defn from-db-entry
   "Convert a db entry into a Book"
@@ -82,6 +86,7 @@
     :status (keyword (get entry "status"))
     :format (keyword (get entry "format"))
     :favorite (not (zero? (int (get entry "favorite"))))
+    :has-cover? (not (zero? (int (get entry "has_cover"))))
     :current-progress (get entry "current_progress")
     :created-at (.toLocal (dart:core/DateTime.parse (get entry "created_at")))
     :local-cover? true}))
@@ -95,15 +100,19 @@
   "Return a new Book with cover-uri set to new-cover-uri and local-cover? to local?
    Use nil for new-cover-uri to remove the cover."
   [^Book book new-cover-uri local?]
-  (assoc book :cover-uri new-cover-uri
-         :local-cover? (boolean local?)))
+  (assoc book
+         :cover-uri new-cover-uri
+         :local-cover? (boolean local?)
+         :has-cover? true))
 
 (defn update-local-cover
   "Return a new Book with cover-uri set to new-cover-uri and local-cover? to local?
    Use nil for new-cover-uri to remove the cover."
   [^Book book new-cover-uri]
-  (assoc book :cover-uri new-cover-uri
-         :local-cover? true))
+  (assoc book
+         :cover-uri new-cover-uri
+         :local-cover? true
+         :has-cover? true))
 
 
 (defn update-author
