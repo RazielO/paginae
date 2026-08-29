@@ -8,7 +8,8 @@
    ["package:material_symbols_icons/symbols.dart" :as symbols]
    [cljd.flutter :as flutter]
    [paginae.book-details.activity-dialog :as book-details.activity-dialog]
-   [paginae.database :as db]))
+   [paginae.database :as db]
+   [paginae.theme :as theme]))
 
 (defn- now-in-seconds
   "Return the current DateTime in seconds since Epoch"
@@ -46,9 +47,11 @@
   "Widget that shows the reading time"
   [{:keys [start-time
            elapsed-time
-           running?]}]
+           running?
+           ticker-atom]}]
   (flutter/widget
-   :get {{{:flds [displayMedium labelLarge]} .-textTheme} material/Theme}
+   :get {{{:flds [displayMedium]} .-textTheme} material/Theme}
+   :watch [_ticker ticker-atom]
 
    (material/Text
     (if (nil? start-time)
@@ -66,7 +69,7 @@
      displayMedium
 
      .fontFamily
-     (.-fontFamily labelLarge)))))
+     theme/sans-serif-font))))
 
 (defn- play-pause-button
   "Widget for the play/pause button"
@@ -163,8 +166,7 @@
              start-time-atom (atom nil) :dispose nil
              elapsed-time-atom (atom 0) :dispose nil
              ticker-atom (atom 0) :dispose nil]
-   :watch [_ticker ticker-atom
-           elapsed-time elapsed-time-atom
+   :watch [elapsed-time elapsed-time-atom
            start-time start-time-atom]
    :let [locales (app-l10n/AppLocalizations.of context)
          portrait? (= material/Orientation.portrait (.-orientation (material/MediaQuery.of context)))]
@@ -235,7 +237,8 @@
            [(timer-widget
              {:start-time start-time
               :elapsed-time elapsed-time
-              :running? @running-atom})
+              :running? @running-atom
+              :ticker-atom ticker-atom})
 
             (play-pause-button
              {:running-atom running-atom
@@ -264,7 +267,8 @@
               [(timer-widget
                 {:start-time start-time
                  :elapsed-time elapsed-time
-                 :running? @running-atom})
+                 :running? @running-atom
+                 :ticker-atom ticker-atom})
 
                (play-pause-button
                 {:running-atom running-atom

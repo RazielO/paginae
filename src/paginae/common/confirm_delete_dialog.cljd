@@ -1,11 +1,11 @@
-(ns paginae.common.confirm-dialog
+(ns paginae.common.confirm-delete-dialog
   {:no-dynamic true}
   (:require
    ["../l10n/app_localizations.dart" :as app-l10n]
    ["package:flutter/material.dart" :as material]
    ["package:flutter/widgets.dart" :as widgets]))
 
-(defn confirm-dialog
+(defn confirm-delete-dialog
   "Dialog to ask to do an action"
   [{:keys [title
            content

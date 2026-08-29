@@ -9,7 +9,8 @@
    ["../l10n/app_localizations.dart" :as app-l10n]
    [paginae.home.badges :as badges]
    [paginae.book-details.book-details :as book-details]
-   ["package:material_symbols_icons/symbols.dart" :as symbols]))
+   ["package:material_symbols_icons/symbols.dart" :as symbols]
+   [paginae.theme :as theme]))
 
 (defn- remove-book-dialog
   "Dialog to delete a book from the database"
@@ -78,6 +79,7 @@
   [book
    refresh!]
   (flutter/widget
+   :key (:id book)
    :get {{{:flds [titleSmall labelMedium]} .-textTheme
           {:flds [onSurfaceVariant]} .-colorScheme} material/Theme}
    :get [material/Navigator]
@@ -130,7 +132,8 @@
          (case (:status book)
            :done (badges/read-badge)
            :reading (badges/reading-badge)
-           :to-read (badges/to-read-badge))))])
+           :to-read (badges/to-read-badge)
+           (badges/to-read-badge))))])
 
     (material/SizedBox
      .height 8)
@@ -336,12 +339,11 @@
 
        (material/Text
         (case filter
-          :favorite "You have no favorite books"
-          :done "You have not finished a book"
-          :to-read "Your to-read list is empty"
-          :reading "You are currently not reading any book"
-          :reset "You have no books"
-          nil "You have no books")
+          :favorite (.-noFavorites locales)
+          :done (.-noFinished locales)
+          :to-read (.-noToRead locales)
+          :reading (.-noReading locales)
+          (.-noBooks locales))
 
         .textAlign
         material/TextAlign.center
@@ -354,7 +356,7 @@
          (.withOpacity onBackground 0.7)
 
          .fontFamily
-         "Manrope")))
+         theme/sans-serif-font)))
 
 
       (material/SliverGrid.builder

@@ -57,9 +57,7 @@
       (-> (http/get uri)
           (.timeout (Duration .seconds 10))
           (.then handle-response)
-          (.catchError (fn [error]
-                         (dart:core/print (str "ERROR: " error))
-                         ;; (handle-error error)
+          (.catchError (fn [_error]
                          (map->QueryResult
                           {:total 0
                            :offset 0

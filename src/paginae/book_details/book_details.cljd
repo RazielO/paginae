@@ -10,7 +10,7 @@
             [paginae.book-details.reading-timer :as book-details.reading-timer]
             [paginae.book-details.reading-progress :as book-details.reading-progress]
             [paginae.book-details.activity-dialog :as book-details.activity-dialog]
-            [paginae.common.confirm-dialog :as common.confirm-dialog]
+            [paginae.common.confirm-delete-dialog :as common.confirm-dialog]
             [paginae.database :as db]
             [paginae.image.widget :as image]
             [paginae.types.book :as book-type]
@@ -311,7 +311,7 @@
            material/Colors.red))])
        .onPressed
        (fn []
-         (common.confirm-dialog/confirm-dialog
+         (common.confirm-dialog/confirm-delete-dialog
           {:title (.-removeNoteTitle locales)
            :content ""
            :context context
@@ -547,6 +547,7 @@
        :background tertiary
        :foreground onTertiary})
      (material/SizedBox .height 20)
+
      ;; Notes
      (flutter/widget
       :when (seq notes)

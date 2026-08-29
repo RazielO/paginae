@@ -190,7 +190,6 @@
                               (reset! filter-atom nil)
                               (reset! current-tab 2))
             :on-image-saved (fn []
-                              (dart:core/print "REFRESH BOOKS")
                               (swap! my-books/refresh-atom inc))})))
 
      .bottomNavigationBar
@@ -204,7 +203,7 @@
 
 (defn main
   []
-  (img-utils/init-image-directory)
+  (await (img-utils/init-image-directory))
 
   (flutter/run
    (main-screen)))

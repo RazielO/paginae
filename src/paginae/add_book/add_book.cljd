@@ -55,7 +55,6 @@
       (material/FilledButton
        .onPressed
        (fn []
-         (dart:core/print "APP BAR ON SAVE")
          (on-save))
 
        .child
@@ -218,7 +217,6 @@
                :on-cancel (fn []
                             (.pop navigator))
                :on-save (fn []
-                          (dart:core/print "ON SAVE FUNCTION")
                           (save-book {:context context
                                       :book-atom book-atom
                                       :saving saving

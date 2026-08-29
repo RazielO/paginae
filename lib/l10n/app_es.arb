@@ -147,8 +147,8 @@
     "@viewJournal": {
         "description": "Action to go to journal"
     },
-    "noBooks": "No estás leyendo ningún libro",
-    "@noBooks": {
+    "noReading": "No estás leyendo ningún libro",
+    "@noReading": {
         "description": "Text to show when there are no books being read"
     },
     "addNewBook": "Añade un libro",
@@ -219,5 +219,21 @@
     "authorRequired": "El autor no puede estar vacío",
     "@authorRequired": {
         "description": "Validation error shown when adding a book and the author is empty"
+    },
+    "noFavorites": "No tienes libros favoritos",
+    "@noFavorites": {
+        "description": "Message when filtering for favorites and none exists"
+    },
+    "noFinished": "No has terminado ningún libro",
+    "@noFinished": {
+        "description": "Message when filtering for finished books and none exists"
+    },
+    "noToRead": "No tienes libros para leer después",
+    "@noToRead": {
+        "description": "Message when filtering for to-read books and none exists"
+    },
+    "noBooks": "No tienes libros",
+    "@noBooks": {
+        "description": "Message when no books are in the library"
     }
 }

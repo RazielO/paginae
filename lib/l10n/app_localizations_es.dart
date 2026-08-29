@@ -152,7 +152,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get viewJournal => 'Ver Diario';
 
   @override
-  String get noBooks => 'No estás leyendo ningún libro';
+  String get noReading => 'No estás leyendo ningún libro';
 
   @override
   String get addNewBook => 'Añade un libro';
@@ -342,4 +342,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get authorRequired => 'El autor no puede estar vacío';
+
+  @override
+  String get noFavorites => 'No tienes libros favoritos';
+
+  @override
+  String get noFinished => 'No has terminado ningún libro';
+
+  @override
+  String get noToRead => 'No tienes libros para leer después';
+
+  @override
+  String get noBooks => 'No tienes libros';
 }

@@ -89,16 +89,15 @@
            total-books
            loading?
            as-list?
-           loading-more?
+           loading-more
            go-to-my-books
            on-image-saved
            error]}]
 
-  (dart:core/print (str "BOOK SEARCH ERROR: " error))
-
   (flutter/widget
    :get {{{:flds [titleLarge labelLarge]} .-textTheme} material/Theme
          {{:flds [onBackground]} .-colorScheme} material/Theme}
+   :watch [_loading-more loading-more]
    :context context
 
    (cond
@@ -164,12 +163,12 @@
 
         .style (.copyWith titleLarge
                           .fontWeight material/FontWeight.bold
-                          .fontFamily "Manrope"
+                          .fontFamily theme/sans-serif-font
                           .color onBackground))))
 
      ;; Display results
      :else
-     (let [item-count (if loading-more?
+     (let [item-count (if @loading-more
                         (inc (count books))
                         (count books))]
 
@@ -179,7 +178,7 @@
 
           .itemBuilder
           (fn [_context index]
-            (if (and loading-more?
+            (if (and @loading-more
                      (= index (dec item-count)))
 
               (material/Padding
@@ -188,7 +187,17 @@
                                               .vertical 20)
 
                .child
-               (material/LinearProgressIndicator))
+               (material/Center
+
+                .child
+                (material/SizedBox
+
+                 .height 80
+
+                 .width 80
+
+                 .child
+                 (material/CircularProgressIndicator))))
 
               (book-card (nth books index) go-to-my-books on-image-saved))))
 
@@ -204,7 +213,7 @@
 
           .itemBuilder
           (fn [_context index]
-            (if (and loading-more?
+            (if (and @loading-more
                      (= index (dec item-count)))
 
               (material/Padding
@@ -259,48 +268,54 @@
    :get {{{:flds [surface onSurface]} .-colorScheme} material/Theme}
    :context context
    :let [locales (app-l10n/AppLocalizations.of context)]
+   :managed [text-controller (material/TextEditingController)]
 
-   (material/Container
-    .padding (material/EdgeInsets.symmetric .horizontal 20 .vertical 5)
+   (flutter/widget
+    (material/Container
+     .padding (material/EdgeInsets.symmetric .horizontal 20 .vertical 5)
 
-    .decoration
-    (material/BoxDecoration
-     .borderRadius (material/BorderRadiusGeometry.circular 10)
-     .color surface)
+     .decoration
+     (material/BoxDecoration
+      .borderRadius (material/BorderRadiusGeometry.circular 10)
+      .color surface))
 
     .child
     (material/Row
      .mainAxisSize material/MainAxisSize.min
 
-     .spacing 20
+     .spacing 20)
 
-     .children
-     [(material/Icon
-       symbols/Symbols.search
+    .children
+    [(material/Icon
+      symbols/Symbols.search
 
-       .color (:60 theme/primary))
+      .color (:60 theme/primary))
 
-      (material/Expanded
-       .child
-       (material/TextField
-        .onSubmitted on-submitted
+     (material/Expanded
+      .child
+      (material/TextField
+       .onSubmitted
+       on-submitted
 
-        .style
-        (material/TextStyle
-         .color onSurface)
+       .controller
+       text-controller
 
-        .decoration
-        (material/InputDecoration
-         .hintText (.-searchBookHint locales)
+       .style
+       (material/TextStyle
+        .color onSurface)
 
-         .border material/InputBorder.none
+       .decoration
+       (material/InputDecoration
+        .hintText (.-searchBookHint locales)
 
-         .enabledBorder material/InputBorder.none
+        .border material/InputBorder.none
 
-         .focusedBorder material/InputBorder.none
+        .enabledBorder material/InputBorder.none
 
-         .hintStyle (material/TextStyle
-                     .color (.withOpacity onSurface 0.6)))))]))))
+        .focusedBorder material/InputBorder.none
+
+        .hintStyle (material/TextStyle
+                    .color (.withOpacity onSurface 0.6)))))])))
 
 (defn- search-widget
   "Widget that shows text input and options to add a book"
@@ -452,6 +467,19 @@
       (reset! loading-more false)
       (reset! error-atom (:error result)))))
 
+(defn- go-up-fab
+  [show-fab
+   on-pressed]
+  (flutter/widget
+   :watch [show-fab? show-fab]
+   :when show-fab?
+   (material/FloatingActionButton
+    .child
+    (material/Icon symbols/Symbols.keyboard_double_arrow_up)
+
+    .onPressed
+    on-pressed)))
+
 (defn book-search-widget
   "Widget for the add book screen. It allows to search for a book, scan its barcode or go to a manual entry"
   [{:keys [go-to-my-books
@@ -464,15 +492,15 @@
            _offset (atom 0) :as offset-atom
            _books (atom []) :as books-atom
            _total-books (atom 0) :as total-atom
-           _loading-more? (atom false) :as loading-more
            scanning? (atom false) :as scanning
-           _show-fab? (atom false) :as show-fab
            _has-more? (atom true) :as has-more
            error (atom nil) :as error-atom]
 
    :context context
 
-   :managed [scroll-controller
+   :managed [loading-more (atom false) :dispose nil
+             show-fab (atom false) :dispose nil
+             scroll-controller
              (let [controller (material/ScrollController)
                    handler (fn []
                              (let [locales (app-l10n/AppLocalizations.of context)
@@ -511,22 +539,17 @@
 
    (material/Scaffold
     .floatingActionButton
-    (when @show-fab
-      (material/FloatingActionButton
+    (go-up-fab
+     show-fab
+     (fn []
+       (-> scroll-controller
+           (.animateTo
+            0
 
-       .onPressed
-       (fn []
-         (-> scroll-controller
-             (.animateTo
-              0
+            .duration (dart:core/Duration .milliseconds 400)
 
-              .duration (dart:core/Duration .milliseconds 400)
-
-              .curve animation/Curves.easeInOut))
-         ())
-
-       .child
-       (material/Icon symbols/Symbols.keyboard_double_arrow_up)))
+            .curve animation/Curves.easeInOut))
+       ()))
 
     .body
     (material/Container
@@ -594,7 +617,7 @@
                      :total-books @total-atom
                      :loading? (empty? @books-atom)
                      :as-list? portrait?
-                     :loading-more? @loading-more
+                     :loading-more loading-more
                      :go-to-my-books go-to-my-books
                      :on-image-saved on-image-saved
                      :error error})

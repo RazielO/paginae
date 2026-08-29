@@ -39,7 +39,7 @@
   []
   (services/TextInputFormatter.withFunction
    (fn [^services/TextEditingValue old-value ^services/TextEditingValue new-value]
-     (if (re-matches #"\d{0,3}\.?\d?" (.-text new-value))
+     (if (re-matches #"^\d{0,3}[\.,]?\d+$" (.-text new-value))
        new-value
        old-value))))
 
@@ -51,9 +51,8 @@
            ^material/TextEditingController controller
            ^app-l10n/AppLocalizations locales]}]
   (flutter/widget
-   ;; :managed [float-ctrl (material/TextEditingController)]
    :watch [float-text controller :> .-text]
-   :let [float-val (try (parse-double float-text)
+   :let [float-val (try (parse-double (.replaceAll ^dart:core/String float-text "," "."))
                         (catch dart:core/Object _ nil))
          float-ok? (and float-val (>= float-val lower-limit) (<= float-val upper-limit))]
 

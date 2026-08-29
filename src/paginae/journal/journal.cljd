@@ -79,14 +79,15 @@
         .softWrap
         true)]))]))
 
-(defn- same-day
-  "Compare 2 DateTimes by day"
-  [^dart:core/DateTime day1
-   data]
-  (let [^dart:core/DateTime day2 (:date (:activity data))]
-    (and (= (.-year day1) (.-year day2))
-         (= (.-month day1) (.-month day2))
-         (= (.-day day1) (.-day day2)))))
+(defn- day-key
+  "Return a vector [year month day] uniquely identifying a day"
+  [^dart:core/DateTime day]
+  [(.-year day) (.-month day) (.-day day)])
+
+(defn- activity-day-key
+  "Return the day-key of an activity data entry"
+  [data]
+  (day-key (:date (:activity data))))
 
 (defn- starting-day-of-week
   "Get the starting day of week. If locale is english, sunday, otherwise monday"
@@ -102,15 +103,17 @@
            ^dart:core/DateTime today
            first-day
            locale
-           activities]}]
+           grouped-activities
+           on-page-changed]}]
   (flutter/widget
+   :watch [^dart:core/DateTime focused-day focused-day-atom]
+
    :get {{{:flds [labelLarge]} .-textTheme
           {:flds [primary secondary onSecondary]} .-colorScheme} material/Theme}
 
-   ;; TODO: Check why it in the emulator is not show first time
    (calendar/TableCalendar
     .focusedDay
-    @focused-day-atom
+    focused-day
 
     .currentDay
     today
@@ -135,8 +138,8 @@
     (starting-day-of-week locale)
 
     .eventLoader
-    (fn [day]
-      (filter #(same-day day %) activities))
+    (fn [^dart:core/DateTime day]
+      (get grouped-activities (day-key day) []))
 
     .calendarStyle
     (calendar/CalendarStyle
@@ -175,7 +178,8 @@
 
     .onPageChanged
     (fn [^dart:core/DateTime day]
-      (reset! focused-day-atom day))
+      (reset! focused-day-atom day)
+      (on-page-changed))
 
     .headerStyle
     (calendar/HeaderStyle
@@ -186,8 +190,7 @@
      false
 
      .rightChevronIcon
-     (let [^dart:core/DateTime focused-day @focused-day-atom
-           same-month (= (.-month today) (.-month focused-day))
+     (let [same-month (= (.-month today) (.-month focused-day))
            same-year (= (.-year today) (.-year focused-day))]
 
        (if (not (and same-month same-year))
@@ -200,13 +203,13 @@
 
 (defn- activities-by-day
   "List the activities of a given day"
-  [activities day context]
-  (let [filtered (filter #(same-day day %) activities)
+  [grouped-activities day context]
+  (let [day-activities (get grouped-activities (day-key day) [])
         locales (app-l10n/AppLocalizations.of context)
         theme (material/Theme.of context)]
 
 
-    (if (empty? filtered)
+    (if (empty? day-activities)
       [(material/Text
         (.-noActivityThatDay locales)
 
@@ -219,7 +222,7 @@
           (.-onSurface (.-colorScheme  theme))
           0.6)))]
 
-      (map activity-card filtered))))
+      (map activity-card day-activities))))
 
 (defn journal-widget
   "Widget to show the reading activity"
@@ -227,14 +230,18 @@
   (flutter/widget
    :context context
    :get {{{:flds [headlineSmall]} .-textTheme} material/Theme}
-   :let [today     (dart:core/DateTime.now)
+   :managed [focused-day-atom (atom (dart:core/DateTime.now)) :dispose nil]
+   :watch [selected-day (atom (dart:core/DateTime.now)) :as selected-day-atom
+           refresh-count (atom 0) :as refresh-day
+           activities (db/get-activities-by-month
+                       (.-month ^dart:core/DateTime @focused-day-atom)
+                       (.-year ^dart:core/DateTime @focused-day-atom)) :default [] :refresh-on refresh-count
+           first-day (db/get-first-activity-date) :default (dart:core/DateTime.now)]
+   :let [today (dart:core/DateTime.now)
          locale (material/Localizations.localeOf context)
          portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)
-         locales (app-l10n/AppLocalizations.of context)]
-   :watch [selected-day (atom (dart:core/DateTime.now)) :as selected-day-atom
-           ^dart:core/DateTime focused-day (atom (dart:core/DateTime.now)) :as focused-day-atom
-           activities (db/get-activities-by-month (.-month focused-day) (.-year focused-day)) :default [] :refresh-on focused-day
-           first-day  (db/get-first-activity-date) :default (dart:core/DateTime.now)]
+         locales (app-l10n/AppLocalizations.of context)
+         grouped-activities (group-by activity-day-key activities)]
 
    (material/Scaffold
 
@@ -272,8 +279,9 @@
            :today today
            :first-day first-day
            :locale locale
-           :activities activities})]
-        (activities-by-day activities selected-day context))))
+           :grouped-activities grouped-activities
+           :on-page-changed (fn [] (swap! refresh-day inc))})]
+        (activities-by-day grouped-activities selected-day context))))
 
      (material/Row
       .children
@@ -285,7 +293,8 @@
           :today today
           :first-day first-day
           :locale locale
-          :activities activities}))
+          :grouped-activities grouped-activities
+          :on-page-changed (fn [] (swap! refresh-day inc))}))
 
        (material/Expanded
         .child
@@ -296,4 +305,4 @@
          .child
          (material/Column
           .children
-          (activities-by-day activities selected-day context))))]))))
+          (activities-by-day grouped-activities selected-day context))))]))))

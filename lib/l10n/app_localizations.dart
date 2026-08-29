@@ -366,7 +366,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'You are not reading any books'**
-  String get noBooks;
+  String get noReading;
 
   /// Button to go to the add book screen
   ///
@@ -691,6 +691,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The author cannot be empty'**
   String get authorRequired;
+
+  /// Message when filtering for favorites and none exists
+  ///
+  /// In en, this message translates to:
+  /// **'You have no favorite books'**
+  String get noFavorites;
+
+  /// Message when filtering for finished books and none exists
+  ///
+  /// In en, this message translates to:
+  /// **'You have not finished a book'**
+  String get noFinished;
+
+  /// Message when filtering for to-read books and none exists
+  ///
+  /// In en, this message translates to:
+  /// **'Your to-read list is empty'**
+  String get noToRead;
+
+  /// Message when no books are in the library
+  ///
+  /// In en, this message translates to:
+  /// **'You have no books'**
+  String get noBooks;
 }
 
 class _AppLocalizationsDelegate

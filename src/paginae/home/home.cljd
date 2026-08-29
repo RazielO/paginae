@@ -137,11 +137,14 @@
 
       .children
       [(material/Text
-        (.-noBooks locales)
+        (.-noReading locales)
 
         .style
-        (.copyWith titleLarge
-                   .fontFamily "Manrope"))
+        (.copyWith
+         titleLarge
+
+         .fontFamily
+         theme/sans-serif-font))
 
        (material/FilledButton
         .onPressed go-to-add
@@ -153,7 +156,7 @@
          .style
          (.copyWith titleMedium
                     .color onPrimary
-                    .fontFamily "Manrope"
+                    .fontFamily theme/sans-serif-font
                     .fontWeight material/FontWeight.bold)))])
 
      ;; List the reading books 

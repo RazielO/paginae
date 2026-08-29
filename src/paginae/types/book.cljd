@@ -86,7 +86,7 @@
     :status (keyword (get entry "status"))
     :format (keyword (get entry "format"))
     :favorite (not (zero? (int (get entry "favorite"))))
-    :has-cover? (not (zero? (int (get entry "has_cover"))))
+    :has-cover? (not (zero? (int (or "0" (get entry "has_cover")))))
     :current-progress (get entry "current_progress")
     :created-at (.toLocal (dart:core/DateTime.parse (get entry "created_at")))
     :local-cover? true}))
@@ -134,11 +134,6 @@
   "Return a new Book with format set to new-format (keyword)."
   [^Book book new-format]
   (assoc book :format new-format))
-
-(defn update-saved-cover
-  "Return a new Book with saved-cover? set to new-value (boolean)."
-  [^Book book new-value]
-  (assoc book :saved-cover? new-value))
 
 (defn update-favorite-status
   "Return a new book with favorite status set to new-favorite (boolean)."

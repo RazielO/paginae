@@ -173,15 +173,21 @@
 
 (defn card-theme
   "Theme for the card"
-  [{:keys [color]}]
+  [{:keys [color shadow-color]}]
   (material/CardThemeData
-   .color color
+   .color
+   color
 
-   .elevation 2.0
+   .shadowColor
+   shadow-color
+
+   .elevation
+   2.0
 
    .shape
    (material/RoundedRectangleBorder
-    .borderRadius (material/BorderRadius.circular 20.0))))
+    .borderRadius
+    (material/BorderRadius.circular 20.0))))
 
 (defn list-tile-theme
   "Theme for a list tile"
@@ -275,20 +281,9 @@
 
    ;; CARD
    .cardTheme
-   (material/CardThemeData
-    .color
-    (.-surface color-scheme)
-
-    .shadowColor
-    shadow-color
-
-    .elevation
-    2.0
-
-    .shape
-    (material/RoundedRectangleBorder
-     .borderRadius
-     (material/BorderRadius.circular 20.0)))
+   (card-theme
+    {:color (.-surface color-scheme)
+     :shadow-color shadow-color})
 
    ;; LIST TILES
    .listTileTheme
