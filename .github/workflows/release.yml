@@ -41,7 +41,7 @@ jobs:
         run: flutter pub get
 
       - name: Compile ClojureDart into Dart
-        run: clj -M:cljd compile
+        run: clojure -M:cljd compile
 
       - name: Generate icons
         run: dart run flutter_launcher_icons
