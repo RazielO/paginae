@@ -15,6 +15,18 @@ A personal reading tracker built with Flutter and ClojureDart. Track your books,
 - **Dark and light theme**
 - **English and Spanish** localization
 
+## Screenshots
+
+<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" alt="1" width="300" />
+
+<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png" alt="2" width="300" />
+
+<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US.png" alt="3" width="300" />
+
+<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4_en-US.png" alt="4" width="300" />
+
+<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5_en-US.png" alt="5" width="300" />
+
 ## Building
 
 ### Prerequisites
