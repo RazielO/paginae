@@ -298,6 +298,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get saveNote => 'Guardar nota';
 
   @override
+  String get sessionResume => 'Retomar';
+
+  @override
+  String get sessionResumeMessage =>
+      'Se ha detectado una sesión de lectura sin terminar. ¿Continuar desde donde lo dejaste?';
+
+  @override
+  String get sessionResumeTitle => '¿Retomar la sesión de lectura?';
+
+  @override
+  String get sessionDiscard => 'Descartar';
+
+  @override
   String get setFavorite => 'Marcar como favorito';
 
   @override

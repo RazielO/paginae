@@ -79,6 +79,10 @@
     "@searchManualEntry": {
         "description": "Search book screen action to manually enter a book"
     },
+    "sessionDiscard": "Descartar",
+    "sessionResume": "Retomar",
+    "sessionResumeMessage": "Se ha detectado una sesión de lectura sin terminar. ¿Continuar desde donde lo dejaste?",
+    "sessionResumeTitle": "¿Retomar la sesión de lectura?",
     "searchNoResults": "No se encontraron resultados",
     "@searchNoResults": {
         "description": "Search book screen label for when no books were found"

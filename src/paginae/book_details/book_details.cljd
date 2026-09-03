@@ -429,7 +429,9 @@
 
 (defn book-details
   "Widget that shows the details of a book"
-  [^book-type/Book book-value]
+  [^book-type/Book book-value
+   session]
+
 
   (flutter/widget
    :get
@@ -441,145 +443,164 @@
    :watch [book (atom book-value) :as book-atom
            rev (atom 0) :as data-revisions
            notes (db/get-book-notes (:id book)) :default [] :refresh-on rev
-           activities (db/get-book-activities (:id book)) :default [] :refresh-on rev]
+           activities (db/get-book-activities (:id book)) :default [] :refresh-on rev
+           _checked-session? (atom nil) :as checked-session]
    :managed [note-controller (material/TextEditingController)
              activity-controller (material/TextEditingController)]
 
-   (material/Scaffold
-    .appBar
-    (app-bar context book-atom))
+   (do
+     (.addPostFrameCallback
+      (widgets/WidgetsBinding.instance)
+      (fn [_]
+        (when (and session (not @checked-session))
+          (reset! checked-session true)
+          (let [result (await (.push navigator
+                                     (#/ (material/MaterialPageRoute Object)
+                                      .builder
+                                      (flutter/build
+                                       (book-details.reading-timer/reading-timer book session)))))] 
+            (when result
+              (swap! book-atom #(book-type/update-current-progress % result))
+              (swap! data-revisions inc))))))
 
-   .body
-   (material/Container
-    .padding
-    (material/EdgeInsets.all 10))
+     (material/Scaffold
+      .appBar
+      (app-bar context book-atom)
 
-   .child
-   (material/SingleChildScrollView)
+      .body
+      (material/Container
+       .padding
+       (material/EdgeInsets.all 10)
 
-   .child
-   (material/Column
-    .crossAxisAlignment
-    material/CrossAxisAlignment.center
+       .child
+       (material/SingleChildScrollView
 
-    .spacing 10
+        .child
+        (material/Column
+         .crossAxisAlignment
+         material/CrossAxisAlignment.center
 
-    .children
-    [;; Cover image
-     (image/cover-image
-      {:book book
-       :placeholder-text (.-noCover locales)
-       :bordered? false
-       :clickable? false
-       :width 200})
+         .spacing 10
 
-     ;; Title
-     (material/Text
-      (:title book)
+         .children
+         [;; Cover image
+          (image/cover-image
+           {:book book
+            :placeholder-text (.-noCover locales)
+            :bordered? false
+            :clickable? false
+            :width 200})
 
-      .style headlineSmall)
+          ;; Title
+          (material/Text
+           (:title book)
 
-     ;; Author
-     (material/Text
-      (.byAuthor locales (if (nil? (:author book)) (.-unknown locales) (:author book)))
+           .style headlineSmall
+           
+           .textAlign
+           material/TextAlign.center)
 
-      .style
-      (.copyWith titleMedium .fontStyle material/FontStyle.italic))
+          ;; Author
+          (material/Text
+           (.byAuthor locales (if (nil? (:author book)) (.-unknown locales) (:author book)))
 
-     (material/SizedBox .height 20)
+           .style
+           (.copyWith titleMedium .fontStyle material/FontStyle.italic))
 
-     ;; Progress circle
-     (book-details.reading-progress/reading-progress
-      {:book book
-       :mark-as-started
-       (fn []
-         (reset! book-atom (book-type/update-status book :reading))
-         (await (db/update-book @book-atom)))})
+          (material/SizedBox .height 20)
 
-     (material/SizedBox .height 20)
-     ;; Action buttons
-     ;; Timer
-     (action-button
-      {:on-pressed
-       (fn []
-         (let [result (await (.push navigator
-                                    (#/ (material/MaterialPageRoute Object)
-                                     .builder
-                                     (flutter/build
-                                      (book-details.reading-timer/reading-timer book)))))]
-           (when result
-             (swap! book-atom #(book-type/update-current-progress % result))
-             (swap! data-revisions inc))))
-       :icon symbols/Symbols.timer
-       :text (.-readingTimer locales)
-       :background primary
-       :foreground onPrimary})
-     ;; Update progress
-     (action-button {:on-pressed
-                     (fn []
-                       (let [data (await (book-details.activity-dialog/add-activity-dialog
-                                          {:context context
-                                           :controller activity-controller
-                                           :book book
-                                           :on-confirm
-                                           (fn [progress]
-                                             (await
-                                              (db/insert-book-activity {:book-id (:id book)
-                                                                        :progress progress})))}))]
-                         (when data
-                           (swap! book-atom #(book-type/update-current-progress % data))
-                           (swap! data-revisions inc))))
-                     :icon symbols/Symbols.edit_note
-                     :text (.-updateProgress locales)
-                     :background secondary
-                     :foreground onSecondary})
-     ;; Add note
-     (action-button
-      {:on-pressed (fn []
-                     (let [note (await (add-note-dialog
-                                        context
-                                        note-controller))]
-                       (when note
-                         (await (db/insert-book-note note (:id book)))
-                         (swap! data-revisions inc))))
-       :icon symbols/Symbols.add
-       :text (.-addNoteAction locales)
-       :background tertiary
-       :foreground onTertiary})
-     (material/SizedBox .height 20)
+          ;; Progress circle
+          (book-details.reading-progress/reading-progress
+           {:book book
+            :mark-as-started
+            (fn []
+              (reset! book-atom (book-type/update-status book :reading))
+              (await (db/update-book @book-atom)))})
 
-     ;; Notes
-     (flutter/widget
-      :when (seq notes)
+          (material/SizedBox .height 20)
+          ;; Action buttons
+          ;; Timer
+          (action-button
+           {:on-pressed
+            (fn []
+              (let [result (await (.push navigator
+                                         (#/ (material/MaterialPageRoute Object)
+                                          .builder
+                                          (flutter/build
+                                           (book-details.reading-timer/reading-timer book nil)))))]
+                (when result
+                  (swap! book-atom #(book-type/update-current-progress % result))
+                  (swap! data-revisions inc))))
+            :icon symbols/Symbols.timer
+            :text (.-readingTimer locales)
+            :background primary
+            :foreground onPrimary})
+          ;; Update progress
+          (action-button {:on-pressed
+                          (fn []
+                            (let [data (await (book-details.activity-dialog/add-activity-dialog
+                                               {:context context
+                                                :controller activity-controller
+                                                :book book
+                                                :on-confirm
+                                                (fn [progress]
+                                                  (await
+                                                   (db/insert-book-activity {:book-id (:id book)
+                                                                             :progress progress})))}))]
+                              (when data
+                                (swap! book-atom #(book-type/update-current-progress % data))
+                                (swap! data-revisions inc))))
+                          :icon symbols/Symbols.edit_note
+                          :text (.-updateProgress locales)
+                          :background secondary
+                          :foreground onSecondary})
+          ;; Add note
+          (action-button
+           {:on-pressed (fn []
+                          (let [note (await (add-note-dialog
+                                             context
+                                             note-controller))]
+                            (when note
+                              (await (db/insert-book-note note (:id book)))
+                              (swap! data-revisions inc))))
+            :icon symbols/Symbols.add
+            :text (.-addNoteAction locales)
+            :background tertiary
+            :foreground onTertiary})
+          (material/SizedBox .height 20)
 
-      (material/Text (.-notesSection locales) .style titleLarge))
+          ;; Notes
+          (flutter/widget
+           :when (seq notes)
 
-     (material/ListView
+           (material/Text (.-notesSection locales) .style titleLarge))
 
-      .shrinkWrap
-      true
+          (material/ListView
 
-      .physics
-      (widgets/NeverScrollableScrollPhysics)
+           .shrinkWrap
+           true
 
-      .children
-      (map #(note-card
-             {:context context
-              :note %
-              :book-name (:title book)
-              :notes-revisions data-revisions
-              :note-controller note-controller})
-           notes))
+           .physics
+           (widgets/NeverScrollableScrollPhysics)
 
-     ;; Activities
-     (flutter/widget
-      :when (seq activities)
+           .children
+           (map #(note-card
+                  {:context context
+                   :note %
+                   :book-name (:title book)
+                   :notes-revisions data-revisions
+                   :note-controller note-controller})
+                notes))
 
-      (material/Text (.-activitySection locales) .style titleLarge))
+          ;; Activities
+          (flutter/widget
+           :when (seq activities)
 
-     (material/ListView .shrinkWrap
-                        true
-                        .physics
-                        (widgets/NeverScrollableScrollPhysics)
-                        .children
-                        (map #(activity-card % book) activities))])))
+           (material/Text (.-activitySection locales) .style titleLarge))
+
+          (material/ListView .shrinkWrap
+                             true
+                             .physics
+                             (widgets/NeverScrollableScrollPhysics)
+                             .children
+                             (map #(activity-card % book) activities))])))))))

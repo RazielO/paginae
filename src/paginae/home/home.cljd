@@ -3,8 +3,10 @@
   (:require ["../l10n/app_localizations.dart" :as app-l10n]
             ["package:carousel_slider/carousel_slider.dart" :as carousel]
             ["package:flutter/material.dart" :as material]
+            ["package:flutter/widgets.dart" :as widgets]
             [cljd.flutter :as flutter]
             [paginae.book-details.book-details :as book-details]
+            [paginae.book-details.reading-session :as reading-session]
             [paginae.database :as db]
             [paginae.home.badges :as badges]
             [paginae.image.widget :as image]
@@ -29,7 +31,7 @@
                       navigator
                       (#/(material/MaterialPageRoute Object)
                        .builder
-                       (flutter/build (book-details/book-details book)))))]
+                       (flutter/build (book-details/book-details book nil)))))]
         (update-books))))
 
    .child
@@ -383,6 +385,26 @@
              (let [entry (nth activities idx)]
                (journal/activity-card entry))))))]))))
 
+(defn- resume-session!
+  "Check for a persisted reading session on app startup. If one exists,
+   resolve it (asking the user about stale sessions), load its book, and
+   push the reading timer. Clears sessions whose book no longer exists."
+  [context
+   ^widgets/NavigatorState navigator
+   session-check-atom]
+  (reset! session-check-atom true)
+  (when (await (reading-session/session-exist?))
+    (let [resolved (await (reading-session/resolve-on-open context))]
+      (when resolved
+        (let [book (await (db/get-book (:book-id resolved)))]
+          (if book
+            (.push navigator
+                   (#/(material/MaterialPageRoute Object)
+                    .builder
+                    (flutter/build
+                     (book-details/book-details book resolved))))
+            (reading-session/delete-session)))))))
+
 (defn home-widget
   "Widget that shows the home screen"
   [{:keys [go-to-add
@@ -397,64 +419,74 @@
    :let [locales (app-l10n/AppLocalizations.of context)]
    :watch [revision (atom 0) :as data-revision
            books (db/get-books-by-status :reading) :default [] :refresh-on revision
+           _session-check (atom false) :as session-check-atom
            counts (db/get-book-counts) :default {:to-read 0
                                                  :favorite 0
                                                  :done 0
                                                  :read 0} :refresh-on revision
            last-activities (db/get-recent-activity 5) :default [] :refresh-on revision]
+   :get [material/Navigator]
 
-   (material/CustomScrollView
-    .slivers
-    [;; App bar
-     (material/SliverAppBar
-      .pinned false
+   (do
+     (.addPostFrameCallback
+      (widgets/WidgetsBinding.instance)
+      (fn [_]
+        (when (not @session-check-atom)
+          (resume-session! context navigator session-check-atom))))
 
-      .floating true
 
-      .flexibleSpace
-      (material/Center
-       .child
-       (material/Text
-        (.-homeTitle locales)
+     (material/CustomScrollView
+      .slivers
+      [;; App bar
+       (material/SliverAppBar
+        .pinned false
 
-        .style
-        (.copyWith headlineMedium
-                   .fontWeight material/FontWeight.bold))))
+        .floating true
 
-     (books-reading
-      {:go-to-add go-to-add
-       :books books
-       :on-pop #(swap! data-revision inc)})
+        .flexibleSpace
+        (material/Center
+         .child
+         (material/Text
+          (.-homeTitle locales)
 
-     (material/SliverToBoxAdapter
-      .child
-      (material/SizedBox
-       .height 30))
+          .style
+          (.copyWith headlineMedium
+                     .fontWeight material/FontWeight.bold))))
 
-     (shelves
-      {:counts counts
-       :go-to-to-read-shelf
-       (fn []
-         (go-to-to-read-shelf)
-         (swap! data-revision inc))
-       :go-to-reading-shelf
-       (fn []
-         (go-to-reading-shelf)
-         (swap! data-revision inc))
-       :go-to-favorite-shelf
-       (fn []
-         (go-to-favorite-shelf)
-         (swap! data-revision inc))
-       :go-to-done-shelf
-       (fn []
-         (go-to-done-shelf)
-         (swap! data-revision inc))})
+       (books-reading
+        {:go-to-add go-to-add
+         :books books
+         :on-pop #(swap! data-revision inc)})
 
-     (material/SliverToBoxAdapter
-      .child
-      (material/SizedBox
-       .height 30))
+       (material/SliverToBoxAdapter
+        .child
+        (material/SizedBox
+         .height 30))
 
-     (recent-activity
-      {:activities last-activities
-       :go-to-journal go-to-journal})])))
+       (shelves
+        {:counts counts
+         :go-to-to-read-shelf
+         (fn []
+           (go-to-to-read-shelf)
+           (swap! data-revision inc))
+         :go-to-reading-shelf
+         (fn []
+           (go-to-reading-shelf)
+           (swap! data-revision inc))
+         :go-to-favorite-shelf
+         (fn []
+           (go-to-favorite-shelf)
+           (swap! data-revision inc))
+         :go-to-done-shelf
+         (fn []
+           (go-to-done-shelf)
+           (swap! data-revision inc))})
+
+       (material/SliverToBoxAdapter
+        .child
+        (material/SizedBox
+         .height 30))
+
+       (recent-activity
+        {:activities last-activities
+         :go-to-journal go-to-journal})]))))

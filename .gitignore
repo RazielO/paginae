@@ -141,3 +141,9 @@ lib/cljd-out/
 test/cljd-out/
 
 unused_keys.txt
+
+# Signing apk
+android/key.properties
+*.jks
+*.keystore
+release-keystore.jks

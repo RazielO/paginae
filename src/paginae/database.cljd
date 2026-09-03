@@ -78,6 +78,18 @@
               .orderBy "created_at DESC"))
      (map book-type/from-db-entry))))
 
+(defn get-book
+  "Query a book by id"
+  [book-id]
+  (let [db (await (get-db))
+        book (await (.query db
+                            books-table
+                            .where "id = ?"
+                            .whereArgs [book-id]))]
+    (if (seq book)
+      (book-type/from-db-entry (first book))
+      nil)))
+
 (defn get-book-counts
   "Query the book counts by status"
   []

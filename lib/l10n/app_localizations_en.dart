@@ -297,6 +297,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveNote => 'Save note';
 
   @override
+  String get sessionResume => 'Resume';
+
+  @override
+  String get sessionResumeMessage =>
+      'An unfinished reading session has been detected. Continue from where you left off?';
+
+  @override
+  String get sessionResumeTitle => 'Resume reading session?';
+
+  @override
+  String get sessionDiscard => 'Discard';
+
+  @override
   String get setFavorite => 'Set as favorite';
 
   @override

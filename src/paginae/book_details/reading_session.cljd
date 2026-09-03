@@ -1,0 +1,156 @@
+(ns paginae.book-details.reading-session
+  {:no-dynamic true}
+  (:require
+   ["package:shared_preferences/shared_preferences.dart" :as sp]
+   ["package:flutter/material.dart" :as material]
+   ["package:flutter/widgets.dart" :as widgets]
+   ["../l10n/app_localizations.dart" :as app-l10n]
+   [paginae.database :as db]))
+
+(def ^:private max-live-gap-seconds
+  "Running sessions not touched within this window are considered stale on reopen."
+  ;; (* 6 3600)
+  60)
+
+(defn now-in-seconds
+  "Return the current DateTime in seconds since Epoch"
+  []
+  (-> (dart:core/DateTime.now)
+      .toUtc
+      .-millisecondsSinceEpoch
+      (/ 1000)
+      .round))
+
+(def session-key
+  "Preferences key holding the session for the given book."
+  "reading_session.")
+
+(defn- parse-live
+  [raw]
+  (let [[started-at accumulated running updated-at book-id] (.split ^dart:core/String raw "|")]
+    {:started-at (parse-long started-at)
+     :accumulated (parse-long accumulated)
+     :running (= running "1")
+     :updated-at (parse-long updated-at)
+     :book-id book-id}))
+
+(defn load-session
+  "Return the persisted session for a book, or nil when none is stored.
+   Session shape: {:started-at int, :accumulated int, :running bool, :updated-at int}"
+  []
+  (let [prefs (await (sp/SharedPreferences.getInstance))]
+    (when (.containsKey prefs session-key)
+      (parse-live (.getString prefs session-key)))))
+
+(defn delete-session
+  []
+  (let [prefs (await (sp/SharedPreferences.getInstance))]
+    (when (.containsKey prefs session-key)
+      (await (.remove prefs session-key)))))
+
+(defn session-exist?
+  []
+  (let [prefs (await (sp/SharedPreferences.getInstance))]
+    (.containsKey prefs session-key)))
+
+(defn save-session
+  "Persist the session for a book. When session is nil, remove it."
+  [session]
+  (let [prefs (await (sp/SharedPreferences.getInstance))]
+    (if (nil? session)
+      (.remove prefs session-key)
+      (let [running (if (:running session) "1" "0")]
+        (.setString prefs
+                    session-key
+                    (str (:started-at session)
+                         "|"
+                         (:accumulated session)
+                         "|"
+                         running
+                         "|"
+                         (:updated-at session)
+                         "|"
+                         (:book-id session)))))))
+
+
+(defn stale-running?
+  "Whether the session claims to be running and has not been touched
+   for longer than max-live-gap-seconds."
+  [session]
+  (boolean
+   (and session
+        (:running session)
+        (> (- (now-in-seconds) (:updated-at session)) max-live-gap-seconds))))
+
+(defn- ask-resume-discard
+  "Ask the user whether to resume or discard a stale running session."
+  [context session]
+  (let [locales (app-l10n/AppLocalizations.of context)]
+    (await
+     (material/showDialog
+      .context context
+
+      .builder
+      (fn [dialog-context]
+        (let [theme (material/Theme.of dialog-context)
+              color-scheme (.-colorScheme theme)
+              text-theme (.-textTheme theme)]
+          (material/AlertDialog
+
+           .title
+           (material/Text (.-sessionResumeTitle locales))
+
+           .content
+           (material/Text (.-sessionResumeMessage locales))
+
+           .actions
+           [(material/TextButton
+             .child
+             (material/Text
+              (.-sessionDiscard locales)
+
+              .style
+              (.-labelLarge text-theme))
+
+             .onPressed
+             (fn []
+               (.pop (widgets/Navigator.of dialog-context) nil)))
+
+            (material/ElevatedButton
+             .style
+             (material/ButtonStyle
+              .backgroundColor
+              (material/WidgetStatePropertyAll (.-secondary color-scheme)))
+
+             .child
+             (material/Text
+              (.-sessionResume locales)
+
+              .style (.copyWith
+                      (.-labelLarge text-theme)
+
+                      .color
+                      (.-onSecondary color-scheme)))
+
+             .onPressed
+             (fn []
+               (.pop (widgets/Navigator.of dialog-context) session)))])))))))
+
+(defn resolve-on-open
+  "Decide what a fresh reading screen should restore from the persisted session.
+   - paused session -> the session as-is
+   - fresh running session -> the session as-is, with a refreshed updated-at
+   - stale running session -> ask the user; nil when discarded (and the session is cleared)."
+  [context]
+
+  (let [session (await (load-session))
+        book (await (db/get-book (:book-id session)))]
+    (when book
+     (if (stale-running? session)
+       (let [choice (await (ask-resume-discard context session))]
+         (when choice
+           (save-session (assoc choice :updated-at (now-in-seconds))))
+         choice)
+       (do (when (:running session)
+             (save-session (assoc session :updated-at (now-in-seconds))))
+           session)))))

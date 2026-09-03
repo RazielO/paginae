@@ -50,20 +50,6 @@
         .style
         (.-titleLarge text-theme))
 
-       ;; Button to switch between percentage and page progress input
-       (if has-pages?
-         (material/ElevatedButton
-          .child
-          (material/Text
-            (if as-pages?
-              (.-switchToPercentage locales)
-              (.-switchToPages locales)))
-
-          .onPressed
-          #(swap! as-pages not))
-
-         (material/SizedBox.shrink))
-
        ;; Input
        (material/Row
         .spacing 10
@@ -88,8 +74,20 @@
               :locales locales})))
 
          ;; Label (pages or percentage)
-         (material/Text
-          (if as-pages? (.-pageUnit locales) "%"))])
+         (if has-pages?
+           (material/DropdownMenu
+            .initialSelection
+            as-pages?
+
+            .dropdownMenuEntries
+            [(material/DropdownMenuEntry .value true .label (.-pageUnit locales))
+             (material/DropdownMenuEntry .value false .label "%")]
+
+            .onSelected
+            (fn [new-value]
+              (reset! as-pages new-value)))
+
+           (material/Text "%"))])
 
        ;; Buttons
        (material/Row
@@ -125,13 +123,13 @@
             .color
             (.-primary color-scheme)))
 
-         .onPressed
-         (fn []
-           (let [value (parse-double (.trim (.-text controller)))]
-             (when (and value (pos? value))
-               (let [progress (if as-pages?
-                                (/ value pages)
-                                (/ value 100.0))]
-                 (await (on-confirm progress))
-                 (.-text! controller "")
-                 (.pop (widgets/Navigator.of dialog-context) progress))))))])]))))
+          .onPressed
+          (fn []
+            (let [value (parse-double (.trim (.-text controller)))]
+              (when (and value (pos? value))
+                (let [progress (if as-pages?
+                                 (/ value pages)
+                                 (/ value 100.0))]
+                  (await (on-confirm progress))
+                  (.-text! controller "")
+                  (.pop (widgets/Navigator.of dialog-context) progress))))))])]))))

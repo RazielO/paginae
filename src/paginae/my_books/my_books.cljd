@@ -100,7 +100,7 @@
                navigator
                (#/(material/MaterialPageRoute Object)
                 .builder
-                (flutter/build (book-details/book-details book)))))
+                (flutter/build (book-details/book-details book nil)))))
              (refresh!)))
 
    (material/Card)

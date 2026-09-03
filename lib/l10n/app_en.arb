@@ -416,6 +416,22 @@
     "@saveNote": {
         "description": "Label for the save note button"
     },
+    "sessionResume": "Resume",
+    "@sessionResume": {
+        "description": "Confirm button label to resume a stale reading session"
+    },
+    "sessionResumeMessage": "An unfinished reading session has been detected. Continue from where you left off?",
+    "@sessionResumeMessage": {
+        "description": "Message shown when a stale running reading session is detected on open"
+    },
+    "sessionResumeTitle": "Resume reading session?",
+    "@sessionResumeTitle": {
+        "description": "Title of the dialog shown when a stale running reading session is detected"
+    },
+    "sessionDiscard": "Discard",
+    "@sessionDiscard": {
+        "description": "Button label to discard a stale reading session"
+    },
     "setFavorite": "Set as favorite",
     "@setFavorite": {
         "description": "Tooltip for marking a book as favorite"

@@ -608,6 +608,30 @@ abstract class AppLocalizations {
   /// **'Save note'**
   String get saveNote;
 
+  /// Confirm button label to resume a stale reading session
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get sessionResume;
+
+  /// Message shown when a stale running reading session is detected on open
+  ///
+  /// In en, this message translates to:
+  /// **'An unfinished reading session has been detected. Continue from where you left off?'**
+  String get sessionResumeMessage;
+
+  /// Title of the dialog shown when a stale running reading session is detected
+  ///
+  /// In en, this message translates to:
+  /// **'Resume reading session?'**
+  String get sessionResumeTitle;
+
+  /// Button label to discard a stale reading session
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get sessionDiscard;
+
   /// Tooltip for marking a book as favorite
   ///
   /// In en, this message translates to:
