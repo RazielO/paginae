@@ -1,7 +1,7 @@
 (ns paginae.book-details.reading-timer
   {:no-dynamic true}
   (:require
-   ["../l10n/app_localizations.dart" :as app-l10n]
+   ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
    ["dart:async" :as dart:async]
    ["package:flutter/material.dart" :as material]
    ["package:flutter/widgets.dart" :as widgets]

@@ -1,7 +1,7 @@
 (ns paginae.journal.journal
   {:no-dynamic true}
   (:require
-   ["../l10n/app_localizations.dart" :as app-l10n]
+   ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
    ["package:flutter/material.dart" :as material]
    ["package:flutter/painting.dart" :as painting]
    ["package:intl/intl.dart" :as intl]

@@ -1,0 +1,49 @@
+(ns paginae.book-details.reading-session-test
+  (:require [cljd.test :refer [deftest is testing]]
+            [paginae.book-details.reading-session :as session]))
+
+(deftest parse-live-test
+  (testing "parses a well-formed session string"
+    (let [s (session/parse-live "1700000000|300|1|1700000100|book-1")]
+      (is (= 1700000000 (:started-at s)))
+      (is (= 300 (:accumulated s)))
+      (is (true? (:running s)))
+      (is (= 1700000100 (:updated-at s)))
+      (is (= "book-1" (:book-id s)))))
+
+  (testing "parses a paused (not running) session"
+    (let [s (session/parse-live "1700000000|300|0|1700000100|book-1")]
+      (is (false? (:running s)))))
+
+  (testing "tolerates a garbage/corrupt string without throwing"
+    (let [s (session/parse-live "not-a-number|also|1|nope")]
+      (is (some? s)))))
+
+(defn- stale-window
+  "The configured staleness window in seconds (3 hours)."
+  []
+  (* 3 3600))
+
+(deftest stale-running?-test
+  (testing "a running session touched recently is not stale"
+    (let [now (session/now-in-seconds)
+          s {:running true :updated-at (dec now)}]
+      (is (false? (session/stale-running? s)))))
+
+  (testing "a running session just under the window is not stale"
+    (let [now (session/now-in-seconds)
+          s {:running true :updated-at (- now (dec (stale-window)))}]
+      (is (false? (session/stale-running? s)))))
+
+  (testing "a running session beyond the window is stale"
+    (let [now (session/now-in-seconds)
+          s {:running true :updated-at (- now (inc (stale-window)))}]
+      (is (true? (session/stale-running? s)))))
+
+  (testing "a paused session is never stale"
+    (let [now (session/now-in-seconds)
+          s {:running false :updated-at (- now 36000)}]
+      (is (false? (session/stale-running? s)))))
+
+  (testing "a nil session is not stale"
+    (is (false? (session/stale-running? nil)))))

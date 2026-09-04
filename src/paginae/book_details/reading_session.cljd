@@ -4,13 +4,12 @@
    ["package:shared_preferences/shared_preferences.dart" :as sp]
    ["package:flutter/material.dart" :as material]
    ["package:flutter/widgets.dart" :as widgets]
-   ["../l10n/app_localizations.dart" :as app-l10n]
+   ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
    [paginae.database :as db]))
 
 (def ^:private max-live-gap-seconds
   "Running sessions not touched within this window are considered stale on reopen."
-  ;; (* 6 3600)
-  60)
+  (* 3 3600))
 
 (defn now-in-seconds
   "Return the current DateTime in seconds since Epoch"
@@ -25,7 +24,8 @@
   "Preferences key holding the session for the given book."
   "reading_session.")
 
-(defn- parse-live
+(defn parse-live
+  "Parse the raw stored session string into a session map."
   [raw]
   (let [[started-at accumulated running updated-at book-id] (.split ^dart:core/String raw "|")]
     {:started-at (parse-long started-at)

@@ -1,6 +1,6 @@
 (ns paginae.types.activity
   {:no-dynamic true}
-  (:require ["../l10n/app_localizations.dart" :as app-l10n]))
+  (:require ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]))
 
 (defrecord Activity
            [id

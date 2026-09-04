@@ -140,7 +140,7 @@ lib/generated_plugin_registrant.dart
 lib/cljd-out/
 test/cljd-out/
 
-unused_keys.txt
+todo.txt
 
 # Signing apk
 android/key.properties

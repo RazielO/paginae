@@ -10,7 +10,7 @@
             ["package:flutter/animation.dart" :as animation]
             ["package:mobile_scanner/mobile_scanner.dart" :as scanner]
             ["package:material_symbols_icons/symbols.dart" :as symbols]
-            ["../l10n/app_localizations.dart" :as app-l10n]))
+            ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]))
 
 (defn- book-card
   "Card that displays a result book after a search"

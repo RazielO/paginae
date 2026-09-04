@@ -1,6 +1,6 @@
 # Paginae
 
-A personal reading tracker built with Flutter and ClojureDart. Track your books, log reading sessions, take notes, and watch your progress grow.
+A personal reading tracker built with Flutter and [ClojureDart](https://github.com/Tensegritics/ClojureDart). Track your books, log reading sessions, take notes, and watch your progress grow.
 
 ## Features
 

@@ -5,7 +5,7 @@
             [paginae.image.utils :as img-utils]
             ["package:dotted_border/dotted_border.dart" :as dotted]
             ["dart:io" :as io]
-            ["../l10n/app_localizations.dart" :as app-l10n]))
+            ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]))
 
 (defn cover-placeholder
   "Widget used for when there is no cover image"

@@ -1,6 +1,6 @@
 (ns paginae.add-book.book-form
   {:no-dynamic true}
-  (:require ["../l10n/app_localizations.dart" :as app-l10n]
+  (:require ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
             ["package:flutter/material.dart" :as material]
             ["package:flutter/services.dart" :as services]
             [cljd.flutter :as flutter]))

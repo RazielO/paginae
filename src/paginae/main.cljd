@@ -8,7 +8,7 @@
             [paginae.my-books.my-books :as my-books]
             [paginae.journal.journal :as journal]
             [paginae.image.utils :as img-utils]
-            ["../l10n/app_localizations.dart" :as app-l10n]
+            ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
             ["package:material_symbols_icons/symbols.dart" :as symbols]))
 
 (defn bottom-sheet-btn

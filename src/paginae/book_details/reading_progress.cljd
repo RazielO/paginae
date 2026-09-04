@@ -1,7 +1,7 @@
 (ns paginae.book-details.reading-progress
   {:no-dynamic true}
   (:require
-   ["../l10n/app_localizations.dart" :as app-l10n]
+   ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
    ["package:material_symbols_icons/symbols.dart" :as symbols]
    ["package:flutter/material.dart" :as material]
    [cljd.flutter :as flutter]

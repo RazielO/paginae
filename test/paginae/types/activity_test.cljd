@@ -1,0 +1,45 @@
+(ns paginae.types.activity-test
+  (:require [cljd.test :refer [deftest is testing]]
+            [paginae.types.activity :as activity]))
+
+(deftest from-db-entry-test
+  (testing "maps a plain db row (id key)"
+    (let [a (activity/from-db-entry {"id" 5
+                                     "book_id" "book-1"
+                                     "reading_time" 3600
+                                     "progress" 0.25
+                                     "date" "2024-01-02T10:20:30.000"
+                                     "created_at" "2024-01-02T10:20:30.000"})]
+      (is (= 5 (:id a)))
+      (is (= "book-1" (:book-id a)))
+      (is (= 3600 (:reading-time a)))
+      (is (= 0.25 (:progress a)))
+      (is (some? (:date a)))
+      (is (some? (:created-at a))))))
+
+(deftest from-db-join-entry-test
+  (testing "maps a joined row (activity_id key)"
+    (let [a (activity/from-db-join-entry {"activity_id" 5
+                                          "book_id" "book-1"
+                                          "reading_time" 3600
+                                          "progress" 0.25
+                                          "date" "2024-01-02T10:20:30.000"
+                                          "created_at" "2024-01-02T10:20:30.000"})]
+      (is (= 5 (:id a)))
+      (is (= "book-1" (:book-id a)))
+      (is (= 3600 (:reading-time a)))
+      (is (= 0.25 (:progress a))))))
+
+(deftest to-db-map-test
+  ;; NOTE: to-db-map always writes the current time as the date, ignoring
+  ;; (:date activity). That is intended for the insert-only usage but is worth
+  ;; documenting here (see todo R11).
+  (testing "serializes fields and drops the id (DB autoincrements)"
+    (let [m (activity/to-db-map
+             (activity/map->Activity
+              {:id 5 :book-id "book-1" :reading-time 3600 :progress 0.25}))]
+      (is (= "book-1" (get m "book_id")))
+      (is (= 3600 (get m "reading_time")))
+      (is (= 0.25 (get m "progress")))
+      (is (nil? (get m "id")) "id is dropped (DB autoincrements)")
+      (is (some? (get m "date")) "date is always present (currently now)"))))

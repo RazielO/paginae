@@ -1,7 +1,7 @@
 (ns paginae.common.confirm-delete-dialog
   {:no-dynamic true}
   (:require
-   ["../l10n/app_localizations.dart" :as app-l10n]
+   ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
    ["package:flutter/material.dart" :as material]
    ["package:flutter/widgets.dart" :as widgets]))
 

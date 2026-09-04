@@ -86,10 +86,11 @@
     :status (keyword (get entry "status"))
     :format (keyword (get entry "format"))
     :favorite (not (zero? (int (get entry "favorite"))))
-    :has-cover? (not (zero? (int (or "0" (get entry "has_cover")))))
+    :has-cover? (not (zero? (int (or (get entry "has_cover") "0"))))
     :current-progress (get entry "current_progress")
     :created-at (.toLocal (dart:core/DateTime.parse (get entry "created_at")))
     :local-cover? true}))
+
 
 (defn update-title
   "Return a new Book with title set to new-title."
@@ -140,10 +141,16 @@
   [^Book book new-favorite]
   (assoc book :favorite new-favorite))
 
+(defn done-progress?
+  "Helper to check if a progress is 'completed' (near 1.0)"
+  [progress]
+  (<= (.abs (- progress 1.0)) 0.001))
+
 (defn update-current-progress
   "Return a new book with current progress set to new-progress (double)."
-  [^Book book new-progress]
-  (let [status (if (= 1.0 new-progress)
+  [^Book book
+   new-progress]
+  (let [status (if (done-progress? new-progress)
                  :done
                  :reading)]
     (assoc book

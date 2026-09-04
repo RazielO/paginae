@@ -1,0 +1,25 @@
+(ns paginae.common.number-input-test
+  (:require [cljd.test :refer [deftest is testing]]
+            [paginae.common.number-input :as number-input]))
+
+(deftest float-text-ok?-test
+  (testing "accepts valid integer inputs"
+    (is (true? (number-input/float-text-ok? "0")))
+    (is (true? (number-input/float-text-ok? "5")))
+    (is (true? (number-input/float-text-ok? "123"))))
+
+  (testing "accepts decimal inputs (B5 regression: intermediate trailing dot)"
+    (is (true? (number-input/float-text-ok? "5.")) "allows typing the separator before more digits")
+    (is (true? (number-input/float-text-ok? "5.5")))
+    (is (true? (number-input/float-text-ok? "5,5")) "comma as decimal separator"))
+
+  (testing "empty string is acceptable (initial field state)"
+    (is (true? (number-input/float-text-ok? ""))))
+
+  (testing "long integer strings are accepted via the fallback \\d+ alternative"
+    (is (true? (number-input/float-text-ok? "1234"))))
+
+  (testing "rejects malformed input"
+    (is (false? (number-input/float-text-ok? "abc")))
+    (is (false? (number-input/float-text-ok? "1.2.3")))
+    (is (false? (number-input/float-text-ok? "-5")))))

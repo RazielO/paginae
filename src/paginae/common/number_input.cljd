@@ -1,12 +1,12 @@
 (ns paginae.common.number-input
   {:no-dynamic true}
-  (:require ["../l10n/app_localizations.dart" :as app-l10n]
+  (:require ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
             ["package:flutter/material.dart" :as material]
             ["package:flutter/services.dart" :as services]
             [cljd.flutter :as flutter]))
 
 (defn integer-input-field
-  "Input field for an integer number in a range [a, b]. Invalid values show an error."
+  "Input field for an integer number in a range [a, b]."
   [{:keys [lower-limit
            upper-limit
            label
@@ -15,7 +15,10 @@
   (flutter/widget
    :watch [int-text controller :> .-text]
    :let [int-val (parse-long int-text)
-         int-ok? (and int-val (>= int-val lower-limit) (<= int-val upper-limit))]
+         int-ok? (or (empty? int-text)
+                     (and int-val
+                          (>= int-val lower-limit)
+                          (<= int-val upper-limit)))]
 
    (material/TextField
     .controller controller
@@ -29,17 +32,28 @@
     .decoration
     (material/InputDecoration
      .labelText label
-
      .errorText
-     (when (and (seq int-text) (not int-ok?))
-       (.numberBetweenError locales lower-limit upper-limit))))))
+     (when (and (seq int-text)
+                (not int-ok?))
+       (.numberBetweenError locales
+                            lower-limit
+                            upper-limit))))))
+
+(def ^:private float-pattern
+  ;; Accepts non-negative numbers with at most two decimal places.
+  #"^(?:\d{0,3}(?:[\.,]\d{0,2})?|\d+)$")
+
+(defn float-text-ok?
+  "Whether the given text is an acceptable float input (per float-pattern)."
+  [^dart:core/String text]
+  (boolean (re-matches float-pattern text)))
 
 (defn- float-formatter
   "Accepts only non-negative numbers with at most one decimal place."
   []
   (services/TextInputFormatter.withFunction
    (fn [^services/TextEditingValue old-value ^services/TextEditingValue new-value]
-     (if (re-matches #"^\d{0,3}[\.,]?\d+$" (.-text new-value))
+     (if (float-text-ok? (.-text new-value))
        new-value
        old-value))))
 
@@ -52,9 +66,15 @@
            ^app-l10n/AppLocalizations locales]}]
   (flutter/widget
    :watch [float-text controller :> .-text]
-   :let [float-val (try (parse-double (.replaceAll ^dart:core/String float-text "," "."))
-                        (catch dart:core/Object _ nil))
-         float-ok? (and float-val (>= float-val lower-limit) (<= float-val upper-limit))]
+   :let [float-val (try
+                     (parse-double (.replaceAll ^dart:core/String float-text "," "."))
+                     (catch dart:core/Object _ nil))
+         float-ok? (or
+                    (empty? float-text)
+                    (and
+                     float-val
+                     (>= float-val lower-limit)
+                     (<= float-val upper-limit)))]
 
    (material/TextField
     .controller controller
@@ -70,6 +90,9 @@
      .labelText label
 
      .errorText
-     (when (and (seq float-text) (not float-ok?))
-       (.valueBetweenError locales lower-limit upper-limit))))))
+     (when (and (seq float-text)
+                (not float-ok?))
+       (.valueBetweenError locales
+                           lower-limit
+                           upper-limit))))))
 

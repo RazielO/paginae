@@ -8,7 +8,7 @@
             [paginae.add-book.reading-status :as reading-status]
             [paginae.add-book.book-format :as book-format]
             [paginae.add-book.book-form :as book-form]
-            ["../l10n/app_localizations.dart" :as app-l10n]
+            ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
             ["package:image_picker/image_picker.dart" :as image-picker]
             [paginae.types.book :as book-type]
             ["package:flutter/widgets.dart" :as widgets]))

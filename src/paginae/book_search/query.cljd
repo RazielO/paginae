@@ -11,6 +11,16 @@
             data ;; Result data
             error])
 
+(defn keep-book?
+  "Whether an Open Library doc should be kept as a search result.
+   Requires a :key and a non-blank :title."
+  [doc]
+  (let [title (get doc "title")]
+    (and
+     (contains? doc "key")
+     (some? title)
+     (not (str/blank? title)))))
+
 (defn query-books
   "Query the Open Library to search for books"
   [query ;; Query to search
@@ -36,13 +46,6 @@
                 :data []
                 :error "Couldn't retrieve data from OpenLibrary. Please try again."}))
 
-            (filter-fn [book]
-              (let [title (get book "title")]
-                (and
-                 (contains? book "key")
-                 (some? title)
-                 (not (str/blank? title)))))
-
             (handle-response [^http/Response response]
               (if (= (.-statusCode response) 200)
                 (let [json (convert/jsonDecode (.-body response))]
@@ -50,7 +53,7 @@
                    {:total (get json "num_found")
                     :offset (get json "offset")
                     :data (map #(book/book-from-query-result % unknown-str)
-                               (filter filter-fn
+                               (filter keep-book?
                                        (get json "docs" [])))}))
                 (handle-error no-response-str)))]
 

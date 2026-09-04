@@ -6,7 +6,7 @@
    [cljd.flutter :as flutter]
    [paginae.database :as db]
    [paginae.image.widget :as image]
-   ["../l10n/app_localizations.dart" :as app-l10n]
+   ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
    [paginae.home.badges :as badges]
    [paginae.book-details.book-details :as book-details]
    ["package:material_symbols_icons/symbols.dart" :as symbols]

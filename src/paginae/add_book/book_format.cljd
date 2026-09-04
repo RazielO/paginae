@@ -2,7 +2,7 @@
   {:no-dynamic true}
   (:require [cljd.flutter :as flutter]
             ["package:flutter/material.dart" :as material]
-            ["../l10n/app_localizations.dart" :as app-l10n]
+            ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
             [paginae.types.book :as book]))
 
 (defn- group-button

@@ -1,0 +1,28 @@
+(ns paginae.widgets-test
+  (:require [cljd.test :refer [deftest]]
+            [paginae.home.badges :as badges]
+            ["package:flutter/material.dart" :as material]
+            ["package:flutter_test/flutter_test.dart" :as ft]))
+
+(defn- pump-in-app
+  "Wrap a widget in a MaterialApp and pump it."
+  [pump-widget widget]
+  (pump-widget
+   (material/MaterialApp
+    .home widget)))
+
+(deftest badges-widget-test
+  :tags [:widget]
+  :runner (ft/testWidgets [tester])
+  (let [^ft/WidgetTester {:flds [pumpWidget]} tester]
+    (await
+     (pump-in-app
+      pumpWidget
+      (material/Row
+       .children
+       [(badges/read-badge)
+        (badges/to-read-badge)
+        (badges/favorite-badge)
+        (badges/reading-badge)])))
+    ;; every badge renders an Icon; the row should render all four
+    (ft/expect (ft/find.byType material/Icon) (ft/findsNWidgets 4))))

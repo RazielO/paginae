@@ -1,0 +1,153 @@
+(ns paginae.types.book-test
+  (:require [cljd.test :refer [deftest is testing]]
+            [paginae.types.book :as book]))
+
+(defn- db-entry
+  "A representative row as returned by the SQLite layer."
+  []
+  {"id" "book-1"
+   "title" "Dune"
+   "author" "Frank Herbert"
+   "pages" 412
+   "status" "reading"
+   "format" "paperback"
+   "favorite" 1
+   "has_cover" 1
+   "current_progress" 0.5
+   "created_at" "2024-01-02 10:20:30"})
+
+(deftest empty-book-test
+  (testing "creates sensible defaults"
+    (let [b (book/empty-book)]
+      (is (some? (:id b)) "generates an id")
+      (is (= "" (:title b)))
+      (is (= "" (:author b)))
+      (is (= :to-read (:status b)))
+      (is (= :hardcover (:format b)))
+      (is (= 0.0 (:current-progress b)))
+      (is (false? (:favorite b)))
+      (is (false? (:has-cover? b)))
+      (is (true? (:local-cover? b))))))
+
+(deftest book-from-query-result-test
+  (testing "maps Open Library JSON fields"
+    (let [json {"title" "Dune"
+                "author_name" ["Frank Herbert" "Brian Herbert"]
+                "first_publish_year" 1965
+                "number_of_pages_median" "700"
+                "cover_edition_key" "OL1234M"}
+          b (book/book-from-query-result json "Unknown")]
+      (is (some? (:id b)))
+      (is (= "Dune" (:title b)))
+      (is (= "Frank Herbert, Brian Herbert" (:author b)) "joins authors with ', '")
+      (is (= "1965" (:first-published b)) "stringifies the year")
+      (is (= 700 (:pages b)) "parses a numeric-string page count")
+      (is (true? (:has-cover? b)))
+      (is (= "https://covers.openlibrary.org/b/olid/OL1234M-M.jpg" (:cover-uri b)))
+      (is (false? (:local-cover? b)))
+      (is (= :to-read (:status b)))))
+
+  (testing "handles missing cover"
+    (let [b (book/book-from-query-result {"title" "Dune"} "Unknown")]
+      (is (false? (:has-cover? b)))
+      (is (nil? (:cover-uri b)))))
+
+  (testing "fallback author and year when unknown"
+    (let [b (book/book-from-query-result {"title" "Dune"} "Unknown")]
+      (is (= "Unknown" (:author b)))
+      (is (= "Unknown" (:first-published b))))))
+
+(deftest to-db-roundtrip-test
+  (testing "to-db-map serializes fields"
+    (let [b (assoc (book/empty-book)
+                   :title "Dune"
+                   :pages 412
+                   :status :reading
+                   :format :ebook
+                   :current-progress 0.75
+                   :favorite true
+                   :has-cover? true)
+          m (book/to-db-map b)]
+      (is (= "reading" (get m "status")))
+      (is (= "ebook" (get m "format")))
+      (is (= 1 (get m "favorite")))
+      (is (= 1 (get m "has_cover")))
+      (is (= 412 (get m "pages")))))
+
+  (testing "from-db-entry reads int flags back to booleans"
+    (let [b (book/from-db-entry (db-entry))]
+      (is (= "book-1" (:id b)))
+      (is (= "Dune" (:title b)))
+      (is (= "Frank Herbert" (:author b)))
+      (is (= 412 (:pages b)))
+      (is (= :reading (:status b)))
+      (is (= :paperback (:format b)))
+      (is (= 0.5 (:current-progress b)))
+      (is (true? (:favorite b)))
+      (is (true? (:has-cover? b)))))
+
+  (testing "zero flags read as false"
+    (let [b (book/from-db-entry (assoc (db-entry)
+                                       "favorite" 0
+                                       "has_cover" 0))]
+      (is (false? (:favorite b)))
+      (is (false? (:has-cover? b)))))
+
+  (testing "from-db-entry keeps local-cover? true"
+    (is (true? (:local-cover? (book/from-db-entry (db-entry)))))))
+
+(deftest from-db-first-published-quirk-test
+  ;; NOTE: first-published is not persisted in the DB schema (see to-db-map and
+  ;; schema.sql), so it is reconstructed as "" on load. This test documents the
+  ;; current behavior; the field is lost across a DB round-trip (todo B3).
+  (testing "first-published is currently reset to empty string"
+    (is (= "" (:first-published (book/from-db-entry (db-entry)))))))
+
+(deftest done-progress?-test
+  (testing "completes near 1.0"
+    (is (true? (book/done-progress? 1.0)))
+    (is (true? (book/done-progress? 0.9995)))
+    (is (true? (book/done-progress? 1.0005))))
+  (testing "does not complete when far from 1.0"
+    (is (false? (book/done-progress? 0.99)))
+    (is (false? (book/done-progress? 0.5)))
+    (is (false? (book/done-progress? 0.0)))))
+
+(deftest update-current-progress-test
+  (testing "marks done near 1.0"
+    (let [b (book/update-current-progress (book/empty-book) 1.0)]
+      (is (= :done (:status b)))
+      (is (= 1.0 (:current-progress b)))))
+  (testing "marks reading otherwise"
+    (let [b (book/update-current-progress (book/empty-book) 0.5)]
+      (is (= :reading (:status b)))
+      (is (= 0.5 (:current-progress b))))))
+
+(deftest update-helpers-test
+  (testing "update-* return new books without mutating"
+    (let [base (book/empty-book)
+          t (book/update-title base "Dune")
+          a (book/update-author t ["Frank" "Herbert"])
+          p (book/update-pages a 412)
+          s (book/update-status p :done)
+          f (book/update-format s :hardcover)
+          fav (book/update-favorite-status f true)]
+      (is (= "Dune" (:title t)))
+      (is (= ["Frank" "Herbert"] (:author a)) "update-author keeps collections as-is")
+      (is (= 412 (:pages p)))
+      (is (= :done (:status s)))
+      (is (= :hardcover (:format f)))
+      (is (true? (:favorite fav)))
+      (is (= "" (:title base)) "original is unchanged")))
+
+  (testing "update-cover"
+    (let [b (book/update-cover (book/empty-book) "http://x.jpg" false)]
+      (is (= "http://x.jpg" (:cover-uri b)))
+      (is (false? (:local-cover? b)))
+      (is (true? (:has-cover? b)))))
+
+  (testing "update-local-cover"
+    (let [b (book/update-local-cover (book/empty-book) "local.jpg")]
+      (is (= "local.jpg" (:cover-uri b)))
+      (is (true? (:local-cover? b)))
+      (is (true? (:has-cover? b))))))
