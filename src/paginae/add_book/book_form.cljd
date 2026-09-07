@@ -2,97 +2,33 @@
   {:no-dynamic true}
   (:require ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
             ["package:flutter/material.dart" :as material]
-            ["package:flutter/services.dart" :as services]
-            [cljd.flutter :as flutter]))
-
-(defn pages-input-field
-  "Input field for a positive integer number. Invalid values show an error."
-  [{:keys [label
-           ^material/TextEditingController controller
-           ^app-l10n/AppLocalizations locales]}]
-  (flutter/widget
-   :watch [int-text controller :> .-text]
-   :let [int-val (parse-long int-text)
-         int-ok? (and int-val (>= int-val 0))]
-   :get {{{:flds [labelLarge]} .-textTheme} material/Theme
-         {{:flds [surface]} .-colorScheme} material/Theme}
-
-   (flutter/widget
-    (material/Column
-     .crossAxisAlignment
-     material/CrossAxisAlignment.start)
-
-    .children
-    [(material/Text
-      label
-
-      .style
-      (.copyWith labelLarge
-                 .letterSpacing 1
-                 .fontWeight material/FontWeight.bold))
-
-     (material/TextField
-      .controller controller
-
-      .keyboardType material/TextInputType.number
-
-      .inputFormatters [services/FilteringTextInputFormatter.digitsOnly]
-
-      .decoration
-      (material/InputDecoration
-       .hintText label
-       .filled true
-       .fillColor surface
-
-       .border
-       (material/OutlineInputBorder
-        .borderRadius
-        (material/BorderRadius.circular 12)
-
-        .borderSide
-        material/BorderSide.none)
-
-       .errorText
-       (when (and (seq int-text) (not int-ok?))
-         (.-invalidInteger locales))))])))
+            [cljd.flutter :as flutter]
+            [paginae.common.number-input :as number-input]))
 
 (defn- input-field
   "Input field for the book data"
   [{:keys [label hint controller]}]
 
   (flutter/widget
-   :get {{{:flds [labelLarge]} .-textTheme} material/Theme
-         {{:flds [surface]} .-colorScheme} material/Theme}
+   :get {{{:flds [surface]} .-colorScheme} material/Theme}
 
-   (material/Column
-    .crossAxisAlignment
-    material/CrossAxisAlignment.start)
+   (material/TextField
+    .controller controller
 
-   .children
-   [(material/Text
-     label
+    .decoration
+    (material/InputDecoration
+     .labelText label
+     .hintText hint
+     .filled true
+     .fillColor surface
 
-     .style
-     (.copyWith labelLarge
-                .letterSpacing 1
-                .fontWeight material/FontWeight.bold))
+     .border
+     (material/OutlineInputBorder
+      .borderRadius
+      (material/BorderRadius.circular 12)
 
-    (material/TextField
-     .controller controller
-
-     .decoration
-     (material/InputDecoration
-      .hintText hint
-      .filled true
-      .fillColor surface
-
-      .border
-      (material/OutlineInputBorder
-       .borderRadius
-       (material/BorderRadius.circular 12)
-
-       .borderSide
-       material/BorderSide.none)))]))
+      .borderSide
+      material/BorderSide.none)))))
 
 (defn form-card
   "Card that holds the form for the book info"
@@ -101,7 +37,7 @@
    pages-controller]
 
   (flutter/widget
-   :get {{{:flds [background]} .-colorScheme} material/Theme}
+   :get {{{:flds [background surface]} .-colorScheme} material/Theme}
    :context context
    :let [locales (app-l10n/AppLocalizations.of context)]
 
@@ -127,10 +63,9 @@
                      :hint (.-bookAuthor locales)
                      :controller author-controller})
 
-       ;; (input-field {:label (.-totalPages locales)
-       ;;               :hint "0"
-       ;;               :controller pages-controller})
-       (pages-input-field
-        {:label (.-totalPages locales)
-         :controller pages-controller
-         :locales locales})])))))
+       (number-input/integer-input-field {:lower-limit 0
+                                          :upper-limit 100000
+                                          :controller pages-controller
+                                          :label (.-totalPages locales)
+                                          :locales locales
+                                          :background-color surface})])))))

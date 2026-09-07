@@ -75,3 +75,8 @@
                    (download-image-bytes (:cover-uri book))))]
       (await (resize-and-save-image bytes image-dest)))))
 
+
+(defn delete-cover
+  "Delete a book's cover from the filesystem"
+  [book-id]
+  (await (.delete (io/File (cover-path book-id)))))

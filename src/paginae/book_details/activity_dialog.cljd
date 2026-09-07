@@ -28,6 +28,7 @@
             pages (:pages book)
             has-pages? (not (nil? pages))]
       :watch [as-pages? (atom has-pages?) :as as-pages]
+      :get {{{:flds [surfaceVariant]} .-colorScheme} material/Theme}
 
       (material/Dialog)
 
@@ -65,13 +66,15 @@
               :upper-limit pages
               :label (.-currentPage locales)
               :controller controller
-              :locales locales})
+              :locales locales
+              :background-color surfaceVariant})
             (common.number-input/float-input-field
              {:lower-limit 0.1
               :upper-limit 100.0
               :label (.-currentPercentage locales)
               :controller controller
-              :locales locales})))
+              :locales locales
+              :background-color surfaceVariant})))
 
          ;; Label (pages or percentage)
          (if has-pages?

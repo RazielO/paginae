@@ -68,6 +68,8 @@ dev_dependencies:
 
   # Icon
   flutter_launcher_icons: ^0.14.4
+
+  # test
   test: ^1.31.1
 
 flutter_launcher_icons:

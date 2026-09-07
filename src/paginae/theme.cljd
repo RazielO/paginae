@@ -57,7 +57,7 @@
    :100 (material/Color 0xFFFFFFFF)})
 
 (def neutral
-  "Material palette based on #F5F2ED as tertiary color"
+  "Material palette based on #F5F2ED as neutral color"
   {:0   (material/Color 0xFF000000)
    :10  (material/Color 0xFF1F1F1E)
    :20  (material/Color 0xFF343433)
@@ -234,20 +234,26 @@
 
 (defn bottom-navigation-theme
   "Theme for the bottom navigation bar"
-  [{:keys [background selected unselected]}]
+  [{:keys [background
+           selected
+           unselected]}]
   (material/BottomNavigationBarThemeData
-   .backgroundColor background
+   .backgroundColor
+   background
 
-   .selectedItemColor selected
+   .selectedItemColor
+   selected
 
-   .unselectedItemColor unselected))
+   .unselectedItemColor
+   unselected))
 
 (defn dialog-theme
   "Theme for dialogs"
   [{:keys [background]}]
   (material/DialogThemeData
 
-   .backgroundColor background
+   .backgroundColor 
+   background
 
    .shape
    (material/RoundedRectangleBorder

@@ -11,7 +11,8 @@
            upper-limit
            label
            ^material/TextEditingController controller
-           ^app-l10n/AppLocalizations locales]}]
+           ^app-l10n/AppLocalizations locales
+           background-color]}]
   (flutter/widget
    :watch [int-text controller :> .-text]
    :let [int-val (parse-long int-text)
@@ -19,7 +20,6 @@
                      (and int-val
                           (>= int-val lower-limit)
                           (<= int-val upper-limit)))]
-
    (material/TextField
     .controller controller
 
@@ -32,9 +32,22 @@
     .decoration
     (material/InputDecoration
      .labelText label
+     .hintText label
+     .filled true
+     .fillColor background-color
+
+     .border
+     (material/OutlineInputBorder
+      .borderRadius
+      (material/BorderRadius.circular 12)
+
+      .borderSide
+      material/BorderSide.none)
+
      .errorText
-     (when (and (seq int-text)
-                (not int-ok?))
+     (when  (and
+             (seq int-text)
+             (not int-ok?))
        (.numberBetweenError locales
                             lower-limit
                             upper-limit))))))
@@ -63,7 +76,8 @@
            upper-limit
            label
            ^material/TextEditingController controller
-           ^app-l10n/AppLocalizations locales]}]
+           ^app-l10n/AppLocalizations locales
+           background-color]}]
   (flutter/widget
    :watch [float-text controller :> .-text]
    :let [float-val (try
@@ -88,6 +102,17 @@
     .decoration
     (material/InputDecoration
      .labelText label
+     .hintText label
+     .filled true
+     .fillColor background-color
+
+     .border
+     (material/OutlineInputBorder
+      .borderRadius
+      (material/BorderRadius.circular 12)
+
+      .borderSide
+      material/BorderSide.none)
 
      .errorText
      (when (and (seq float-text)

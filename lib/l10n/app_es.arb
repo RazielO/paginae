@@ -54,7 +54,7 @@
     },
     "loading": "Cargando",
     "noCover": "Sin Portada",
-    "noServerResponse": "No hay respuesta del servidor",
+    "noServerResponse": "No se pudo obtener datos de OpenLibrary. Inténtalo de nuevo.",
     "note": "Nota",
     "notesSection": "Notas",
     "numberBetweenError": "Ingresa un número entre {lower} y {upper}",

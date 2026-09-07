@@ -4,80 +4,12 @@
    ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
    ["package:flutter/material.dart" :as material]
    ["package:flutter/painting.dart" :as painting]
-   ["package:intl/intl.dart" :as intl]
    ["package:material_symbols_icons/symbols.dart" :as symbols]
    ["package:table_calendar/table_calendar.dart" :as calendar]
    [cljd.flutter :as flutter]
-   [paginae.database :as db]
-   [paginae.image.widget :as image]
-   [paginae.types.activity :as activity-type]))
+   [paginae.common.activity-card :as common.activity-card]
+   [paginae.database :as db]))
 
-(defn activity-card
-  "Card for displaying a reading activity"
-  [data]
-  (flutter/widget
-   :get {{{:flds [labelMedium titleMedium]} .-textTheme} material/Theme}
-   :context context
-   :let [locale (material/Localizations.localeOf context)
-         locales (app-l10n/AppLocalizations.of context)
-         book (:book data)
-         activity (:activity data)]
-
-   (material/Card)
-
-   .child
-   (material/Row
-    .spacing 10)
-
-   .children
-   [ ;; Cover image
-    (image/cover-image
-     {:book book
-      :placeholder-text (.-noCover locales)
-      :bordered? false
-      :clickable? false
-      :on-click nil
-      :width 100})
-
-    (material/Expanded
-
-     .child
-     (material/Column
-      .crossAxisAlignment
-      material/CrossAxisAlignment.start
-
-      .children
-      [;; Read date
-       (material/Text
-        (str
-         (.format
-          (intl/DateFormat.yMMMd (.toString locale))
-          (:date activity))
-         " "
-         (.format
-          (intl/DateFormat.Hm (.toString locale))
-          (:date activity)))
-
-        .style
-        labelMedium)
-
-       (material/SizedBox
-
-        .height 20)
-
-       ;; Title
-       (material/Text
-        (:title book)
-
-        .style
-        titleMedium)
-
-       ;; Activity
-       (material/Text
-        (activity-type/activity-string (:activity data) (:book data) locales)
-
-        .softWrap
-        true)]))]))
 
 (defn- day-key
   "Return a vector [year month day] uniquely identifying a day"
@@ -222,7 +154,7 @@
           (.-onSurface (.-colorScheme  theme))
           0.6)))]
 
-      (map activity-card day-activities))))
+      (map #(common.activity-card/activity-card % true) day-activities))))
 
 (defn journal-widget
   "Widget to show the reading activity"

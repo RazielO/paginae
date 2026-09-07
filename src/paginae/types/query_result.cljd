@@ -1,0 +1,8 @@
+(ns paginae.types.query-result)
+
+(defrecord QueryResult
+           [total ;; Number of results
+            offset ;; Current offset
+            data ;; Result data
+            error ;; Error message
+            ])

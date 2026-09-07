@@ -329,7 +329,7 @@
     "@goBack": {
         "description": "Tooltip for the back button"
     },
-    "noServerResponse": "No response from server",
+    "noServerResponse": "Couldn't retrieve data from OpenLibrary. Try again.",
     "@noServerResponse": {
         "description": "Error message shown when the server does not respond"
     },

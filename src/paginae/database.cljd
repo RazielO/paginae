@@ -2,6 +2,7 @@
   {:no-dynamic true}
   (:require ["dart:async" :as dart:async]
             ["package:flutter/services.dart" :as services]
+            ["package:intl/intl.dart" :as intl]
             ["package:path/path.dart" :as path]
             ["package:sqflite/sqflite.dart" :as sqlite]
             [clojure.string :as str]
@@ -246,26 +247,6 @@
               .orderBy "date DESC"))
      (map activity-type/from-db-entry))))
 
-(defn get-recent-activity
-  "Query the last n activity items, each paired with its book"
-  [n]
-  (let [db (await (get-db))]
-    (->>
-     (await
-      (.rawQuery db
-                 (str "SELECT a.id AS activity_id, a.book_id, a.reading_time, "
-                      "a.progress, a.date, "
-                      "b.id, b.title, b.author, b.pages, b.status, b.format, "
-                      "b.current_progress, b.favorite, b.created_at "
-                      "FROM activities a "
-                      "JOIN books b ON a.book_id = b.id "
-                      "ORDER BY a.date DESC "
-                      "LIMIT ?")
-                 [n]))
-     (map (fn [row]
-            {:activity (activity-type/from-db-join-entry row)
-             :book (book-type/from-db-entry row)})))))
-
 (defn insert-book-activity
   "Insert a new activity on a book and update its progress"
   [activity]
@@ -286,27 +267,58 @@
                               .where "id = ?"
                               .whereArgs [(:book-id activity)]))))))
 
+
+(defn- get-activities
+  "Helper function that queries a join between activities and books"
+  [where-clause
+   params
+   limit]
+  (let [db (await (get-db))]
+    (->> (await
+          (.rawQuery
+           db
+           (str "SELECT activities.id AS activity_id,"
+                "       activities.book_id,"
+                "       activities.reading_time,"
+                "       activities.progress,"
+                "       activities.date,"
+                "       books.id,"
+                "       books.title,"
+                "       books.author,"
+                "       books.pages,"
+                "       books.status,"
+                "       books.format,"
+                "       books.current_progress,"
+                "       books.favorite,"
+                "       books.created_at "
+                "FROM activities "
+                "JOIN books ON activities.book_id = books.id "
+                (when where-clause
+                  (str "WHERE " where-clause " "))
+                "ORDER BY activities.date DESC "
+                (when limit "LIMIT ?"))
+           (cond-> params
+             limit (conj limit))))
+         (map (fn [row]
+                {:activity (activity-type/from-db-entry row)
+                 :book (book-type/from-db-entry row)})))))
+
+(defn get-recent-activity
+  "Get n recent activities"
+  [n]
+  (get-activities nil [] n))
+
 (defn get-activities-by-month
-  "Query the activities done in a given month"
-  [month year]
-  (let [db (await (get-db))
-        start-date (str year "-" (.padLeft (.toString month) 2 "0") "-01")
-        end-date (str year "-" (.padLeft (.toString (inc month)) 2 "0") "-01")]
-    (->>
-     (await
-      (.rawQuery db
-                 (str "SELECT a.id AS activity_id, a.book_id, a.reading_time, "
-                      "a.progress, a.date, "
-                      "b.id, b.title, b.author, b.pages, b.status, b.format, "
-                      "b.current_progress, b.favorite, b.created_at "
-                      "FROM activities a "
-                      "JOIN books b ON a.book_id = b.id "
-                      "WHERE a.date >= ? AND a.date < ? "
-                      "ORDER BY a.date DESC")
-                 [start-date end-date]))
-     (map (fn [row]
-            {:activity (activity-type/from-db-join-entry row)
-             :book (book-type/from-db-entry row)})))))
+  "Get the activities in a month"
+  [month
+   year]
+  (let [date-format (intl/DateFormat. "yyyy-MM-dd")
+        start-date (.format date-format (intl/DateTime. year month 1))
+        end-date (.format date-format (intl/DateTime. year (inc month) 1))]
+    (get-activities
+     "activities.date >= ? AND activities.date < ?"
+     [start-date end-date]
+     nil)))
 
 (defn get-first-activity-date
   "Query the date of the first activity"

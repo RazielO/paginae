@@ -134,7 +134,10 @@
                       (swap! book-atom book-type/update-local-cover cover))))})
 
     ;; Form
-    (book-form/form-card title-controller author-controller pages-controller)
+    (book-form/form-card
+     title-controller
+     author-controller
+     pages-controller)
 
     ;; Reading status
     (reading-status/status-card book-atom)

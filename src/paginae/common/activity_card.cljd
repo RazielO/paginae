@@ -1,0 +1,100 @@
+(ns paginae.common.activity-card
+  {:no-dynamic true}
+  (:require
+   ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
+   ["package:flutter/material.dart" :as material]
+   ["package:intl/intl.dart" :as intl]
+   [cljd.flutter :as flutter]
+   [paginae.image.widget :as image]
+   [paginae.types.activity :as activity-type]))
+
+(defn activity-card
+  "Card for displaying a reading activity"
+  [data
+   with-cover?]
+  (flutter/widget
+   :get {{{:flds [bodyLarge titleMedium labelLarge]} .-textTheme
+          {:flds [onSurface]} .-colorScheme} material/Theme}
+   :context context
+   :let [locale (material/Localizations.localeOf context)
+         locales (app-l10n/AppLocalizations.of context)
+         book (:book data)
+         activity (:activity data)]
+
+   (material/Card)
+
+   .child
+   (material/ConstrainedBox
+    .constraints
+    (material/BoxConstraints .minHeight 80))
+
+   .child
+   (material/Row
+    .spacing 10)
+
+   .children
+   [ ;; Cover image
+    (flutter/widget
+     :when with-cover?
+
+     (image/cover-image
+      {:book book
+       :placeholder-text (.-noCover locales)
+       :bordered? false
+       :clickable? false
+       :on-click nil
+       :width 100}))
+
+    (material/Expanded
+
+     .child
+     (material/Column
+      .crossAxisAlignment
+      (if with-cover?
+        material/CrossAxisAlignment.start
+        material/CrossAxisAlignment.center)
+
+      .children
+      [;; Read date
+       (material/Text
+        (str
+         (.format
+          (intl/DateFormat.yMMMd (.toString locale))
+          (:date activity))
+         " "
+         (.format
+          (intl/DateFormat.Hm (.toString locale))
+          (:date activity)))
+
+        .style
+        (.copyWith
+         labelLarge
+
+         .color
+         (.withOpacity onSurface 0.7)))
+
+       (material/SizedBox
+        .height
+        (if with-cover?
+          20
+          10))
+
+       ;; Title
+       (flutter/widget
+        :when with-cover?
+
+        (material/Text
+         (:title book)
+
+         .style
+         titleMedium))
+
+       ;; Activity
+       (material/Text
+        (activity-type/activity-string (:activity data) (:book data) locales)
+
+        .softWrap
+        true
+
+        .style
+        bodyLarge)]))]))

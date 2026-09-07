@@ -90,8 +90,12 @@
          img-width (or width 140)
          img-height (* img-width (/ 10 7))
 
-         local-path (when (and (:local-cover? book) (:has-cover? book))
-                      (img-utils/cover-path (:id book)))
+         local-path (when (and (:local-cover? book)
+                               book
+                               (:has-cover? book))
+                      (if (:cover-uri book)
+                        (:cover-uri book)
+                        (img-utils/cover-path (:id book))))
 
          placeholder
          (cover-placeholder {:text placeholder-text

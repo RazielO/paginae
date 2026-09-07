@@ -10,7 +10,8 @@
    [paginae.home.badges :as badges]
    [paginae.book-details.book-details :as book-details]
    ["package:material_symbols_icons/symbols.dart" :as symbols]
-   [paginae.theme :as theme]))
+   [paginae.theme :as theme]
+   [paginae.image.utils :as img-utils]))
 
 (defn- remove-book-dialog
   "Dialog to delete a book from the database"
@@ -64,6 +65,9 @@
          (fn []
            (let [deletion-result (await (db/delete-book (:id book)))]
              (when deletion-result
+               (when (:has-cover? book)
+                 (img-utils/delete-cover (:id book)))
+
                (when (.-mounted dialog-context)
                  (.pop (widgets/Navigator.of dialog-context)))
                (refresh!))))
@@ -128,12 +132,8 @@
 
        .child
        (if (:favorite book)
-         (badges/favorite-badge)
-         (case (:status book)
-           :done (badges/read-badge)
-           :reading (badges/reading-badge)
-           :to-read (badges/to-read-badge)
-           (badges/to-read-badge))))])
+         (badges/badge :favorite)
+         (badges/badge (:status book))))])
 
     (material/SizedBox
      .height 8)
@@ -285,7 +285,6 @@
           {:flds [onBackground]} .-colorScheme} material/Theme}
    :context context
    :watch [filter (atom filter-by) :as filter-atom
-           ;; refresh (atom 0) :as refresh-atom
            refresh refresh-atom
 
            books (cond

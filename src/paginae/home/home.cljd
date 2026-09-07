@@ -1,16 +1,16 @@
 (ns paginae.home.home
   {:no-dynamic true}
-  (:require ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
-            ["package:carousel_slider/carousel_slider.dart" :as carousel]
+  (:require ["package:carousel_slider/carousel_slider.dart" :as carousel]
+            ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
             ["package:flutter/material.dart" :as material]
             ["package:flutter/widgets.dart" :as widgets]
             [cljd.flutter :as flutter]
             [paginae.book-details.book-details :as book-details]
             [paginae.book-details.reading-session :as reading-session]
+            [paginae.common.activity-card :as common.activity-card]
             [paginae.database :as db]
             [paginae.home.badges :as badges]
             [paginae.image.widget :as image]
-            [paginae.journal.journal :as journal]
             [paginae.theme :as theme]))
 
 (defn- reading-book-card
@@ -214,7 +214,12 @@
 
 (defn- shelf-card
   "Card that represents a 'bookshelf' (group of books)"
-  [{:keys [title subtitle bg-color number badge on-tap]}]
+  [{:keys [title
+           subtitle
+           bg-color
+           number
+           badge
+           on-tap]}]
   (flutter/widget
    :get {{{:flds [headlineLarge titleLarge labelMedium]} .-textTheme
           {:flds [onSurfaceVariant]} .-colorScheme} material/Theme}
@@ -306,7 +311,7 @@
          :subtitle (.-shelfReadSubtitle locales)
          :bg-color (:70 theme/primary)
          :number (:done counts)
-         :badge (badges/read-badge)
+         :badge (badges/badge :done)
          :on-tap go-to-done-shelf})
 
        (shelf-card
@@ -314,7 +319,7 @@
          :subtitle (.-shelfToReadSubtitle locales)
          :bg-color (:70 theme/secondary)
          :number (:to-read counts)
-         :badge (badges/to-read-badge)
+         :badge (badges/badge :to-read)
          :on-tap go-to-to-read-shelf})
 
        (shelf-card
@@ -322,7 +327,7 @@
          :subtitle (.-shelfFavoritesSubtitle locales)
          :bg-color (:70 theme/tertiary)
          :number (:favorite counts)
-         :badge (badges/favorite-badge)
+         :badge (badges/badge :favorite)
          :on-tap go-to-favorite-shelf})
 
        (shelf-card
@@ -330,7 +335,7 @@
          :subtitle (.-shelfReadingSubtitle locales)
          :bg-color (:70 theme/neutral)
          :number (:reading counts)
-         :badge (badges/reading-badge)
+         :badge (badges/badge :reading)
          :on-tap go-to-reading-shelf})])])))
 
 (defn- recent-activity
@@ -383,7 +388,7 @@
          (fn [_context idx]
            (when (< idx (count activities))
              (let [entry (nth activities idx)]
-               (journal/activity-card entry))))))]))))
+               (common.activity-card/activity-card entry true))))))]))))
 
 (defn- resume-session!
   "Check for a persisted reading session on app startup. If one exists,

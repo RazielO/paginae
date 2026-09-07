@@ -3,7 +3,8 @@
   (:require [cljd.flutter :as flutter]
             [paginae.theme :as theme]
             [paginae.add-book.add-book :as add-book]
-            [paginae.types.book :as book]
+            [paginae.types.book :as book-type]
+            [paginae.types.book-search-result :as book-search-result]
             [paginae.image.widget :as image]
             [paginae.book-search.query :as query]
             ["package:flutter/material.dart" :as material]
@@ -14,7 +15,7 @@
 
 (defn- book-card
   "Card that displays a result book after a search"
-  [book
+  [^book-search-result/BookSearchResult book
    go-to-my-books
    on-image-saved]
 
@@ -30,7 +31,7 @@
               navigator
               (#/(material/MaterialPageRoute Object)
                .builder
-               (flutter/build (add-book/add-book-screen book go-to-my-books on-image-saved))))
+               (flutter/build (add-book/add-book-screen (book-type/from-search-result book) go-to-my-books on-image-saved))))
              nil)
 
     .child
@@ -348,7 +349,7 @@
                                      navigator
                                      (#/(material/MaterialPageRoute Object)
                                       .builder
-                                      (flutter/build (add-book/add-book-screen (book/empty-book) go-to-my-books on-image-saved))))
+                                      (flutter/build (add-book/add-book-screen (book-type/empty-book) go-to-my-books on-image-saved))))
                                     nil)
                       :background-color secondary
                       :foreground-color onSecondary})]
@@ -488,6 +489,8 @@
    :get {{{:flds [background]} .-colorScheme
           {:flds [headlineSmall]} .-textTheme} material/Theme}
 
+   :context context
+
    :watch [query (atom "") :as query-atom
            _offset (atom 0) :as offset-atom
            _books (atom []) :as books-atom
@@ -496,17 +499,19 @@
            _has-more? (atom true) :as has-more
            error (atom nil) :as error-atom]
 
-   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)
+         portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)]
+
 
    :managed [loading-more (atom false) :dispose nil
              show-fab (atom false) :dispose nil
              scroll-controller
              (let [controller (material/ScrollController)
+                   locales (app-l10n/AppLocalizations.of context)
+                   unknown-str (.-unknown locales)
+                   no-response-str (.-noServerResponse locales)
                    handler (fn []
-                             (let [locales (app-l10n/AppLocalizations.of context)
-                                   unknown-str (.-unknown locales)
-                                   no-response-str (.-noServerResponse locales)
-                                   offset (.-offset controller)
+                             (let [offset (.-offset controller)
                                    position (.-position controller)]
                                (when (and
                                       @has-more
@@ -534,8 +539,6 @@
                controller)]
 
 
-   :let [locales (app-l10n/AppLocalizations.of context)
-         portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)]
 
    (material/Scaffold
     .floatingActionButton

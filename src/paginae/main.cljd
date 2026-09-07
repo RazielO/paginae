@@ -102,32 +102,32 @@
       [(bottom-sheet-btn
         {:title (.-bottomHome locales)
          :icon symbols/Symbols.home
-         :active? (= 0 current-tab)
-         :on-pressed #(change-tab 0)})
+         :active? (= :home current-tab)
+         :on-pressed #(change-tab :home)})
 
        (bottom-sheet-btn
         {:title (.-bottomJournal locales)
          :icon symbols/Symbols.book_ribbon
-         :active? (= 1 current-tab)
-         :on-pressed #(change-tab 1)})
+         :active? (= :journal current-tab)
+         :on-pressed #(change-tab :journal)})
 
        (bottom-sheet-btn
         {:title (.-bottomLibrary locales)
          :icon symbols/Symbols.library_books
-         :active? (= 2 current-tab)
-         :on-pressed #(change-tab 2)})
+         :active? (= :my-books current-tab)
+         :on-pressed #(change-tab :my-books)})
 
        (bottom-sheet-btn
         {:title (.-bottomAdd locales)
          :icon symbols/Symbols.add
-         :active? (= 3 current-tab)
-         :on-pressed #(change-tab 3)})])))))
+         :active? (= :search current-tab)
+         :on-pressed #(change-tab :search)})])))))
 
 (defn main-screen
   []
 
   (flutter/widget
-   :watch [tab (atom 0) :as current-tab
+   :watch [tab (atom :home) :as current-tab
            books-filter (atom nil) :as filter-atom]
 
    (material/MaterialApp
@@ -158,48 +158,46 @@
       .margin
       (material/EdgeInsets.only
        .top 10
-
        .left 20
-
        .right 20)
 
       .child
       (case tab
-        0 (home/home-widget
-           {:go-to-add #(reset! current-tab 3)
-            :go-to-journal #(reset! current-tab 1)
-            :go-to-reading-shelf (fn []
-                                   (reset! filter-atom :reading)
-                                   (reset! current-tab 2))
-            :go-to-to-read-shelf (fn []
-                                   (reset! filter-atom :to-read)
-                                   (reset! current-tab 2))
-            :go-to-done-shelf (fn []
-                                (reset! filter-atom :done)
-                                (reset! current-tab 2))
-            :go-to-favorite-shelf (fn []
-                                    (reset! filter-atom :favorite)
-                                    (reset! current-tab 2))})
+        :home (home/home-widget
+               {:go-to-add #(reset! current-tab :search)
+                :go-to-journal #(reset! current-tab :journal)
+                :go-to-reading-shelf (fn []
+                                       (reset! filter-atom :reading)
+                                       (reset! current-tab :my-books))
+                :go-to-to-read-shelf (fn []
+                                       (reset! filter-atom :to-read)
+                                       (reset! current-tab :my-books))
+                :go-to-done-shelf (fn []
+                                    (reset! filter-atom :done)
+                                    (reset! current-tab :my-books))
+                :go-to-favorite-shelf (fn []
+                                        (reset! filter-atom :favorite)
+                                        (reset! current-tab :my-books))})
 
-        1 (journal/journal-widget)
+        :journal (journal/journal-widget)
 
-        2 (my-books/my-books-widget books-filter)
+        :my-books (my-books/my-books-widget books-filter)
 
-        3 (book-search/book-search-widget
-           {:go-to-my-books (fn []
-                              (reset! filter-atom nil)
-                              (reset! current-tab 2))
-            :on-image-saved (fn []
-                              (swap! my-books/refresh-atom inc))})))
+        :search (book-search/book-search-widget
+                 {:go-to-my-books (fn []
+                                    (reset! filter-atom nil)
+                                    (reset! current-tab :my-books))
+                  :on-image-saved (fn []
+                                    (swap! my-books/refresh-atom inc))})))
 
      .bottomNavigationBar
      (bottom-sheet
       tab
-      (fn [i]
-        (when (= i 2)
+      (fn [new-tab]
+        (when (= new-tab :my-books)
           (reset! filter-atom nil))
 
-        (reset! current-tab i)))))))
+        (reset! current-tab new-tab)))))))
 
 (defn main
   []

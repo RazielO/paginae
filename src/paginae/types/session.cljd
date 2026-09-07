@@ -1,0 +1,29 @@
+(ns paginae.types.session
+  {:no-dynamic true}
+  (:require
+   ["dart:convert" :as convert]))
+
+(defrecord Session [^int started-at
+                    ^int accumulated
+                    ^bool running
+                    ^int updated-at
+                    ^String book-id])
+
+(defn to-json
+  [^Session session]
+  (convert/jsonEncode
+   {"started-at" (:started-at session)
+    "accumulated" (:accumulated session)
+    "running" (:running session)
+    "updated-at" (:updated-at session)
+    "book-id" (:book-id session)}))
+
+(defn from-json
+  [^String raw-str]
+  (let [json (convert/jsonDecode raw-str)]
+    (map->Session
+     {:started-at (get json "started-at")
+      :accumulated (get json "accumulated")
+      :running (get json "running")
+      :updated-at (get json "updated-at")
+      :book-id (get json "book-id")})))

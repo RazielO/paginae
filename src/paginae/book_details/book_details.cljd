@@ -7,15 +7,15 @@
             ["package:material_symbols_icons/symbols.dart" :as symbols]
             ["package:share_plus/share_plus.dart" :as share_plus]
             [cljd.flutter :as flutter]
-            [paginae.book-details.reading-timer :as book-details.reading-timer]
-            [paginae.book-details.reading-progress :as book-details.reading-progress]
             [paginae.book-details.activity-dialog :as book-details.activity-dialog]
+            [paginae.book-details.reading-progress :as book-details.reading-progress]
+            [paginae.book-details.reading-timer :as book-details.reading-timer]
+            [paginae.common.activity-card :as common.activity-card]
             [paginae.common.confirm-delete-dialog :as common.confirm-dialog]
             [paginae.database :as db]
             [paginae.image.widget :as image]
             [paginae.types.book :as book-type]
-            [paginae.types.note :as note-type]
-            [paginae.types.activity :as activity-type]))
+            [paginae.types.note :as note-type]))
 
 (defn- add-note-dialog
   "Dialog for adding a note to the book"
@@ -367,66 +367,6 @@
            (swap! book-atom #(book-type/update-favorite-status % new-status))
            (await (db/update-book @book-atom)))))])))
 
-(defn- activity-card
-  "Card for displaying a reading activity"
-  [activity book]
-  (flutter/widget
-   :get {{{:flds [labelLarge bodyLarge]} .-textTheme
-          {:flds [onSurface]} .-colorScheme} material/Theme}
-   :context context
-   :let [locales (app-l10n/AppLocalizations.of context)
-         locale (material/Localizations.localeOf context)]
-   :key (:id activity)
-
-   (material/Card)
-
-   .child
-   (material/ConstrainedBox
-    .constraints
-    (material/BoxConstraints .minHeight 80))
-
-   .child
-   (material/Padding
-    .padding
-    (material/EdgeInsets.all 10))
-
-   .child
-   (material/Column
-    .spacing 5
-
-    .mainAxisAlignment material/MainAxisAlignment.center
-
-    .crossAxisAlignment material/CrossAxisAlignment.center)
-
-   .children
-   [;; Date
-    (material/Text
-     (str
-      (.format
-       (intl/DateFormat.yMMMd (.toString locale))
-       (:date activity))
-      " "
-      (.format
-       (intl/DateFormat.Hm (.toString locale))
-       (:date activity)))
-
-     .textAlign
-     material/TextAlign.end
-
-     .style
-     (.copyWith
-      labelLarge
-
-      .color
-      (.withOpacity onSurface 0.7)))
-    ;; Activity
-    (material/Text
-     (activity-type/activity-string activity book locales)
-
-     .textAlign material/TextAlign.center
-
-     .style bodyLarge)]))
-
 (defn book-details
   "Widget that shows the details of a book"
   [^book-type/Book book-value
@@ -458,7 +398,7 @@
                                      (#/ (material/MaterialPageRoute Object)
                                       .builder
                                       (flutter/build
-                                       (book-details.reading-timer/reading-timer book session)))))] 
+                                       (book-details.reading-timer/reading-timer book session)))))]
             (when result
               (swap! book-atom #(book-type/update-current-progress % result))
               (swap! data-revisions inc))))))
@@ -496,7 +436,7 @@
            (:title book)
 
            .style headlineSmall
-           
+
            .textAlign
            material/TextAlign.center)
 
@@ -603,4 +543,7 @@
                              .physics
                              (widgets/NeverScrollableScrollPhysics)
                              .children
-                             (map #(activity-card % book) activities))])))))))
+                             (map #(common.activity-card/activity-card
+                                    {:activity %
+                                     :book book}
+                                    false) activities))])))))))

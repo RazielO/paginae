@@ -245,7 +245,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goBack => 'Go Back';
 
   @override
-  String get noServerResponse => 'No response from server';
+  String get noServerResponse =>
+      'Couldn\'t retrieve data from OpenLibrary. Try again.';
 
   @override
   String get note => 'Note';

@@ -1,65 +1,30 @@
 (ns paginae.types.book
   {:no-dynamic true}
-  (:require ["package:uuid/uuid.dart" :as uuid]
-            [clojure.string :as str]))
+  (:require ["package:uuid/uuid.dart" :as uuid]))
 
 (defrecord Book
            [id
             title
             author
-            first-published
             pages
             status
             format
-            cover-uri
-            favorite
             current-progress
+            favorite
+            has-cover?
             created-at
-            local-cover?
-            has-cover?])
+            cover-uri])
 
 (defn empty-book
   "Create an empty book"
   []
   (map->Book
    {:id (uuid/.v4 (uuid/Uuid))
-    :title ""
-    :author ""
-    :first-published ""
-    :favorite false
     :status :to-read
     :format :hardcover
     :current-progress 0.0
-    :cover-uri ""
-    :local-cover? true
+    :favorite false
     :has-cover? false}))
-
-(defn- maybe-string-to-int
-  "Parse a value into an int, it might be string or int"
-  [value]
-  (if (string? value)
-    (int/parse value)
-    value))
-
-(defn book-from-query-result
-  "Construct a book from a JSON from a query result"
-  [json unknown-str]
-  (let [has-cover? (not= (get json "cover_edition_key" ::not-found) ::not-found)]
-    (map->Book
-     {:id (uuid/.v4 (uuid/Uuid))
-      :title (get json "title")
-      :author (str/join ", " (get json "author_name" [unknown-str]))
-      :first-published (str (get json "first_publish_year" unknown-str))
-      :pages (maybe-string-to-int (get json "number_of_pages_median" 0))
-      :status :to-read
-      :format :hardcover
-      :favorite false
-      :created-at nil
-      :current-progress 0.0
-      :cover-uri (when has-cover?
-                   (str "https://covers.openlibrary.org/b/olid/" (get json "cover_edition_key") "-M.jpg"))
-      :local-cover? false
-      :has-cover? has-cover?})))
 
 (defn to-db-map
   "Convert a book to a map to store on the database"
@@ -81,16 +46,28 @@
    {:id (get entry "id")
     :title (get entry "title")
     :author (get entry "author")
-    :first-published ""
     :pages (get entry "pages")
     :status (keyword (get entry "status"))
     :format (keyword (get entry "format"))
+    :current-progress (get entry "current_progress")
     :favorite (not (zero? (int (get entry "favorite"))))
     :has-cover? (not (zero? (int (or (get entry "has_cover") "0"))))
-    :current-progress (get entry "current_progress")
     :created-at (.toLocal (dart:core/DateTime.parse (get entry "created_at")))
     :local-cover? true}))
 
+(defn from-search-result [search-result]
+  (map->Book
+   {:id (:id search-result)
+    :title (:title search-result)
+    :author (:author search-result)
+    :pages (:pages search-result)
+    :status :to-read
+    :format :hardcover
+    :current-progress 0.0
+    :favorite false
+    :has-cover? false
+    :cover-uri (:cover-uri search-result)
+    :local-cover? false}))
 
 (defn update-title
   "Return a new Book with title set to new-title."
@@ -109,12 +86,12 @@
 (defn update-local-cover
   "Return a new Book with cover-uri set to new-cover-uri and local-cover? to local?
    Use nil for new-cover-uri to remove the cover."
-  [^Book book new-cover-uri]
+  [^Book book
+   new-cover-uri]
   (assoc book
          :cover-uri new-cover-uri
          :local-cover? true
          :has-cover? true))
-
 
 (defn update-author
   "Return a new Book with author set to new-author (string or collection)."

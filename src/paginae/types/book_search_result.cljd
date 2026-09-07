@@ -1,0 +1,100 @@
+(ns paginae.types.book-search-result
+  {:no-dynamic true}
+  (:require ["package:uuid/uuid.dart" :as uuid]
+            [clojure.string :as str]))
+
+(defrecord BookSearchResult
+           [id
+            title
+            author
+            first-published
+            pages
+            cover-uri
+            has-cover?])
+
+(defn- maybe-string-to-int
+  "Parse a value into an int, it might be string or int"
+  [value]
+  (if (string? value)
+    (int/parse value)
+    value))
+
+(defn book-from-query-result
+  "Construct a book from a JSON from a query result"
+  [json unknown-str]
+  (let [cover-key (get json "cover_edition_key" ::not-found)
+        has-cover? (not= cover-key ::not-found)]
+    (map->BookSearchResult
+     {:id (uuid/.v4 (uuid/Uuid))
+      :title (get json "title")
+      :author (str/join ", " (get json "author_name" [unknown-str]))
+      :first-published (str (get json "first_publish_year" unknown-str))
+      :pages (maybe-string-to-int (get json "number_of_pages_median" 0))
+      :cover-uri (when has-cover?
+                   (str "https://covers.openlibrary.org/b/olid/" cover-key "-M.jpg"))
+      :has-cover? has-cover?})))
+
+(defn update-title
+  "Return a new BookSearchResult with title set to new-title."
+  [^BookSearchResult book new-title]
+  (assoc book :title new-title))
+
+(defn update-cover
+  "Return a new BookSearchResult with cover-uri set to new-cover-uri and local-cover? to local?
+   Use nil for new-cover-uri to remove the cover."
+  [^BookSearchResult book new-cover-uri local?]
+  (assoc book
+         :cover-uri new-cover-uri
+         :local-cover? (boolean local?)
+         :has-cover? true))
+
+(defn update-local-cover
+  "Return a new BookSearchResult with cover-uri set to new-cover-uri and local-cover? to local?
+   Use nil for new-cover-uri to remove the cover."
+  [^BookSearchResult book new-cover-uri]
+  (assoc book
+         :cover-uri new-cover-uri
+         :local-cover? true
+         :has-cover? true))
+
+
+(defn update-author
+  "Return a new BookSearchResult with author set to new-author (string or collection)."
+  [^BookSearchResult book new-author]
+  (assoc book :author new-author))
+
+(defn update-pages
+  "Return a new BookSearchResult with pages set to new-pages (integer)."
+  [^BookSearchResult book new-pages]
+  (assoc book :pages new-pages))
+
+(defn update-status
+  "Return a new BookSearchResult with status set to new-status (keyword)."
+  [^BookSearchResult book new-status]
+  (assoc book :status new-status))
+
+(defn update-format
+  "Return a new BookSearchResult with format set to new-format (keyword)."
+  [^BookSearchResult book new-format]
+  (assoc book :format new-format))
+
+(defn update-favorite-status
+  "Return a new book with favorite status set to new-favorite (boolean)."
+  [^BookSearchResult book new-favorite]
+  (assoc book :favorite new-favorite))
+
+(defn done-progress?
+  "Helper to check if a progress is 'completed' (near 1.0)"
+  [progress]
+  (<= (.abs (- progress 1.0)) 0.001))
+
+(defn update-current-progress
+  "Return a new book with current progress set to new-progress (double)."
+  [^BookSearchResult book
+   new-progress]
+  (let [status (if (done-progress? new-progress)
+                 :done
+                 :reading)]
+    (assoc book
+           :current-progress new-progress
+           :status status)))

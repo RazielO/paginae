@@ -527,7 +527,7 @@ abstract class AppLocalizations {
   /// Error message shown when the server does not respond
   ///
   /// In en, this message translates to:
-  /// **'No response from server'**
+  /// **'Couldn\'t retrieve data from OpenLibrary. Try again.'**
   String get noServerResponse;
 
   /// Header label for a note card
