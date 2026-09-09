@@ -1,0 +1,47 @@
+(ns paginae.common.async-test
+  {:no-dynamic true}
+  (:require [cljd.test :refer [deftest is testing]]
+            ["dart:async" :as dart:async]
+            [paginae.common.async :as async]))
+
+(deftest try-await-plain-value-test
+  (testing "a plain value is tagged as success"
+    (let [result (await (async/try-await #(inc 1)))]
+      (is (true? (:ok result)))
+      (is (= 2 (:value result)))))
+
+  (testing "nil is tagged as success"
+    (let [result (await (async/try-await #(do nil)))]
+      (is (true? (:ok result)))
+      (is (nil? (:value result))))))
+
+(deftest try-await-future-test
+  (testing "a resolved future yields its value"
+    (let [result (await (async/try-await #(dart:async/Future.value 42)))]
+      (is (true? (:ok result)))
+      (is (= 42 (:value result)))))
+
+  (testing "a rejected future is tagged as failure"
+    (let [result (await (async/try-await #(dart:async/Future.error (Exception. "boom"))))]
+      (is (false? (:ok result)))
+      (is (some? (:error result))))))
+
+(deftest try-await-sync-throw-test
+  (testing "a synchronous throw is tagged as failure"
+    (let [result (await (async/try-await #(throw (Exception. "boom"))))]
+      (is (false? (:ok result)))
+      (is (some? (:error result))))))
+
+(deftest fallback-test
+  (testing "returns the value on success"
+    (is (= 7 (async/fallback {:ok true :value 7}
+                             (fn [_error] :failed)))))
+
+  (testing "calls on-error with the error on failure"
+    (let [seen (atom nil)
+          outcome (async/fallback {:ok false :error :boom}
+                                  (fn [error]
+                                    (reset! seen error)
+                                    :recovered))]
+      (is (= :boom @seen))
+      (is (= :recovered outcome)))))

@@ -1,4 +1,4 @@
-(ns paginae.home.badges
+(ns paginae.common.badges
   {:no-dynamic true}
   (:require
    ["package:flutter/material.dart" :as material]

@@ -129,6 +129,8 @@
   (flutter/widget
    :watch [tab (atom :home) :as current-tab
            books-filter (atom nil) :as filter-atom]
+   :bind {:data-revision (atom 0)}
+   :get [:data-revision]
 
    (material/MaterialApp
     .title
@@ -188,7 +190,7 @@
                                     (reset! filter-atom nil)
                                     (reset! current-tab :my-books))
                   :on-image-saved (fn []
-                                    (swap! my-books/refresh-atom inc))})))
+                                    (swap! data-revision inc))})))
 
      .bottomNavigationBar
      (bottom-sheet

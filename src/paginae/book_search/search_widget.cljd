@@ -1,0 +1,169 @@
+(ns paginae.book-search.search-widget
+  {:no-dynamic true}
+  (:require ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
+            ["package:flutter/material.dart" :as material]
+            ["package:material_symbols_icons/symbols.dart" :as symbols]
+            [cljd.flutter :as flutter]
+            [paginae.add-book.add-book :as add-book]
+            [paginae.theme :as theme]
+            [paginae.types.book :as book-type]))
+
+(defn- pill-button
+  "Button for adding actions"
+  [{:keys
+    [text
+     icon
+     on-pressed
+     background-color
+     foreground-color]}]
+  (flutter/widget
+
+   (material/ElevatedButton
+    .onPressed on-pressed
+
+    .style
+    (material/ButtonStyle
+     .backgroundColor (material/WidgetStatePropertyAll ^material/Color background-color))
+
+    .child
+    (material/Row
+     .mainAxisAlignment material/MainAxisAlignment.center
+
+     .spacing 20
+
+     .children
+     [(material/Icon
+       icon
+
+       .color foreground-color)
+
+      (material/Text
+       text
+
+       .style (material/TextStyle
+               .color foreground-color))]))))
+
+(defn- search-text-field
+  "Input field to search books"
+  [text
+   on-submitted]
+  (flutter/widget
+   :get {{{:flds [surface onSurface]} .-colorScheme} material/Theme}
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+   :managed [text-controller (material/TextEditingController .text text)]
+
+   (flutter/widget
+    (material/Container
+     .padding (material/EdgeInsets.symmetric .horizontal 20 .vertical 5)
+
+     .decoration
+     (material/BoxDecoration
+      .borderRadius (material/BorderRadiusGeometry.circular 10)
+      .color surface))
+
+    .child
+    (material/Row
+     .mainAxisSize material/MainAxisSize.min
+
+     .spacing 20)
+
+    .children
+    [(material/Icon
+      symbols/Symbols.search
+
+      .color (:60 theme/primary))
+
+     (material/Expanded
+      .child
+      (material/TextField
+       .onSubmitted
+       on-submitted
+
+       .controller
+       text-controller
+
+       .style
+       (material/TextStyle
+        .color onSurface)
+
+       .decoration
+       (material/InputDecoration
+        .hintText (.-searchBookHint locales)
+
+        .border material/InputBorder.none
+
+        .enabledBorder material/InputBorder.none
+
+        .focusedBorder material/InputBorder.none
+
+        .hintStyle (material/TextStyle
+                    .color (.withOpacity onSurface 0.6)))))])))
+
+(defn search-widget
+  "Widget that shows text input and options to add a book"
+  [{:keys [on-submitted
+           text
+           scanning
+           go-to-my-books
+           on-image-saved]}]
+  (flutter/widget
+   :get {{{:flds [primary onPrimary secondary onSecondary]} .-colorScheme} material/Theme}
+   :get [material/Navigator]
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)
+
+         portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)
+
+         text-field (search-text-field text on-submitted)
+
+         scan-btn (pill-button
+                   {:text (.-searchScanBarcode locales)
+                    :icon symbols/Symbols.barcode_scanner
+                    :on-pressed #(reset! scanning true)
+                    :background-color primary
+                    :foreground-color onPrimary})
+
+         manual-btn (pill-button
+                     {:text (.-searchManualEntry locales)
+                      :icon symbols/Symbols.edit_note
+                      :on-pressed (fn []
+                                    (.push
+                                     navigator
+                                     (#/(material/MaterialPageRoute Object)
+                                      .builder
+                                      (flutter/build (add-book/add-book-screen (book-type/empty-book) go-to-my-books on-image-saved))))
+                                    nil)
+                      :background-color secondary
+                      :foreground-color onSecondary})]
+
+   (if portrait?
+     (material/Column
+      .crossAxisAlignment material/CrossAxisAlignment.center
+
+      .spacing 5
+
+      .children
+      [text-field
+       scan-btn
+       manual-btn])
+
+     (material/Column
+      .crossAxisAlignment material/CrossAxisAlignment.center
+
+      .spacing 10
+
+      .children
+      [text-field
+
+       (material/Row
+        .spacing 10
+
+        .children
+        [(material/Expanded
+          .child
+          scan-btn)
+
+         (material/Expanded
+          .child
+          manual-btn)])]))))

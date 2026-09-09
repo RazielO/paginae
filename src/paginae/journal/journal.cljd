@@ -30,14 +30,14 @@
 
 (defn- journal-calendar
   "Widget that displays a calendar with reading data"
-  [{:keys [focused-day-atom
-           selected-day-atom
-           ^dart:core/DateTime today
+  [{:keys [^dart:core/DateTime today
            first-day
            locale
            grouped-activities
            on-page-changed]}]
   (flutter/widget
+   :get [:focused-day-atom
+         :selected-day-atom]
    :watch [^dart:core/DateTime focused-day focused-day-atom]
 
    :get {{{:flds [labelLarge]} .-textTheme
@@ -135,7 +135,9 @@
 
 (defn- activities-by-day
   "List the activities of a given day"
-  [grouped-activities day context]
+  [grouped-activities
+   day
+   context]
   (let [day-activities (get grouped-activities (day-key day) [])
         locales (app-l10n/AppLocalizations.of context)
         theme (material/Theme.of context)]
@@ -161,9 +163,12 @@
   []
   (flutter/widget
    :context context
-   :get {{{:flds [headlineSmall]} .-textTheme} material/Theme}
-   :managed [focused-day-atom (atom (dart:core/DateTime.now)) :dispose nil]
-   :watch [selected-day (atom (dart:core/DateTime.now)) :as selected-day-atom
+   :get {{{:flds [headlineSmall]} .-textTheme} material/Theme} 
+   :bind {:selected-day-atom (atom (dart:core/DateTime.now))
+          :focused-day-atom (atom (dart:core/DateTime.now))}
+   :get [:selected-day-atom
+         :focused-day-atom]
+   :watch [selected-day selected-day-atom
            refresh-count (atom 0) :as refresh-day
            activities (db/get-activities-by-month
                        (.-month ^dart:core/DateTime @focused-day-atom)

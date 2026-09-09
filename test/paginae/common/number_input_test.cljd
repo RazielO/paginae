@@ -1,4 +1,5 @@
 (ns paginae.common.number-input-test
+  {:no-dynamic true}
   (:require [cljd.test :refer [deftest is testing]]
             [paginae.common.number-input :as number-input]))
 

@@ -1,0 +1,20 @@
+(ns paginae.common.async
+  {:no-dynamic true})
+
+(defn try-await
+  "Run the function `f` (may return a `Future` or not) and return a tagged result.
+   Returns `{:ok true :value v}` on success or `{:ok false :error e}` when `f` throws or its `Future` fails"
+  [f]
+  (try
+    {:ok true :value (await (f))}
+    (catch Exception e
+      {:ok false :error e})))
+
+(defn fallback
+  "Unwrap a tagged result.
+   If the result is `ok`, returns `(:value result)`, otherwise calls `(on-error (:error result))`"
+  [result
+   on-error]
+  (if (:ok result)
+    (:value result)
+    (on-error (:error result))))

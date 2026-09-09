@@ -1,175 +1,22 @@
 (ns paginae.my-books.my-books
   {:no-dynamic true}
   (:require
+   ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
    ["package:flutter/material.dart" :as material]
-   ["package:flutter/widgets.dart" :as widgets]
+   ["package:material_symbols_icons/symbols.dart" :as symbols]
    [cljd.flutter :as flutter]
    [paginae.database :as db]
-   [paginae.image.widget :as image]
-   ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
-   [paginae.home.badges :as badges]
-   [paginae.book-details.book-details :as book-details]
-   ["package:material_symbols_icons/symbols.dart" :as symbols]
-   [paginae.theme :as theme]
-   [paginae.image.utils :as img-utils]))
+   [paginae.my-books.book-card :as book-card]
+   [paginae.theme :as theme]))
 
-(defn- remove-book-dialog
-  "Dialog to delete a book from the database"
-  [context
-   book
-   refresh!]
-
-  (material/showDialog
-   .context context
-
-   .builder
-   (fn [^widgets/BuildContext dialog-context]
-     (flutter/widget
-      :get {{{:flds [labelLarge]} .-textTheme
-             {:flds [secondary onSecondary]} .-colorScheme} material/Theme}
-      :let [locales (app-l10n/AppLocalizations.of dialog-context)]
-
-      (material/AlertDialog
-
-       .title
-       (material/Text
-        ((.-deleteBookTitle locales) (:title book)))
-
-       .actions
-       [(material/TextButton
-         .child
-
-         (material/Text
-          (.-cancel locales)
-
-          .style
-          labelLarge)
-
-         .onPressed
-         (fn []
-           (.pop (widgets/Navigator.of dialog-context))))
-
-        (material/ElevatedButton
-         .child
-         (material/Text
-          (.-delete locales)
-
-          .style
-          (.copyWith
-           labelLarge
-
-           .color
-           onSecondary))
-
-         .onPressed
-         (fn []
-           (let [deletion-result (await (db/delete-book (:id book)))]
-             (when deletion-result
-               (when (:has-cover? book)
-                 (img-utils/delete-cover (:id book)))
-
-               (when (.-mounted dialog-context)
-                 (.pop (widgets/Navigator.of dialog-context)))
-               (refresh!))))
-
-         .style
-         (material/ButtonStyle
-          .backgroundColor
-          (material/WidgetStatePropertyAll
-           secondary)))])))))
-
-(defn- book-card
-  "Card that contains a book"
-  [book
-   refresh!]
-  (flutter/widget
-   :key (:id book)
-   :get {{{:flds [titleSmall labelMedium]} .-textTheme
-          {:flds [onSurfaceVariant]} .-colorScheme} material/Theme}
-   :get [material/Navigator]
-   :context context
-   :let [locales (app-l10n/AppLocalizations.of context)]
-
-   (material/InkWell
-    .onLongPress
-    (fn []
-      (remove-book-dialog
-       context
-       book
-       refresh!))
-
-    .onTap (fn []
-             (await
-              (.push
-               navigator
-               (#/(material/MaterialPageRoute Object)
-                .builder
-                (flutter/build (book-details/book-details book nil)))))
-             (refresh!)))
-
-   (material/Card)
-
-   (material/Column)
-
-   .children
-   [;; Cover
-    (material/Stack
-
-     .children
-     [(image/cover-image
-       {:book book
-        :placeholder-text (.-noCover locales)
-        :bordered? false
-        :clickable? false
-        :width 200})
-
-      ;; badge
-      (material/Positioned
-
-       .top 0
-
-       .left 0
-
-       .child
-       (if (:favorite book)
-         (badges/badge :favorite)
-         (badges/badge (:status book))))])
-
-    (material/SizedBox
-     .height 8)
-
-    ;; Title
-    (material/Text
-     (:title book)
-
-     .style titleSmall
-
-     .textAlign material/TextAlign.center
-
-     .maxLines 2
-
-     .overflow widgets/TextOverflow.ellipsis)
-
-    ;; Author
-    (material/Text
-     (:author book)
-
-     .maxLines 1
-
-     .overflow widgets/TextOverflow.ellipsis
-
-     .style
-     (.copyWith
-      labelMedium
-
-      .color (.withOpacity onSurfaceVariant 0.75)))]))
 
 (defn- filter-button
   "Popup menu to select filter"
-  [filter-atom
-   refresh-atom]
+  []
   (flutter/widget
    :get {{{:flds [secondary onSecondary]} .-colorScheme} material/Theme}
+   :get [:data-revision
+         :filter-by]
    :context context
    :let [locales (app-l10n/AppLocalizations.of context)]
 
@@ -179,12 +26,12 @@
     (material/Icon
      symbols/Symbols.filter_alt
 
-     .fill 1)
+     .fill 1.0)
 
     .onSelected
     (fn [value]
-      (reset! filter-atom value)
-      (swap! refresh-atom inc))
+      (reset! filter-by value)
+      (swap! data-revision inc))
 
     .itemBuilder
     (fn [_builder-context]
@@ -272,20 +119,20 @@
            (material/TextStyle
             .color onSecondary)))))]))))
 
-(def refresh-atom (atom 0))
 
 (defn my-books-widget
   "Widget that shows the user's books"
-  [filter-by]
-
-  (reset! refresh-atom 0)
+  [filter-by-value]
 
   (flutter/widget
    :get {{{:flds [headlineSmall titleMedium]} .-textTheme
           {:flds [onBackground]} .-colorScheme} material/Theme}
    :context context
-   :watch [filter (atom filter-by) :as filter-atom
-           refresh refresh-atom
+   :bind {:filter-by (atom filter-by-value)}
+   :get [:data-revision
+         :filter-by]
+   :watch [filter filter-by
+           refresh data-revision
 
            books (cond
                    (or (= :reset filter) (nil? filter))
@@ -314,7 +161,7 @@
      .centerTitle true
 
      .actions
-     [(filter-button filter-atom refresh-atom)]
+     [(filter-button)]
 
      .title
      (material/Text
@@ -370,7 +217,7 @@
 
        .itemBuilder
        (fn [_context index]
-         (book-card
+         (book-card/book-card
           (nth books index)
           (fn []
-            (swap! refresh-atom inc))))))]))
+            (swap! data-revision inc))))))]))

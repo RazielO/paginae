@@ -1,0 +1,105 @@
+(ns paginae.book-details.notes.add-note-dialog
+  {:no-dynamic true}
+  (:require
+   ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
+   ["package:flutter/material.dart" :as material]
+   ["package:flutter/widgets.dart" :as widgets]
+   [cljd.flutter :as flutter]))
+
+(defn add-note-dialog
+  "Dialog for adding a note to the book"
+  [context
+   ^material/TextEditingController controller]
+
+  (material/showDialog
+   .context
+   context
+
+   .builder
+   (fn [dialog-context]
+     (flutter/widget
+      :let [locales (app-l10n/AppLocalizations.of dialog-context)
+            theme (material/Theme.of dialog-context)
+            color-scheme (.-colorScheme theme)
+            text-theme (.-textTheme theme)]
+
+      (material/Dialog)
+
+      .child
+      (material/Padding
+       .padding
+       (material/EdgeInsets.symmetric .horizontal 10 .vertical 20))
+
+      .child
+      (material/Column
+       .mainAxisSize
+       material/MainAxisSize.min)
+
+      .children
+      [;; Title
+       (material/Text
+        (.-addNote locales)
+
+        .style
+        (.-titleLarge text-theme))
+
+       (material/SizedBox .height 20)
+
+       ;; Note text field
+       (material/TextField
+        .controller controller
+
+        .minLines 5
+
+        .maxLines 5
+
+        .decoration
+        (material/InputDecoration
+         .hintText (.-addNote locales)
+
+         .filled true
+
+         .border
+         (material/OutlineInputBorder
+          .borderRadius
+          (material/BorderRadius.circular 12))))
+
+       ;; Buttons
+       (material/Row
+        .mainAxisAlignment
+        material/MainAxisAlignment.end
+
+        .children
+        [;; Cancel button
+         (material/TextButton
+          .child
+          (material/Text
+           (.-cancel locales)
+
+           .style
+           (.-labelLarge text-theme))
+
+          .onPressed
+          (fn []
+            (.-text! controller "")
+            (.pop (widgets/Navigator.of dialog-context))))
+
+         ;; Save button
+         (material/TextButton
+          .child
+          (material/Text
+           (.-save locales)
+
+           .style
+           (.copyWith
+            (.-labelLarge text-theme)
+
+            .color
+            (.-primary color-scheme)))
+
+          .onPressed
+          (fn []
+            (let [note (.trim (.-text controller))]
+              (when (seq note)
+                (.-text! controller "")
+                (.pop (widgets/Navigator.of dialog-context) note)))))])]))))

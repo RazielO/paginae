@@ -2,6 +2,8 @@
   {:no-dynamic true}
   (:require [cljd.flutter :as flutter]
             ["package:flutter/material.dart" :as material]
+            ["package:flutter/foundation.dart" :as foundation]
+            [paginae.common.async :as async]
             [paginae.image.utils :as img-utils]
             [paginae.image.widget :as image]
             [paginae.database :as db]
@@ -155,6 +157,20 @@
         .content (material/Text message))))
   nil)
 
+(defn- save-cover-and-notify
+  "Save the book cover after navigation has happened.
+   On failure a snackbar is shown"
+  [context
+   {:keys [id] :as book}
+   on-image-saved]
+  (let [cover-result (await (async/try-await #(img-utils/save-book-cover book)))]
+    (if (:ok cover-result)
+      (do
+        (on-image-saved)
+        (await (async/try-await #(db/set-book-has-cover id))))
+      (show-snackbar context
+                     "Failed to save cover"))))
+
 (defn- save-book
   "Validate and save book to database"
   [{:keys [^widgets/BuildContext context
@@ -182,14 +198,17 @@
                                            :author new-author
                                            :pages (parse-long (.trim (.-text pages-controller)))
                                            :has-cover? false))
-                  (await (db/insert-book @book-atom))
-                  (when (.-mounted context)
-                    (go-to-my-books)
-                    (.pop (material/Navigator.of context)))
-                  (.then ^Future (img-utils/save-book-cover @book-atom)
-                         (fn [_result]
-                           (on-image-saved)
-                           (db/set-book-has-cover (:id @book-atom)))))))
+                  (let [insert-result (await (async/try-await #(db/insert-book @book-atom)))]
+                    (if (:ok insert-result)
+                      (do
+                        (when (.-mounted context)
+                          (go-to-my-books)
+                          (.pop (material/Navigator.of context)))
+                        (await (save-cover-and-notify context
+                                                      @book-atom
+                                                      on-image-saved)))
+                      (foundation/debugPrint
+                       (str "Failed to insert book: " (:error insert-result))))))))
       (finally
         (reset! saving false)))))
 

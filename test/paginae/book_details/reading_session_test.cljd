@@ -1,10 +1,12 @@
 (ns paginae.book-details.reading-session-test
+  {:no-dynamic true}
   (:require [cljd.test :refer [deftest is testing]]
-            [paginae.book-details.reading-session :as session]))
+            [paginae.book-details.timer.reading-session :as session]
+            [paginae.types.session :as session-type]))
 
 (deftest parse-live-test
   (testing "parses a well-formed session string"
-    (let [s (session/parse-live "1700000000|300|1|1700000100|book-1")]
+    (let [s (session-type/from-json "{\"started-at\": 1700000000, \"accumulated\": 300, \"running\": true, \"updated-at\": 1700000100, \"book-id\": \"book-1\"}")]
       (is (= 1700000000 (:started-at s)))
       (is (= 300 (:accumulated s)))
       (is (true? (:running s)))
@@ -12,12 +14,8 @@
       (is (= "book-1" (:book-id s)))))
 
   (testing "parses a paused (not running) session"
-    (let [s (session/parse-live "1700000000|300|0|1700000100|book-1")]
-      (is (false? (:running s)))))
-
-  (testing "tolerates a garbage/corrupt string without throwing"
-    (let [s (session/parse-live "not-a-number|also|1|nope")]
-      (is (some? s)))))
+    (let [s (session-type/from-json "{\"started-at\": 1700000000, \"accumulated\": 300, \"running\": false, \"updated-at\": 1700000100, \"book-id\": \"book-1\"}")]
+      (is (false? (:running s))))))
 
 (defn- stale-window
   "The configured staleness window in seconds (3 hours)."

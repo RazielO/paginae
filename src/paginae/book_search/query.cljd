@@ -3,6 +3,7 @@
   (:require ["dart:convert" :as convert]
             ["package:http/http.dart" :as http]
             [clojure.string :as str]
+            [paginae.common.async :as async]
             [paginae.types.book-search-result :as book-search-result]
             [paginae.types.query-result :as query-result]))
 
@@ -50,8 +51,14 @@
                                        (get json "docs" [])))}))
                 (handle-error no-response-str)))]
 
-      (-> (http/get uri)
-          (.timeout (Duration .seconds 10))
-          (.then handle-response)
-          (.catchError (fn [_error]
-                         (handle-error no-response-str)))))))
+      (let [result
+            (await (async/try-await
+                    (fn []
+                      (let [^http/Response response
+                            (await (.timeout (http/get uri)
+                                             (Duration .seconds 10)))]
+                        (handle-response response)))))]
+        (async/fallback
+         result
+         (fn [_error]
+           (handle-error no-response-str)))))))

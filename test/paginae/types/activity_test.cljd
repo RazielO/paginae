@@ -1,4 +1,5 @@
 (ns paginae.types.activity-test
+  {:no-dynamic true}
   (:require [cljd.test :refer [deftest is testing]]
             [paginae.types.activity :as activity]))
 
@@ -19,7 +20,7 @@
 
 (deftest from-db-join-entry-test
   (testing "maps a joined row (activity_id key)"
-    (let [a (activity/from-db-join-entry {"activity_id" 5
+    (let [a (activity/from-db-entry {"activity_id" 5
                                           "book_id" "book-1"
                                           "reading_time" 3600
                                           "progress" 0.25

@@ -1,4 +1,4 @@
-(ns paginae.book-details.reading-timer
+(ns paginae.book-details.timer.reading-timer
   {:no-dynamic true}
   (:require
    ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
@@ -8,7 +8,7 @@
    ["package:material_symbols_icons/symbols.dart" :as symbols]
    [cljd.flutter :as flutter]
    [paginae.book-details.activity-dialog :as book-details.activity-dialog]
-   [paginae.book-details.reading-session :as reading-session]
+   [paginae.book-details.timer.reading-session :as reading-session]
    [paginae.database :as db]
    [paginae.theme :as theme]))
 
@@ -232,7 +232,7 @@
                                   :progress progress
                                   :reading-time (if (nil? start-time)
                                                   nil
-                                                  (+ elapsed-time (elapsed-seconds start-time)))})))}))]
+                                                  (+ elapsed-time (elapsed-seconds start-time)))})))}))] 
            (when (and data (.-mounted context))
              (reading-session/delete-session)
              (.pop (widgets/Navigator.of context) data)))))])

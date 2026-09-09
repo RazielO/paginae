@@ -1,450 +1,14 @@
 (ns paginae.book-search.book-search
   {:no-dynamic true}
-  (:require [cljd.flutter :as flutter]
-            [paginae.theme :as theme]
-            [paginae.add-book.add-book :as add-book]
-            [paginae.types.book :as book-type]
-            [paginae.types.book-search-result :as book-search-result]
-            [paginae.image.widget :as image]
-            [paginae.book-search.query :as query]
-            ["package:flutter/material.dart" :as material]
+  (:require ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
             ["package:flutter/animation.dart" :as animation]
-            ["package:mobile_scanner/mobile_scanner.dart" :as scanner]
+            ["package:flutter/material.dart" :as material]
             ["package:material_symbols_icons/symbols.dart" :as symbols]
-            ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]))
-
-(defn- book-card
-  "Card that displays a result book after a search"
-  [^book-search-result/BookSearchResult book
-   go-to-my-books
-   on-image-saved]
-
-  (flutter/widget
-   :get {{{:flds [titleLarge]} .-textTheme} material/Theme}
-   :get [material/Navigator]
-   :context context
-   :let [locales (app-l10n/AppLocalizations.of context)]
-
-   (material/InkWell
-    .onTap (fn []
-             (.push
-              navigator
-              (#/(material/MaterialPageRoute Object)
-               .builder
-               (flutter/build (add-book/add-book-screen (book-type/from-search-result book) go-to-my-books on-image-saved))))
-             nil)
-
-    .child
-    (material/Card
-     .child
-     (material/Container
-      .padding (material/EdgeInsets.all 10)
-
-      .child
-      (material/Row
-       .spacing 30
-
-       .children
-       [;; Book's cover
-        (image/cover-image
-         {:book book
-          :placeholder-text (.-noCover locales)
-          :bordered? false
-          :clickable? false
-          :on-click nil})
-
-        (material/Expanded
-         .child
-         (material/Column
-          .crossAxisAlignment material/CrossAxisAlignment.start
-
-          .spacing 5
-
-          .children
-          [;; Book's title
-           (material/Text
-            (:title book)
-            .style titleLarge
-            .softWrap true)
-
-           ;; Book's author
-           (material/Text
-            (.toUpperCase ^String (:author book))
-
-            .style (material/TextStyle
-                    .color (:60 theme/neutral)
-                    .fontSize 16
-                    .fontWeight material/FontWeight.bold))
-
-           ;; Book's first publication year
-           (material/Text
-            ((.-firstPublished locales) (:first-published book))
-
-            .style (material/TextStyle
-                    .color (:50 theme/neutral)
-                    .fontSize 14))]))]))))))
-
-(defn- book-list
-  "List to display search book results"
-  [{:keys [books
-           total-books
-           loading?
-           as-list?
-           loading-more
-           go-to-my-books
-           on-image-saved
-           error]}]
-
-  (flutter/widget
-   :get {{{:flds [titleLarge labelLarge]} .-textTheme} material/Theme
-         {{:flds [onBackground]} .-colorScheme} material/Theme}
-   :watch [_loading-more loading-more]
-   :context context
-
-   (cond
-     error
-     (material/SliverToBoxAdapter
-      .child
-      (material/Padding
-       .padding
-       (material/EdgeInsets.only .top 20)
-
-       .child
-       (material/Center
-        .child
-        (material/Text
-         error
-
-         .textAlign
-         material/TextAlign.center
-
-         .style
-         (.copyWith
-          labelLarge
-
-          .color
-          (.withOpacity onBackground 0.7)
-
-          .letterSpacing
-          2.0)))))
-
-
-     ;; Results are loading
-     loading?
-     (material/SliverToBoxAdapter
-      .child
-      (material/Padding
-       .padding
-       (material/EdgeInsets.only .top 20)
-
-       .child
-       (material/Center
-        .child
-        (material/SizedBox
-         .height 80
-
-         .width 80
-
-         .child
-         (material/CircularProgressIndicator)))))
-
-     ;; No results
-     (= 0 total-books)
-     (material/SliverToBoxAdapter
-      .child
-      (material/Padding
-       .padding
-       (material/EdgeInsets.only .top 20)
-
-       .child
-       (material/Text
-        (.-searchNoResults (app-l10n/AppLocalizations.of context))
-
-        .textAlign material/TextAlign.center
-
-        .style (.copyWith titleLarge
-                          .fontWeight material/FontWeight.bold
-                          .fontFamily theme/sans-serif-font
-                          .color onBackground))))
-
-     ;; Display results
-     :else
-     (let [item-count (if @loading-more
-                        (inc (count books))
-                        (count books))]
-
-       (if as-list?
-         (material/SliverList.builder
-          .itemCount item-count
-
-          .itemBuilder
-          (fn [_context index]
-            (if (and @loading-more
-                     (= index (dec item-count)))
-
-              (material/Padding
-               .padding
-               (material/EdgeInsets.symmetric .horizontal 0
-                                              .vertical 20)
-
-               .child
-               (material/Center
-
-                .child
-                (material/SizedBox
-
-                 .height 80
-
-                 .width 80
-
-                 .child
-                 (material/CircularProgressIndicator))))
-
-              (book-card (nth books index) go-to-my-books on-image-saved))))
-
-         (material/SliverGrid.builder
-          .itemCount item-count
-
-          .gridDelegate
-          (material/SliverGridDelegateWithFixedCrossAxisCount
-           .crossAxisCount 2
-           .crossAxisSpacing 10
-           .mainAxisSpacing 5
-           .childAspectRatio (/ 16 9))
-
-          .itemBuilder
-          (fn [_context index]
-            (if (and @loading-more
-                     (= index (dec item-count)))
-
-              (material/Padding
-               .padding
-               (material/EdgeInsets.symmetric .horizontal 0
-                                              .vertical 20)
-
-               .child
-               (material/LinearProgressIndicator))
-
-              (book-card (nth books index) go-to-my-books on-image-saved)))))))))
-
-(defn- pill-button
-  "Button for adding actions"
-  [{:keys
-    [text
-     icon
-     on-pressed
-     background-color
-     foreground-color]}]
-  (flutter/widget
-
-   (material/ElevatedButton
-    .onPressed on-pressed
-
-    .style
-    (material/ButtonStyle
-     .backgroundColor (material/WidgetStatePropertyAll ^material/Color background-color))
-
-    .child
-    (material/Row
-     .mainAxisAlignment material/MainAxisAlignment.center
-
-     .spacing 20
-
-     .children
-     [(material/Icon
-       icon
-
-       .color foreground-color)
-
-      (material/Text
-       text
-
-       .style (material/TextStyle
-               .color foreground-color))]))))
-
-(defn- search-text-field
-  "Input field to search books"
-  [on-submitted]
-  (flutter/widget
-   :get {{{:flds [surface onSurface]} .-colorScheme} material/Theme}
-   :context context
-   :let [locales (app-l10n/AppLocalizations.of context)]
-   :managed [text-controller (material/TextEditingController)]
-
-   (flutter/widget
-    (material/Container
-     .padding (material/EdgeInsets.symmetric .horizontal 20 .vertical 5)
-
-     .decoration
-     (material/BoxDecoration
-      .borderRadius (material/BorderRadiusGeometry.circular 10)
-      .color surface))
-
-    .child
-    (material/Row
-     .mainAxisSize material/MainAxisSize.min
-
-     .spacing 20)
-
-    .children
-    [(material/Icon
-      symbols/Symbols.search
-
-      .color (:60 theme/primary))
-
-     (material/Expanded
-      .child
-      (material/TextField
-       .onSubmitted
-       on-submitted
-
-       .controller
-       text-controller
-
-       .style
-       (material/TextStyle
-        .color onSurface)
-
-       .decoration
-       (material/InputDecoration
-        .hintText (.-searchBookHint locales)
-
-        .border material/InputBorder.none
-
-        .enabledBorder material/InputBorder.none
-
-        .focusedBorder material/InputBorder.none
-
-        .hintStyle (material/TextStyle
-                    .color (.withOpacity onSurface 0.6)))))])))
-
-(defn- search-widget
-  "Widget that shows text input and options to add a book"
-  [{:keys [on-submitted
-           scanning
-           go-to-my-books
-           on-image-saved]}]
-  (flutter/widget
-   :get {{{:flds [primary onPrimary secondary onSecondary]} .-colorScheme} material/Theme}
-   :get [material/Navigator]
-   :context context
-   :let [locales (app-l10n/AppLocalizations.of context)
-
-         portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)
-
-         text-field (search-text-field on-submitted)
-
-         scan-btn (pill-button
-                   {:text (.-searchScanBarcode locales)
-                    :icon symbols/Symbols.barcode_scanner
-                    :on-pressed #(reset! scanning true)
-                    :background-color primary
-                    :foreground-color onPrimary})
-
-         manual-btn (pill-button
-                     {:text (.-searchManualEntry locales)
-                      :icon symbols/Symbols.edit_note
-                      :on-pressed (fn []
-                                    (.push
-                                     navigator
-                                     (#/(material/MaterialPageRoute Object)
-                                      .builder
-                                      (flutter/build (add-book/add-book-screen (book-type/empty-book) go-to-my-books on-image-saved))))
-                                    nil)
-                      :background-color secondary
-                      :foreground-color onSecondary})]
-
-   (if portrait?
-     (material/Column
-      .crossAxisAlignment material/CrossAxisAlignment.center
-
-      .spacing 5
-
-      .children
-      [text-field
-       scan-btn
-       manual-btn])
-
-     (material/Column
-      .crossAxisAlignment material/CrossAxisAlignment.center
-
-      .spacing 10
-
-      .children
-      [text-field
-
-       (material/Row
-        .spacing 10
-
-        .children
-        [(material/Expanded
-          .child
-          scan-btn)
-
-         (material/Expanded
-          .child
-          manual-btn)])]))))
-
-(defn- barcode-scanner
-  "Barcode scanner, shows a cancel button and camera"
-  [scanning query-atom]
-  (flutter/widget
-   :get {{{:flds [secondary onSecondary]} .-colorScheme} material/Theme}
-   :context context
-   :let [locales (app-l10n/AppLocalizations.of context)]
-
-   (material/Expanded
-    .child
-    (material/Column
-     .spacing 10
-
-     .children
-     [;; Cancel button
-      (material/ElevatedButton
-       .onPressed #(reset! scanning false)
-
-       .style
-       (material/ButtonStyle
-        .backgroundColor
-        (material/WidgetStatePropertyAll secondary)
-
-        .padding
-        (material/WidgetStatePropertyAll
-         (material/EdgeInsets.symmetric .horizontal 0 .vertical 10)))
-
-       .child
-       (material/Row
-        .mainAxisAlignment material/MainAxisAlignment.center
-
-        .spacing 10
-
-        .children
-        [(material/Icon symbols/Symbols.cancel
-                        .color onSecondary)
-
-         (material/Text (.-searchCancelScanning locales)
-                        .style (material/TextStyle
-                                .color onSecondary
-                                .fontSize 16))]))
-
-      ;; Barcode scanner
-      (material/ClipRRect
-       .borderRadius
-       (material/BorderRadiusGeometry.circular 15)
-
-       .child
-       (material/SizedBox
-        .height 300
-
-        .child
-        (scanner/MobileScanner
-         .onDetect
-         (fn [capture]
-           (let [barcodes (.-barcodes ^scanner/BarcodeCapture capture)
-                 barcode (first barcodes)]
-             (when barcode
-               (reset! query-atom (.-rawValue ^scanner/Barcode barcode))
-               (reset! scanning false)))))))]))))
+            [cljd.flutter :as flutter]
+            [paginae.book-search.barcode-scanner :as barcode-scanner]
+            [paginae.book-search.book-list :as book-list]
+            [paginae.book-search.query :as query]
+            [paginae.book-search.search-widget :as search-widget]))
 
 (defn- load-books
   [{:keys [query
@@ -494,10 +58,11 @@
    :watch [query (atom "") :as query-atom
            _offset (atom 0) :as offset-atom
            _books (atom []) :as books-atom
-           _total-books (atom 0) :as total-atom
+           _total-books (atom nil) :as total-atom
            scanning? (atom false) :as scanning
            _has-more? (atom true) :as has-more
-           error (atom nil) :as error-atom]
+           error (atom nil) :as error-atom
+           _loading (atom false) :as loading-atom]
 
    :let [locales (app-l10n/AppLocalizations.of context)
          portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)]
@@ -592,38 +157,42 @@
        (material/SliverToBoxAdapter
         .child
         (if scanning?
-          (barcode-scanner scanning query-atom)
+          (barcode-scanner/barcode-scanner scanning
+                                           query-atom)
 
-          (search-widget {:on-submitted (fn [text]
-                                          (let [locales (app-l10n/AppLocalizations.of context)]
-                                            (reset! query-atom text)
-                                            (reset! books-atom [])
-                                            (reset! offset-atom 0)
-                                            (reset! total-atom 0)
-                                            (reset! error-atom nil)
-                                            (load-books {:query text
-                                                         :loading-more loading-more
-                                                         :unknown-str (.-unknown locales)
-                                                         :no-response-str (.-noServerResponse locales)
-                                                         :books-atom books-atom
-                                                         :total-atom total-atom
-                                                         :offset-atom offset-atom
-                                                         :has-more has-more
-                                                         :error-atom error-atom})))
-                          :scanning scanning
-                          :go-to-my-books go-to-my-books
-                          :on-image-saved on-image-saved})))
+          (search-widget/search-widget {:on-submitted (fn [text]
+                                                        (let [locales (app-l10n/AppLocalizations.of context)]
+                                                          (reset! loading-atom true)
+                                                          (reset! query-atom text)
+                                                          (reset! books-atom [])
+                                                          (reset! offset-atom 0)
+                                                          (reset! total-atom nil)
+                                                          (reset! error-atom nil)
+                                                          (load-books {:query text
+                                                                       :loading-more loading-more
+                                                                       :unknown-str (.-unknown locales)
+                                                                       :no-response-str (.-noServerResponse locales)
+                                                                       :books-atom books-atom
+                                                                       :total-atom total-atom
+                                                                       :offset-atom offset-atom
+                                                                       :has-more has-more
+                                                                       :error-atom error-atom})
+                                                          (reset! loading-atom false)))
+                                        :text @query-atom
+                                        :scanning scanning
+                                        :go-to-my-books go-to-my-books
+                                        :on-image-saved on-image-saved})))
 
        (if (and (not scanning?)
                 (seq query))
-         (book-list {:books @books-atom
-                     :total-books @total-atom
-                     :loading? (empty? @books-atom)
-                     :as-list? portrait?
-                     :loading-more loading-more
-                     :go-to-my-books go-to-my-books
-                     :on-image-saved on-image-saved
-                     :error error})
+         (book-list/book-list {:books @books-atom
+                               :total-books @total-atom
+                               :loading? (nil? @total-atom)
+                               :as-list? portrait?
+                               :loading-more loading-more
+                               :go-to-my-books go-to-my-books
+                               :on-image-saved on-image-saved
+                               :error error})
          (material/SliverToBoxAdapter
           .child
           (material/Container)))])))))

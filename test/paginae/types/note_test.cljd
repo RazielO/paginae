@@ -1,4 +1,5 @@
 (ns paginae.types.note-test
+  {:no-dynamic true}
   (:require [cljd.test :refer [deftest is testing]]
             [paginae.types.note :as note]))
 

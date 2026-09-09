@@ -1,0 +1,133 @@
+(ns paginae.home.shelves
+  {:no-dynamic true}
+  (:require ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
+            ["package:flutter/material.dart" :as material]
+            [cljd.flutter :as flutter]
+            [paginae.common.badges :as badges]
+            [paginae.theme :as theme]))
+
+(defn- shelf-card
+  "Card that represents a 'bookshelf' (group of books)"
+  [{:keys [title
+           subtitle
+           bg-color
+           number
+           badge
+           on-tap]}]
+  (flutter/widget
+   :get {{{:flds [headlineLarge titleLarge labelMedium]} .-textTheme
+          {:flds [onSurfaceVariant]} .-colorScheme} material/Theme}
+
+   (material/InkWell
+    .onTap on-tap
+
+    .child
+    (material/Card
+
+     .child
+     (material/Padding
+
+      .padding
+      (material/EdgeInsets.symmetric .vertical 20 .horizontal 20)
+
+      .child
+      (material/Column
+
+       .crossAxisAlignment material/CrossAxisAlignment.start
+
+       .children
+       [;; Icon and count
+        (material/Row
+
+         .mainAxisAlignment
+         material/MainAxisAlignment.spaceBetween
+
+         .children
+         [;; Icon
+          badge
+
+          ;; Count
+          (material/Text
+           (str number)
+
+           .style
+           (.copyWith headlineLarge
+                      .fontWeight material/FontWeight.w700
+                      .color bg-color))])
+
+        (material/SizedBox
+         .height 20)
+
+        ;; Title
+        (material/Text
+         title
+
+         .style titleLarge)
+
+        ;; Subtitle
+        (material/Text
+         (.toUpperCase ^String subtitle)
+
+         .style (.copyWith labelMedium
+                           .color (.withOpacity onSurfaceVariant 0.75)))]))))))
+
+(defn shelves
+  "Widget that contains cards with book groups"
+  [{:keys [counts
+           go-to-to-read-shelf
+           go-to-reading-shelf
+           go-to-favorite-shelf
+           go-to-done-shelf]}]
+  (flutter/widget
+   :get {{{:flds [headlineSmall]} .-textTheme} material/Theme}
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)
+         portrait? (= material/Orientation.portrait (.-orientation (material/MediaQuery.of context)))]
+
+   (material/SliverMainAxisGroup
+
+    .slivers
+    [(material/SliverToBoxAdapter
+
+      .child
+      (material/Text
+       (.-myShelves locales)
+       .softWrap true
+       .maxLines 2
+       .style headlineSmall))
+
+     (material/SliverGrid.count
+      .crossAxisCount (if portrait? 2 4)
+
+      .children
+      [(shelf-card
+        {:title (.-shelfReadTitle locales)
+         :subtitle (.-shelfReadSubtitle locales)
+         :bg-color (:70 theme/primary)
+         :number (:done counts)
+         :badge (badges/badge :done)
+         :on-tap go-to-done-shelf})
+
+       (shelf-card
+        {:title (.-shelfToReadTitle locales)
+         :subtitle (.-shelfToReadSubtitle locales)
+         :bg-color (:70 theme/secondary)
+         :number (:to-read counts)
+         :badge (badges/badge :to-read)
+         :on-tap go-to-to-read-shelf})
+
+       (shelf-card
+        {:title (.-shelfFavoritesTitle locales)
+         :subtitle (.-shelfFavoritesSubtitle locales)
+         :bg-color (:70 theme/tertiary)
+         :number (:favorite counts)
+         :badge (badges/badge :favorite)
+         :on-tap go-to-favorite-shelf})
+
+       (shelf-card
+        {:title (.-shelfReadingTitle locales)
+         :subtitle (.-shelfReadingSubtitle locales)
+         :bg-color (:70 theme/neutral)
+         :number (:reading counts)
+         :badge (badges/badge :reading)
+         :on-tap go-to-reading-shelf})])])))

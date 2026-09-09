@@ -1,4 +1,5 @@
-(ns paginae.types.query-result)
+(ns paginae.types.query-result
+  {:no-dynamic true})
 
 (defrecord QueryResult
            [total ;; Number of results

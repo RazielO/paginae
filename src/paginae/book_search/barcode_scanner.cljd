@@ -1,0 +1,67 @@
+(ns paginae.book-search.barcode-scanner
+  {:no-dynamic true}
+  (:require [cljd.flutter :as flutter]
+            ["package:flutter/material.dart" :as material]
+            ["package:mobile_scanner/mobile_scanner.dart" :as scanner]
+            ["package:material_symbols_icons/symbols.dart" :as symbols]
+            ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]))
+
+(defn barcode-scanner
+  "Barcode scanner, shows a cancel button and camera"
+  [scanning
+   query-atom]
+  (flutter/widget
+   :get {{{:flds [secondary onSecondary]} .-colorScheme} material/Theme}
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+
+   (material/Column
+    .spacing 10)
+
+   .children
+   [;; Cancel button
+    (material/ElevatedButton
+     .onPressed #(reset! scanning false)
+
+     .style
+     (material/ButtonStyle
+      .backgroundColor
+      (material/WidgetStatePropertyAll secondary)
+
+      .padding
+      (material/WidgetStatePropertyAll
+       (material/EdgeInsets.symmetric .horizontal 0 .vertical 10)))
+
+     .child
+     (material/Row
+      .mainAxisAlignment material/MainAxisAlignment.center
+
+      .spacing 10
+
+      .children
+      [(material/Icon symbols/Symbols.cancel
+                      .color onSecondary)
+
+       (material/Text (.-searchCancelScanning locales)
+                      .style (material/TextStyle
+                              .color onSecondary
+                              .fontSize 16))]))
+
+    ;; Barcode scanner
+    (material/ClipRRect
+     .borderRadius
+     (material/BorderRadiusGeometry.circular 15)
+
+     .child
+     (material/SizedBox
+      .height 300
+
+      .child
+      (scanner/MobileScanner
+       .onDetect
+       (fn [capture]
+         (let [barcodes (.-barcodes ^scanner/BarcodeCapture capture)
+               barcode (first barcodes)]
+           (when barcode
+             (reset! query-atom (.-rawValue ^scanner/Barcode barcode))
+             (reset! scanning false)))))))]))

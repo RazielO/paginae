@@ -1,0 +1,170 @@
+(ns paginae.my-books.book-card
+  {:no-dynamic true}
+  (:require
+   ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
+   ["package:flutter/material.dart" :as material]
+   ["package:flutter/widgets.dart" :as widgets]
+   [cljd.flutter :as flutter]
+   [paginae.book-details.book-details :as book-details]
+   [paginae.database :as db]
+   [paginae.common.badges :as badges]
+   [paginae.image.utils :as image.utils]
+   [paginae.image.widget :as image]))
+
+(defn- remove-book-dialog
+  "Dialog to delete a book from the database"
+  [context
+   book
+   refresh!]
+
+  (material/showDialog
+   .context
+   context
+
+   .builder
+   (fn [^widgets/BuildContext dialog-context]
+     (flutter/widget
+      :get {{{:flds [labelLarge]} .-textTheme
+             {:flds [secondary onSecondary]} .-colorScheme} material/Theme}
+      :let [locales (app-l10n/AppLocalizations.of dialog-context)]
+
+      (material/AlertDialog
+
+       .title
+       (material/Text
+        ((.-deleteBookTitle locales) (:title book)))
+
+       .actions
+       [(material/TextButton
+
+         .child
+         (material/Text
+          (.-cancel locales)
+
+          .style
+          labelLarge)
+
+         .onPressed
+         (fn []
+           (.pop (widgets/Navigator.of dialog-context))))
+
+        (material/ElevatedButton
+
+         .child
+         (material/Text
+          (.-delete locales)
+
+          .style
+          (.copyWith
+           labelLarge
+
+           .color
+           onSecondary))
+
+         .onPressed
+         (fn []
+           (let [deletion-result (await (db/delete-book (:id book)))]
+             (when deletion-result
+               (when (:has-cover? book)
+                 (image.utils/delete-cover (:id book)))
+
+               (when (.-mounted dialog-context)
+                 (.pop (widgets/Navigator.of dialog-context)))
+               (refresh!))))
+
+         .style
+         (material/ButtonStyle
+          .backgroundColor
+          (material/WidgetStatePropertyAll secondary)))])))))
+
+(defn book-card
+  "Card that contains a book"
+  [book
+   refresh!]
+  (flutter/widget
+   :key (:id book)
+   :get {{{:flds [titleSmall labelMedium]} .-textTheme
+          {:flds [onSurfaceVariant]} .-colorScheme} material/Theme}
+   :get [material/Navigator]
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+
+   (material/InkWell
+    .onLongPress
+    (fn []
+      (remove-book-dialog
+       context
+       book
+       refresh!))
+
+    .onTap (fn []
+             (await
+              (.push
+               navigator
+               (#/(material/MaterialPageRoute Object)
+                .builder
+                (flutter/build (book-details/book-details book nil)))))
+             (refresh!)))
+
+   (material/Card)
+
+   (material/Column)
+
+   .children
+   [;; Cover
+    (material/Stack
+
+     .children
+     [(image/cover-image
+       {:book book
+        :placeholder-text (.-noCover locales)
+        :bordered? false
+        :clickable? false
+        :width 200})
+
+      ;; badge
+      (material/Positioned
+       .top 0
+       .left 0
+
+       .child
+       (if (:favorite book)
+         (badges/badge :favorite)
+         (badges/badge (:status book))))])
+
+    (material/SizedBox
+     .height 8)
+
+    ;; Title
+    (material/Text
+     (:title book)
+
+     .style
+     titleSmall
+
+     .textAlign
+     material/TextAlign.center
+
+     .maxLines
+     2
+
+     .overflow
+     widgets/TextOverflow.ellipsis)
+
+    ;; Author
+    (material/Text
+     (:author book)
+
+     .maxLines
+     1
+
+     .overflow
+     widgets/TextOverflow.ellipsis
+
+     .style
+     (.copyWith
+      labelMedium
+
+      .color
+      (.withOpacity onSurfaceVariant
+                    0.75)))]))
