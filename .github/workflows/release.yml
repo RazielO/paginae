@@ -41,7 +41,7 @@ jobs:
         run: flutter pub get
 
       - name: Run tests
-        run: clj -M:cljd:test test
+        run: clojure -M:cljd:test test
 
       - name: Delete files before compiling (can't compile after testing)
         run: rm -rf lib/cljd-out test/cljd-out
