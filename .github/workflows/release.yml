@@ -72,7 +72,7 @@ jobs:
           EOF
 
       - name: Build release APK
-        run: flutter build apk --release
+        run: flutter build apk --release --split-per-abi
 
       - name: Get latest build-tools version
         id: buildtools
@@ -92,18 +92,33 @@ jobs:
         run: |
           "$ANDROID_HOME/build-tools/$VERSION/apksigner" verify \
             --verbose \
-            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+          "$ANDROID_HOME/build-tools/$VERSION/apksigner" verify \
+            --verbose \
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          "$ANDROID_HOME/build-tools/$VERSION/apksigner" verify \
+            --verbose \
+            build/app/outputs/flutter-apk/app-x86_64-release.apk
 
       - name: Rename APK
         run: |
           mv \
-            build/app/outputs/flutter-apk/app-release.apk \
-            paginae.apk
+            build/app/outputs/flutter-apk/app-armeabi-v7-release.apk \
+            paginae-armeabi-v7a-${{ github.ref_name }}.apk
+          mv \
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+            paginae-arm64-v8a-${{ github.ref_name }}.apk
+          mv \
+            build/app/outputs/flutter-apk/app-x86_64-release.apk \
+            paginae-x86_64-${{ github.ref_name }}.apk
 
       - name: Upload APK to GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          files: paginae.apk
+          files: |
+            paginae-armeabi-v7a-${{ github.ref_name }}.apk
+            paginae-arm64-v8a-${{ github.ref_name }}.apk
+            paginae-x86_64-${{ github.ref_name }}.apk
 
       - name: Cleanup signing files
         if: always()
