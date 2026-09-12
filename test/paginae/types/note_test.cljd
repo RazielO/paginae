@@ -8,11 +8,13 @@
     (let [n (note/from-db-entry {"id" 1
                                  "book_id" "book-1"
                                  "contents" "Great"
-                                 "created_at" "2024-01-02 10:20:30"})]
+                                 "created_at" "2024-01-02 10:20:30"
+                                 "updated_at" "2024-01-02 10:20:30"})]
       (is (= 1 (:id n)))
       (is (= "book-1" (:book-id n)))
       (is (= "Great" (:contents n)))
-      (is (some? (:created-at n)) "parses created_at"))))
+      (is (some? (:created-at n)) "parses created_at")
+      (is (some? (:updated-at n)) "parses updated_at"))))
 
 (deftest to-db-roundtrip-test
   (testing "to-db-map omits created_at (DB supplies the default)"
@@ -21,7 +23,8 @@
       (is (= 1 (get m "id")))
       (is (= "book-1" (get m "book_id")))
       (is (= "Great" (get m "contents")))
-      (is (nil? (get m "created_at")) "created_at is absent, DB sets it"))))
+      (is (not (nil? (get m "created_at"))) "created_at is set at current time")
+      (is (not (nil? (get m "updated_at"))) "updated_at is set at current time"))))
 
 (deftest update-contents-test
   (testing "immutably updates contents"
