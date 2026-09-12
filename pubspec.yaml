@@ -2,7 +2,7 @@ name: cljd_paginae
 description: "App to track reading"
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.1.0
 
 environment:
   sdk: ^3.11.4
