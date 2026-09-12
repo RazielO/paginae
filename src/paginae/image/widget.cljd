@@ -9,7 +9,9 @@
 
 (defn cover-placeholder
   "Widget used for when there is no cover image"
-  [{:keys [text width height]}]
+  [{:keys [text
+           width
+           height]}]
   (flutter/widget
    :get {{{:flds [surfaceVariant onSurfaceVariant]} .-colorScheme} material/Theme}
 
@@ -69,7 +71,8 @@
 
 (defn- clickable-wrapper
   "Wrapper for when the cover is clickable"
-  [on-click child]
+  [on-click 
+   child]
   (material/InkWell
    .onTap on-click
    .child child))

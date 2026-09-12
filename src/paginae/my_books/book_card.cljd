@@ -6,76 +6,11 @@
    ["package:flutter/widgets.dart" :as widgets]
    [cljd.flutter :as flutter]
    [paginae.book-details.book-details :as book-details]
-   [paginae.database :as db]
    [paginae.common.badges :as badges]
-   [paginae.image.utils :as image.utils]
+   [paginae.common.confirm-delete-dialog :as common.confirm-dialog]
+   [paginae.database :as db]
+   [paginae.image.utils :as img-utils]
    [paginae.image.widget :as image]))
-
-(defn- remove-book-dialog
-  "Dialog to delete a book from the database"
-  [context
-   book
-   refresh!]
-
-  (material/showDialog
-   .context
-   context
-
-   .builder
-   (fn [^widgets/BuildContext dialog-context]
-     (flutter/widget
-      :get {{{:flds [labelLarge]} .-textTheme
-             {:flds [secondary onSecondary]} .-colorScheme} material/Theme}
-      :let [locales (app-l10n/AppLocalizations.of dialog-context)]
-
-      (material/AlertDialog
-
-       .title
-       (material/Text
-        ((.-deleteBookTitle locales) (:title book)))
-
-       .actions
-       [(material/TextButton
-
-         .child
-         (material/Text
-          (.-cancel locales)
-
-          .style
-          labelLarge)
-
-         .onPressed
-         (fn []
-           (.pop (widgets/Navigator.of dialog-context))))
-
-        (material/ElevatedButton
-
-         .child
-         (material/Text
-          (.-delete locales)
-
-          .style
-          (.copyWith
-           labelLarge
-
-           .color
-           onSecondary))
-
-         .onPressed
-         (fn []
-           (let [deletion-result (await (db/delete-book (:id book)))]
-             (when deletion-result
-               (when (:has-cover? book)
-                 (image.utils/delete-cover (:id book)))
-
-               (when (.-mounted dialog-context)
-                 (.pop (widgets/Navigator.of dialog-context)))
-               (refresh!))))
-
-         .style
-         (material/ButtonStyle
-          .backgroundColor
-          (material/WidgetStatePropertyAll secondary)))])))))
 
 (defn book-card
   "Card that contains a book"
@@ -92,10 +27,16 @@
    (material/InkWell
     .onLongPress
     (fn []
-      (remove-book-dialog
-       context
-       book
-       refresh!))
+      (common.confirm-dialog/confirm-delete-dialog
+       {:title ((.-deleteBookTitle locales) (:title book))
+        :content ""
+        :context context
+        :on-confirm (fn []
+                      (let [deletion-result (await (db/delete-book (:id book)))]
+                        (when deletion-result
+                          (when (:has-cover? book)
+                            (img-utils/delete-cover (:id book)))
+                          (refresh!))))}))
 
     .onTap (fn []
              (await

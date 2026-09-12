@@ -1,0 +1,115 @@
+(ns paginae.common.book-editor.book-format
+  {:no-dynamic true}
+  (:require [cljd.flutter :as flutter]
+            ["package:flutter/material.dart" :as material]
+            ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
+            [paginae.types.book :as book]
+            [paginae.theme :as theme]))
+
+(defn- group-button
+  "Button for selecting format"
+  [{:keys [text
+           on-pressed
+           selected?]}]
+  (flutter/widget
+   :get {{{:flds [primary onPrimary surface onSurface]} .-colorScheme} material/Theme}
+
+   (material/ElevatedButton
+    .onPressed on-pressed
+
+    .style
+    (material/ButtonStyle
+     .backgroundColor
+     (material/WidgetStatePropertyAll
+      ^material/Color
+      (if selected?
+        primary
+        surface))
+
+     .foregroundColor
+     (material/WidgetStatePropertyAll
+      ^material/Color
+      (if selected?
+        onPrimary
+        onSurface))
+
+     .shape
+     (material/WidgetStatePropertyAll
+      (material/RoundedRectangleBorder
+       .borderRadius
+       (material/BorderRadius.circular 16)))))
+
+   .child
+   (material/Container
+    .padding
+    (material/EdgeInsets.all 16))
+
+   .child
+   (material/Text
+    text
+
+    .textAlign
+    material/TextAlign.center
+
+    .overflow
+    material/TextOverflow.clip)))
+
+(defn format-card
+  "Card that holds possible formats for a book"
+  [book-atom]
+
+  (flutter/widget
+   :get {{{:flds [background]} .-colorScheme} material/Theme
+         {{:flds [bodyLarge]} .-textTheme} material/Theme}
+   :context context
+   :let [locales (app-l10n/AppLocalizations.of context)]
+
+   (material/Card
+    .color
+    background)
+
+   .child
+   (material/Container
+    .padding
+    (material/EdgeInsets.all 24))
+
+   .child
+   (material/Column
+    .spacing 8
+    .crossAxisAlignment material/CrossAxisAlignment.start)
+
+   .children
+   [(material/Text
+     (.-format locales)
+     .style (.copyWith bodyLarge
+                       .fontWeight material/FontWeight.bold
+                       .fontFamily theme/serif-font))
+
+    (material/GridView.count
+     .crossAxisCount 2
+     .crossAxisSpacing 8
+     .mainAxisSpacing 8
+     .shrinkWrap true
+     .childAspectRatio 1.5
+     .physics (material/NeverScrollableScrollPhysics.)
+
+     .children
+     [(group-button
+       {:text (.-hardcover locales)
+        :on-pressed #(swap! book-atom book/update-format :hardcover)
+        :selected? (= (:format @book-atom) :hardcover)})
+
+      (group-button
+       {:text (.-paperback locales)
+        :on-pressed #(swap! book-atom book/update-format :paperback)
+        :selected? (= (:format @book-atom) :paperback)})
+
+      (group-button
+       {:text (.-ebook locales)
+        :on-pressed #(swap! book-atom book/update-format :ebook)
+        :selected? (= (:format @book-atom) :ebook)})
+
+      (group-button
+       {:text (.-audiobook locales)
+        :on-pressed #(swap! book-atom book/update-format :audiobook)
+        :selected? (= (:format @book-atom) :audiobook)})])]))

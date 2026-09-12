@@ -1,6 +1,10 @@
 (ns paginae.types.book
   {:no-dynamic true}
-  (:require ["package:uuid/uuid.dart" :as uuid]))
+  (:require ["package:uuid/uuid.dart" :as uuid]
+            [clojure.string :as str]
+            [paginae.types.activity :as activity-type]
+            [paginae.types.note :as note-type]
+            ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]))
 
 (defrecord Book
            [id
@@ -13,6 +17,7 @@
             favorite
             has-cover?
             created-at
+            updated-at
             cover-uri])
 
 (defn empty-book
@@ -37,7 +42,8 @@
    "format" (name (:format book))
    "current_progress" (:current-progress book)
    "favorite" (if (:favorite book) 1 0)
-   "has_cover" (if (:has-cover? book) 1 0)})
+   "has_cover" (if (:has-cover? book) 1 0)
+   "updated_at" (.toIso8601String (.toUtc (dart:core/DateTime.now)))})
 
 (defn from-db-entry
   "Convert a db entry into a Book"
@@ -52,10 +58,13 @@
     :current-progress (get entry "current_progress")
     :favorite (not (zero? (int (get entry "favorite"))))
     :has-cover? (not (zero? (int (or (get entry "has_cover") "0"))))
+    :updated-at (.toLocal (dart:core/DateTime.parse (get entry "updated_at")))
     :created-at (.toLocal (dart:core/DateTime.parse (get entry "created_at")))
     :local-cover? true}))
 
-(defn from-search-result [search-result]
+(defn from-search-result
+  "Convert from a BookSearchResult into Book"
+  [search-result]
   (map->Book
    {:id (:id search-result)
     :title (:title search-result)
@@ -71,13 +80,16 @@
 
 (defn update-title
   "Return a new Book with title set to new-title."
-  [^Book book new-title]
+  [^Book book
+   new-title]
   (assoc book :title new-title))
 
 (defn update-cover
   "Return a new Book with cover-uri set to new-cover-uri and local-cover? to local?
    Use nil for new-cover-uri to remove the cover."
-  [^Book book new-cover-uri local?]
+  [^Book book
+   new-cover-uri
+   local?]
   (assoc book
          :cover-uri new-cover-uri
          :local-cover? (boolean local?)
@@ -95,27 +107,35 @@
 
 (defn update-author
   "Return a new Book with author set to new-author (string or collection)."
-  [^Book book new-author]
+  [^Book book
+   new-author]
   (assoc book :author new-author))
 
 (defn update-pages
   "Return a new Book with pages set to new-pages (integer)."
-  [^Book book new-pages]
+  [^Book book
+   new-pages]
   (assoc book :pages new-pages))
 
 (defn update-status
   "Return a new Book with status set to new-status (keyword)."
-  [^Book book new-status]
-  (assoc book :status new-status))
+  [^Book book
+   new-status]
+  (assoc book :status new-status
+         :current-progress (if (= :done new-status)
+                             1.0
+                             0.0)))
 
 (defn update-format
   "Return a new Book with format set to new-format (keyword)."
-  [^Book book new-format]
+  [^Book book
+   new-format]
   (assoc book :format new-format))
 
 (defn update-favorite-status
   "Return a new book with favorite status set to new-favorite (boolean)."
-  [^Book book new-favorite]
+  [^Book book
+   new-favorite]
   (assoc book :favorite new-favorite))
 
 (defn done-progress?
@@ -133,3 +153,55 @@
     (assoc book
            :current-progress new-progress
            :status status)))
+
+(defn export-text
+  "Text representation when sharing the book"
+  [book
+   activities
+   notes
+   ^app-l10n/AppLocalizations locales
+   as-markdown?]
+  (let [title (if as-markdown?
+                (str "# " (:title book) "\n")
+                (str (.-bookTitle locales) ": " (:title book)))
+
+        author (if as-markdown?
+                 (str "- **" (.-bookAuthor locales) "**: " (:author book))
+                 (str (.-bookAuthor locales) ": " (:author book)))
+
+        pages (when (:pages book)
+                (if as-markdown?
+                  (str "- **" (.-totalPages locales) ":** " (:pages book))
+                  (str (.-totalPages locales) ": " (:pages book))))
+
+        progress (.round (* 100 (:current-progress book)))
+        reading-progress (if as-markdown?
+                           (str "- **" (.-readingProgress locales) "**: " progress "%")
+                           (str (.-readingProgress locales) ": " progress "%"))
+
+        notes-section (when (seq notes)
+                        (str "\n"
+                             (if as-markdown?
+                               (str "## " (.-notesSection locales))
+                               (.toUpperCase (.-notesSection locales)))
+                             "\n\n"
+                             (str/join "\n\n" (map #(note-type/export-text % as-markdown?) notes))))
+
+
+        activity-section (when (seq activities)
+                           (str "\n"
+                                (if as-markdown?
+                                  (str "## " (.-readingSessions locales))
+                                  (.toUpperCase (.-readingSessions locales)))
+                                "\n\n"
+                                (str/join "\n" (map #(str "- " (activity-type/activity-export-string % book locales)) activities))))]
+
+    (str/join "\n"
+              (filterv
+               #(not (nil? %))
+               [title
+                author
+                pages
+                reading-progress
+                notes-section
+                activity-section]))))

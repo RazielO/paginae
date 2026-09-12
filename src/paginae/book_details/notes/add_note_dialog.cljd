@@ -102,4 +102,5 @@
             (let [note (.trim (.-text controller))]
               (when (seq note)
                 (.-text! controller "")
-                (.pop (widgets/Navigator.of dialog-context) note)))))])]))))
+                (.pop (widgets/Navigator.of dialog-context) note)))))])]
+                ))))

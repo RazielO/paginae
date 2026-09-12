@@ -203,7 +203,7 @@ abstract class AppLocalizations {
   /// Label for title of the book while adding one
   ///
   /// In en, this message translates to:
-  /// **'Book Title'**
+  /// **'Title'**
   String get bookTitle;
 
   /// Label for author of the book while adding one
@@ -739,6 +739,70 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You have no books'**
   String get noBooks;
+
+  /// Activity description when only a page was reached
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: {pages}'**
+  String activityReachedPageExport(String date, int pages);
+
+  /// Activity description when only a percentage was reached
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: {percentage}%'**
+  String activityReachedPercentExport(String date, String percentage);
+
+  /// Activity description when reading time and reached page are shown
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: {pages} ({time})'**
+  String activityReadToPageExport(String date, String time, int pages);
+
+  /// Activity description when reading time and reached percentage are shown
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: {percentage}% ({time})'**
+  String activityReadToPercentExport(
+    String date,
+    String time,
+    String percentage,
+  );
+
+  /// Title for the share book dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Share book'**
+  String get shareDialogTitle;
+
+  /// Action for sharing the book as text
+  ///
+  /// In en, this message translates to:
+  /// **'Share as text'**
+  String get shareAsText;
+
+  /// Action for sharing the book as markdown
+  ///
+  /// In en, this message translates to:
+  /// **'Share as markdown'**
+  String get shareAsMarkdown;
+
+  /// Message for an image saving error
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save cover'**
+  String get failedToSaveCover;
+
+  /// Label for reading progress on export
+  ///
+  /// In en, this message translates to:
+  /// **'Reading progress'**
+  String get readingProgress;
+
+  /// Label for reading sessions on export
+  ///
+  /// In en, this message translates to:
+  /// **'Reading sessions'**
+  String get readingSessions;
 }
 
 class _AppLocalizationsDelegate

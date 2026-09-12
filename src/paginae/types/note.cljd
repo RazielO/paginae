@@ -1,10 +1,14 @@
 (ns paginae.types.note
-  {:no-dynamic true})
+  {:no-dynamic true}
+  (:require
+   ["package:intl/intl.dart" :as intl]
+   [clojure.string :as str]))
 
 (defrecord Note
            [id
             book-id
             contents
+            updated-at
             created-at])
 
 (defn from-db-entry
@@ -14,14 +18,42 @@
    {:id (get entry "id")
     :book-id (get entry "book_id")
     :contents (get entry "contents")
+    :updated-at (.toLocal (dart:core/DateTime.parse (get entry "updated_at")))
     :created-at (.toLocal (dart:core/DateTime.parse (get entry "created_at")))}))
 
-(defn to-db-map [note]
+(defn to-db-map
+  "Convert a note to a map to insert into the database"
+  [note]
   {"id" (:id note)
    "book_id" (:book-id note)
-   "contents" (:contents note)})
+   "contents" (:contents note)
+   "updated_at" (.toIso8601String (.toUtc (dart:core/DateTime.now)))
+   "created_at" (.toIso8601String (.toUtc (dart:core/DateTime.now)))})
+
+(defn insert-db-map
+  "Convert a note to a map to insert into the database"
+  [contents
+   book-id]
+  {"book_id" book-id
+   "contents" contents
+   "updated_at" (.toIso8601String (.toUtc (dart:core/DateTime.now)))
+   "created_at" (.toIso8601String (.toUtc (dart:core/DateTime.now)))})
 
 (defn update-contents
+  "Return a new note with contents updated"
   [note
    new-contents]
   (assoc note :contents new-contents))
+
+(defn export-text
+  "Return the note representation in text or markdown to share"
+  [note
+   as-markdown?]
+  (let [contents (:contents note)
+        date (.format
+              (intl/DateFormat "yyyy-MM-dd")
+              (:updated-at note))]
+
+    (if as-markdown?
+      (str date ":\n\n" (str/join "\n" (map #(str "> " %) (str/split-lines contents))))
+      (str date ": \"" contents "\""))))

@@ -10,6 +10,7 @@
                     ^String book-id])
 
 (defn to-json
+  "Convert the session object into a JSON"
   [^Session session]
   (convert/jsonEncode
    {"started-at" (:started-at session)
@@ -19,6 +20,7 @@
     "book-id" (:book-id session)}))
 
 (defn from-json
+  "Convert from JSON into a session object"
   [^String raw-str]
   (let [json (convert/jsonDecode raw-str)]
     (map->Session

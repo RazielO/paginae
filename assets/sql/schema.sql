@@ -10,6 +10,7 @@ CREATE TABLE books (
     current_progress REAL DEFAULT 0.0,
     favorite INTEGER DEFAULT 0,
     has_cover INTEGER DEFAULT 0,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -27,6 +28,7 @@ CREATE TABLE notes (
     id INTEGER NOT NULL PRIMARY KEY,
     book_id TEXT NOT NULL,
     contents TEXT NOT NULL,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE
 );

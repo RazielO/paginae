@@ -368,4 +368,46 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get noBooks => 'No tienes libros';
+
+  @override
+  String activityReachedPageExport(String date, int pages) {
+    return '$date: $pages';
+  }
+
+  @override
+  String activityReachedPercentExport(String date, String percentage) {
+    return '$date: $percentage%';
+  }
+
+  @override
+  String activityReadToPageExport(String date, String time, int pages) {
+    return '$date: $pages ($time)';
+  }
+
+  @override
+  String activityReadToPercentExport(
+    String date,
+    String time,
+    String percentage,
+  ) {
+    return '$date: $percentage% ($time)';
+  }
+
+  @override
+  String get shareDialogTitle => 'Compartir libro';
+
+  @override
+  String get shareAsText => 'Compartir como texto';
+
+  @override
+  String get shareAsMarkdown => 'Compartir como markdown';
+
+  @override
+  String get failedToSaveCover => 'Fallo al guardar la portada';
+
+  @override
+  String get readingProgress => 'Progreso de lectura';
+
+  @override
+  String get readingSessions => 'Sesiones de lectura';
 }

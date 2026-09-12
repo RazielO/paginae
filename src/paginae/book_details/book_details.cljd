@@ -9,9 +9,13 @@
             [paginae.book-details.notes.add-note-dialog :as add-note-dialog]
             [paginae.book-details.notes.note-card :as note-card]
             [paginae.book-details.reading-progress :as book-details.reading-progress]
+            [paginae.book-details.share-dialog :as share-dialog]
             [paginae.book-details.timer.reading-timer :as book-details.reading-timer]
             [paginae.common.activity-card :as common.activity-card]
+            [paginae.common.book-editor.book-editor :as book-editor]
+            [paginae.common.confirm-delete-dialog :as common.confirm-dialog]
             [paginae.database :as db]
+            [paginae.image.utils :as img-utils]
             [paginae.image.widget :as image]
             [paginae.types.book :as book-type]))
 
@@ -52,15 +56,13 @@
 (defn- app-bar
   "App bar for the book details screen"
   [context
-   book-atom]
+   book-atom
+   notes
+   activities]
 
   (let [locales (app-l10n/AppLocalizations.of context)
         color-scheme (.-colorScheme (material/Theme.of context))]
     (material/AppBar
-     .title
-     (material/Text
-      (.-bookDetailsTitle locales))
-
      .leading
      (material/IconButton
       .icon
@@ -72,7 +74,8 @@
       (fn [] (.pop (widgets/Navigator.of context))))
 
      .actions
-     [(material/IconButton
+     [;; Favorite button
+      (material/IconButton
        .icon
        (material/Icon
         symbols/Symbols.favorite
@@ -94,7 +97,83 @@
        (fn []
          (let [new-status (not (:favorite @book-atom))]
            (swap! book-atom #(book-type/update-favorite-status % new-status))
-           (await (db/update-book @book-atom)))))])))
+           (await (db/update-book @book-atom)))))
+
+      ;; Edit button
+      (material/IconButton
+       .icon
+       (material/Icon
+        symbols/Symbols.edit
+
+        .fill
+        1.0)
+
+       .tooltip
+       (.-edit locales)
+
+       .onPressed
+       (fn []
+         (let [updated (await
+                        (.push
+                         (material/Navigator.of context)
+                         (#/(material/MaterialPageRoute Object)
+                          .builder
+                          (flutter/build
+                           (book-editor/book-editor {:book @book-atom
+                                                     :on-save db/update-book
+                                                     :on-navigation #()})))))]
+           (when updated
+             (reset! book-atom updated)))
+         nil))
+
+      ;; Share button
+      (material/IconButton
+       .icon
+       (material/Icon
+        symbols/Symbols.share
+
+        .fill
+        1.0)
+
+       .tooltip
+       (.-share locales)
+
+       .onPressed
+       (fn []
+         (share-dialog/share-dialog @book-atom
+                                    notes
+                                    activities
+                                    context)))
+
+      ;; Delete button
+      (material/IconButton
+       .icon
+       (material/Icon
+        symbols/Symbols.delete
+
+        .color
+        material/Colors.red
+
+        .fill
+        1.0)
+
+       .tooltip
+       (if (:favorite @book-atom)
+         (.-unsetFavorite locales)
+         (.-setFavorite locales))
+
+       .onPressed
+       (fn []
+         (common.confirm-dialog/confirm-delete-dialog
+          {:title ((.-deleteBookTitle locales) (:title @book-atom))
+           :content ""
+           :context context
+           :on-confirm (fn []
+                         (let [deletion-result (await (db/delete-book (:id @book-atom)))]
+                           (when deletion-result
+                             (when (:has-cover? @book-atom)
+                               (img-utils/delete-cover (:id @book-atom)))
+                             (.pop (material/Navigator.of context)))))})))])))
 
 (defn book-details
   "Widget that shows the details of a book"
@@ -134,7 +213,10 @@
 
      (material/Scaffold
       .appBar
-      (app-bar context book-atom)
+      (app-bar context
+               book-atom
+               notes
+               activities)
 
       .body
       (material/Container

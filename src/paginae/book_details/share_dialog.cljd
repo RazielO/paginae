@@ -1,0 +1,147 @@
+(ns paginae.book-details.share-dialog
+  {:no-dynamic true}
+  (:require
+   ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
+   ["package:flutter/material.dart" :as material]
+   ["package:flutter/widgets.dart" :as widgets]
+   ["package:share_plus/share_plus.dart" :as share_plus]
+   [cljd.flutter :as flutter]
+   [paginae.types.book :as book-type]))
+
+(defn share-dialog
+  "Dialog to share a book's details"
+  [book
+   notes
+   activities
+   context]
+  (material/showDialog
+   .context
+   context
+
+   .builder
+   (fn [dialog-context]
+     (flutter/widget
+      :let [locales (app-l10n/AppLocalizations.of dialog-context)
+            theme (material/Theme.of dialog-context)
+            color-scheme (.-colorScheme theme)
+            text-theme (.-textTheme theme)
+            max-height (* 0.75 (.-height (material/MediaQuery.sizeOf context)))]
+      :watch [as-markdown? (atom true) :as as-markdown]
+
+      (material/Dialog)
+
+      .child
+      (material/ConstrainedBox
+       .constraints
+       (material/BoxConstraints
+        .maxHeight max-height))
+
+      .child
+      (material/Padding
+       .padding
+       (material/EdgeInsets.symmetric .horizontal 10 .vertical 20))
+
+      .child
+      (material/Column
+       .spacing 10
+
+       .mainAxisSize
+       material/MainAxisSize.min)
+
+      .children
+      [;; Title
+       (material/Text
+        (.-shareDialogTitle locales)
+
+        .style
+        (.-titleLarge text-theme))
+
+       ;; Export contents
+       (material/Flexible
+
+        .child
+        (material/TextField
+         .controller
+         (material/TextEditingController
+          .text
+          (book-type/export-text book activities notes locales as-markdown?))
+
+         .readOnly true
+
+         .maxLines nil
+
+         .expands true
+
+         .scrollPhysics (material/ClampingScrollPhysics)
+
+         .decoration
+         (material/InputDecoration
+          .hintText (.-addNote locales)
+
+          .filled true
+
+          .border
+          (material/OutlineInputBorder
+           .borderRadius
+           (material/BorderRadius.circular 12)))))
+
+       ;; Markdown toggle
+       (material/Row
+
+        .children
+        [(material/Switch
+          .value
+          as-markdown?
+
+          .onChanged
+          (fn [value]
+            (reset! as-markdown value)))
+
+         (material/Text
+          (if as-markdown?
+            (.-shareAsMarkdown locales)
+            (.-shareAsText locales))
+
+          .style
+          (.-labelLarge text-theme))])
+
+       ;; Buttons
+       (material/Row
+        .mainAxisAlignment
+        material/MainAxisAlignment.end
+
+        .children
+        [;; Cancel button
+         (material/TextButton
+          .child
+          (material/Text
+           (.-cancel locales)
+
+           .style
+           (.-labelLarge text-theme))
+
+          .onPressed
+          (fn []
+            (.pop (widgets/Navigator.of dialog-context))))
+
+         ;; Share button
+         (material/TextButton
+          .child
+          (material/Text
+           (.-share locales)
+
+           .style
+           (.copyWith
+            (.-labelLarge text-theme)
+
+            .color
+            (.-primary color-scheme)))
+
+          .onPressed
+          (fn []
+            (.pop (widgets/Navigator.of dialog-context))
+            (.share share_plus/SharePlus.instance
+                    (share_plus/ShareParams.
+                     .text
+                     (book-type/export-text book activities notes locales as-markdown?)))
+            nil))])]))))

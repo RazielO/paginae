@@ -1,6 +1,7 @@
 (ns paginae.types.activity
   {:no-dynamic true}
-  (:require ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]))
+  (:require ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
+            ["package:intl/intl.dart" :as intl]))
 
 (defrecord Activity
            [id
@@ -44,9 +45,10 @@
         mins (mod (quot seconds 60) 60)
         secs (mod seconds 60)
 
-        time (.join [(if (zero? hours) "" (str hours "h"))
-                     (if (zero? mins) "" (str mins "m"))
-                     (if (zero? secs) "" (str secs "s"))] " ")]
+        time (.trim
+              (.join [(if (zero? hours) "" (str hours "h"))
+                      (if (zero? mins) "" (str mins "m"))
+                      (if (zero? secs) "" (str secs "s"))] " "))]
 
     (if has-time?
       (if has-pages?
@@ -55,3 +57,32 @@
       (if has-pages?
         (.activityReachedPage locales pages)
         (.activityReachedPercent locales percentage)))))
+
+(defn activity-export-string
+  "Create a string representation for the activity for export"
+  [activity
+   book
+   ^app-l10n/AppLocalizations locales]
+  (let [has-time? (not (nil? (:reading-time activity)))
+        has-pages? (not (nil? (:pages book)))
+        pages (.round (* (:progress activity) (or (:pages book) 0)))
+        percentage (.toStringAsFixed (* 100 (:progress activity)) 2)
+        seconds (or (:reading-time activity) 0)
+        hours  (quot seconds 3600)
+        mins (mod (quot seconds 60) 60)
+        secs (mod seconds 60)
+        time (.trim
+              (.join [(if (zero? hours) "" (str hours "h"))
+                      (if (zero? mins) "" (str mins "m"))
+                      (if (zero? secs) "" (str secs "s"))] " "))
+        date (.format
+              (intl/DateFormat "yyyy-MM-dd")
+              (:date activity))]
+
+    (if has-time?
+      (if has-pages?
+        (.activityReadToPageExport locales date time pages)
+        (.activityReadToPercentExport locales date time percentage))
+      (if has-pages?
+        (.activityReachedPageExport locales date pages)
+        (.activityReachedPercentExport locales date percentage)))))

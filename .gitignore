@@ -141,6 +141,7 @@ lib/cljd-out/
 test/cljd-out/
 
 todo.txt
+scripts/lint.sh
 
 # Signing apk
 android/key.properties

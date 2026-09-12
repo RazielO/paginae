@@ -12,19 +12,10 @@
    [paginae.database :as db]
    [paginae.theme :as theme]))
 
-(defn- now-in-seconds
-  "Return the current DateTime in seconds since Epoch"
-  []
-  (-> (dart:core/DateTime.now)
-      .toUtc
-      .-millisecondsSinceEpoch
-      (/ 1000)
-      .round))
-
 (defn elapsed-seconds
   "Calculate the seconds that have passed since a given time"
   [start-time]
-  (- (now-in-seconds) start-time))
+  (- (reading-session/now-in-seconds) start-time))
 
 (defn- start-timer
   "Start the timer"
@@ -177,21 +168,21 @@
    :let [locales (app-l10n/AppLocalizations.of context)
          portrait? (= material/Orientation.portrait (.-orientation (material/MediaQuery.of context)))
          start-session (fn []
-                         (reset! start-time-atom (now-in-seconds))
+                         (reset! start-time-atom (reading-session/now-in-seconds))
                          (reading-session/save-session
-                          {:started-at (now-in-seconds)
+                          {:started-at (reading-session/now-in-seconds)
                            :accumulated elapsed-time
                            :running true
-                           :updated-at (now-in-seconds)
+                           :updated-at (reading-session/now-in-seconds)
                            :book-id (:id book)})
                          (start-timer timer-atom ticker-atom))
          pause-session (fn []
-                         (swap! elapsed-time-atom #(+ % (- (now-in-seconds) start-time)))
+                         (swap! elapsed-time-atom #(+ % (- (reading-session/now-in-seconds) start-time)))
                          (reading-session/save-session
                           {:started-at start-time
                            :accumulated @elapsed-time-atom
                            :running false
-                           :updated-at (now-in-seconds)
+                           :updated-at (reading-session/now-in-seconds)
                            :book-id (:id book)})
                          (pause-timer timer-atom))]
 

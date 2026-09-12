@@ -1,4 +1,4 @@
-(ns paginae.add-book.book-form
+(ns paginae.common.book-editor.form
   {:no-dynamic true}
   (:require ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
             ["package:flutter/material.dart" :as material]
@@ -7,7 +7,9 @@
 
 (defn- input-field
   "Input field for the book data"
-  [{:keys [label hint controller]}]
+  [{:keys [label 
+           hint
+           controller]}]
 
   (flutter/widget
    :get {{{:flds [surface]} .-colorScheme} material/Theme}

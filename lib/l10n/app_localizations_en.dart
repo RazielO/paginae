@@ -62,7 +62,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addCover => 'Add Cover';
 
   @override
-  String get bookTitle => 'Book Title';
+  String get bookTitle => 'Title';
 
   @override
   String get bookAuthor => 'Author';
@@ -367,4 +367,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noBooks => 'You have no books';
+
+  @override
+  String activityReachedPageExport(String date, int pages) {
+    return '$date: $pages';
+  }
+
+  @override
+  String activityReachedPercentExport(String date, String percentage) {
+    return '$date: $percentage%';
+  }
+
+  @override
+  String activityReadToPageExport(String date, String time, int pages) {
+    return '$date: $pages ($time)';
+  }
+
+  @override
+  String activityReadToPercentExport(
+    String date,
+    String time,
+    String percentage,
+  ) {
+    return '$date: $percentage% ($time)';
+  }
+
+  @override
+  String get shareDialogTitle => 'Share book';
+
+  @override
+  String get shareAsText => 'Share as text';
+
+  @override
+  String get shareAsMarkdown => 'Share as markdown';
+
+  @override
+  String get failedToSaveCover => 'Failed to save cover';
+
+  @override
+  String get readingProgress => 'Reading progress';
+
+  @override
+  String get readingSessions => 'Reading sessions';
 }

@@ -11,6 +11,7 @@
             [paginae.book-search.search-widget :as search-widget]))
 
 (defn- load-books
+  "Function to load more books"
   [{:keys [query
            loading-more
            unknown-str
@@ -33,6 +34,7 @@
       (reset! error-atom (:error result)))))
 
 (defn- go-up-fab
+  "Floating action button to go to the top of the screen"
   [show-fab
    on-pressed]
   (flutter/widget
@@ -47,8 +49,7 @@
 
 (defn book-search-widget
   "Widget for the add book screen. It allows to search for a book, scan its barcode or go to a manual entry"
-  [{:keys [go-to-my-books
-           on-image-saved]}]
+  [{:keys [go-to-my-books]}]
   (flutter/widget
    :get {{{:flds [background]} .-colorScheme
           {:flds [headlineSmall]} .-textTheme} material/Theme}
@@ -180,8 +181,7 @@
                                                           (reset! loading-atom false)))
                                         :text @query-atom
                                         :scanning scanning
-                                        :go-to-my-books go-to-my-books
-                                        :on-image-saved on-image-saved})))
+                                        :go-to-my-books go-to-my-books})))
 
        (if (and (not scanning?)
                 (seq query))
@@ -191,7 +191,6 @@
                                :as-list? portrait?
                                :loading-more loading-more
                                :go-to-my-books go-to-my-books
-                               :on-image-saved on-image-saved
                                :error error})
          (material/SliverToBoxAdapter
           .child

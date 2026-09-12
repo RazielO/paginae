@@ -41,6 +41,7 @@
     material/FontWeight.bold)))
 
 (defn badge
+  "Widget that shows a badge according to a book's status"
   [status]
   (let [data (case status
                :done {:icon symbols/Symbols.check_circle

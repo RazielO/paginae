@@ -4,7 +4,8 @@
             ["package:flutter/material.dart" :as material]
             ["package:material_symbols_icons/symbols.dart" :as symbols]
             [cljd.flutter :as flutter]
-            [paginae.add-book.add-book :as add-book]
+            [paginae.common.book-editor.book-editor :as book-editor]
+            [paginae.database :as db]
             [paginae.theme :as theme]
             [paginae.types.book :as book-type]))
 
@@ -105,8 +106,7 @@
   [{:keys [on-submitted
            text
            scanning
-           go-to-my-books
-           on-image-saved]}]
+           go-to-my-books]}]
   (flutter/widget
    :get {{{:flds [primary onPrimary secondary onSecondary]} .-colorScheme} material/Theme}
    :get [material/Navigator]
@@ -132,7 +132,12 @@
                                      navigator
                                      (#/(material/MaterialPageRoute Object)
                                       .builder
-                                      (flutter/build (add-book/add-book-screen (book-type/empty-book) go-to-my-books on-image-saved))))
+                                      (flutter/build
+                                       (book-editor/book-editor {:book (book-type/empty-book)
+                                                                 :on-save (fn [book]
+                                                                            (db/insert-book
+                                                                             (book-type/from-search-result book)))
+                                                                 :on-navigation go-to-my-books}))))
                                     nil)
                       :background-color secondary
                       :foreground-color onSecondary})]

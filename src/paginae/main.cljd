@@ -124,13 +124,13 @@
          :on-pressed #(change-tab :search)})])))))
 
 (defn main-screen
+  "Main screen scaffold"
   []
 
   (flutter/widget
+   :bind {:data-revision (atom 0)}
    :watch [tab (atom :home) :as current-tab
            books-filter (atom nil) :as filter-atom]
-   :bind {:data-revision (atom 0)}
-   :get [:data-revision]
 
    (material/MaterialApp
     .title
@@ -188,9 +188,7 @@
         :search (book-search/book-search-widget
                  {:go-to-my-books (fn []
                                     (reset! filter-atom nil)
-                                    (reset! current-tab :my-books))
-                  :on-image-saved (fn []
-                                    (swap! data-revision inc))})))
+                                    (reset! current-tab :my-books))})))
 
      .bottomNavigationBar
      (bottom-sheet
@@ -202,6 +200,7 @@
         (reset! current-tab new-tab)))))))
 
 (defn main
+  "App entry point"
   []
   (await (img-utils/init-image-directory))
 

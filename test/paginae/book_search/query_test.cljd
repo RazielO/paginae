@@ -3,7 +3,9 @@
   (:require [cljd.test :refer [deftest is testing]]
             [paginae.book-search.query :as query]))
 
-(defn- doc [m]
+(defn- doc
+  "Testing query object"
+  [m]
   (merge {"title" "Dune" "key" "/works/OL123"} m))
 
 (deftest keep-book?-test

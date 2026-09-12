@@ -72,7 +72,7 @@
     "@addCover": {
         "description": "Add book screen action to add a local cover"
     },
-    "bookTitle": "Book Title",
+    "bookTitle": "Title",
     "@bookTitle": {
         "description": "Label for title of the book while adding one"
     },
@@ -519,5 +519,83 @@
     "noBooks": "You have no books",
     "@noBooks": {
         "description": "Message when no books are in the library"
+    },
+    "activityReachedPageExport": "{date}: {pages}",
+    "@activityReachedPageExport": {
+        "description": "Activity description when only a page was reached",
+        "placeholders": {
+            "date": {
+                "type": "String"
+            },
+            "pages": {
+                "type": "int"
+            }
+        }
+    },
+    "activityReachedPercentExport": "{date}: {percentage}%",
+    "@activityReachedPercentExport": {
+        "description": "Activity description when only a percentage was reached",
+        "placeholders": {
+            "date": {
+                "type": "String"
+            },
+            "percentage": {
+                "type": "String"
+            }
+        }
+    },
+    "activityReadToPageExport": "{date}: {pages} ({time})",
+    "@activityReadToPageExport": {
+        "description": "Activity description when reading time and reached page are shown",
+        "placeholders": {
+            "date": {
+                "type": "String"
+            },
+            "time": {
+                "type": "String"
+            },
+            "pages": {
+                "type": "int"
+            }
+        }
+    },
+    "activityReadToPercentExport": "{date}: {percentage}% ({time})",
+    "@activityReadToPercentExport": {
+        "description": "Activity description when reading time and reached percentage are shown",
+        "placeholders": {
+            "date": {
+                "type": "String"
+            },
+            "time": {
+                "type": "String"
+            },
+            "percentage": {
+                "type": "String"
+            }
+        }
+    },
+    "shareDialogTitle": "Share book",
+    "@shareDialogTitle": {
+        "description": "Title for the share book dialog"
+    },
+    "shareAsText": "Share as text",
+    "@shareAsText": {
+        "description": "Action for sharing the book as text"
+    },
+    "shareAsMarkdown": "Share as markdown",
+    "@shareAsMarkdown": {
+        "description": "Action for sharing the book as markdown"
+    },
+    "failedToSaveCover": "Failed to save cover",
+    "@failedToSaveCover": {
+        "description": "Message for an image saving error"
+    },
+    "readingProgress": "Reading progress",
+    "@readingProgress": {
+        "description": "Label for reading progress on export"
+    },
+    "readingSessions": "Reading sessions",
+    "@readingSessions": {
+        "description": "Label for reading sessions on export"
     }
 }

@@ -21,7 +21,8 @@
 
 (defn run-schema
   "Execute a SQL schema in the database"
-  [^sqlite/Database db sql]
+  [^sqlite/Database db 
+   sql]
   (doseq [stmt (remove str/blank?
                        (str/split sql #";"))]
     (.execute db stmt)))
@@ -150,17 +151,6 @@
               "books"
               (book-type/to-db-map book)))))
 
-(defn insert-book-note
-  "Insert a note into the database for a given book"
-  [note-contents
-   book-id]
-  (let [db (await (get-db))]
-    (await
-     (.insert db
-              notes-table
-              {"contents" note-contents
-               "book_id" book-id}))))
-
 (defn update-book
   "Update a book in the database"
   [^book-type/Book book]
@@ -178,7 +168,7 @@
   (let [db (await (get-db))]
     (.update db
              books-table
-             {"has_cover" true}
+             {"has_cover" 1}
              .where "id = ?"
              .whereArgs [book-id])))
 
@@ -195,6 +185,17 @@
 ;; ************************************************
 ;; * Notes queries                                *
 ;; ************************************************
+(defn insert-book-note
+  "Insert a note into the database for a given book"
+  [note-contents
+   book-id]
+  (let [db (await (get-db))]
+    (await
+     (.insert db
+              notes-table
+              (note-type/insert-db-map note-contents
+                                       book-id)))))
+
 (defn update-book-note
   "Update a book in the database"
   [note]
@@ -214,7 +215,6 @@
      (await
       (.query db
               notes-table
-              .columns ["id" "book_id" "contents" "created_at"]
               .where "book_id = ?"
               .whereArgs [book-id]
               .orderBy "created_at ASC"))
@@ -241,7 +241,6 @@
      (await
       (.query db
               activities-table
-              .columns ["id" "book_id" "reading_time" "progress" "date" "created_at"]
               .where "book_id = ?"
               .whereArgs [book-id]
               .orderBy "date DESC"))
@@ -290,6 +289,7 @@
                 "       books.format,"
                 "       books.current_progress,"
                 "       books.favorite,"
+                "       books.updated_at,"
                 "       books.created_at "
                 "FROM activities "
                 "JOIN books ON activities.book_id = books.id "

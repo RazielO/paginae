@@ -38,6 +38,7 @@
       true)))
 
 (defn resize-and-save-image
+  "Copy the input bytes into an image of a maximum width and store it in disk"
   [input-bytes
    output-path]
   (await
@@ -47,6 +48,7 @@
      :output-path output-path})))
 
 (defn- ^async/Future download-image-bytes
+  "Download the image from the URL"
   [url]
   (let [client (io/HttpClient.)]
     (try

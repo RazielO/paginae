@@ -3,17 +3,17 @@
   (:require ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
             ["package:flutter/material.dart" :as material]
             [cljd.flutter :as flutter]
-            [paginae.add-book.add-book :as add-book]
+            [paginae.common.book-editor.book-editor :as book-editor]
+            [paginae.database :as db]
             [paginae.image.widget :as image]
             [paginae.theme :as theme]
-            [paginae.types.book :as book-type]
-            [paginae.types.book-search-result :as book-search-result]))
+            [paginae.types.book-search-result :as book-search-result]
+            [paginae.types.book :as book-type]))
 
 (defn- book-card
   "Card that displays a result book after a search"
   [^book-search-result/BookSearchResult book
-   go-to-my-books
-   on-image-saved]
+   go-to-my-books]
 
   (flutter/widget
    :get {{{:flds [titleLarge]} .-textTheme} material/Theme}
@@ -27,7 +27,12 @@
               navigator
               (#/(material/MaterialPageRoute Object)
                .builder
-               (flutter/build (add-book/add-book-screen (book-type/from-search-result book) go-to-my-books on-image-saved))))
+               (flutter/build
+                (book-editor/book-editor {:book book
+                                          :on-save (fn [book]
+                                                     (db/insert-book
+                                                      (book-type/from-search-result book)))
+                                          :on-navigation go-to-my-books}))))
              nil)
 
     .child
@@ -88,7 +93,6 @@
            as-list?
            loading-more
            go-to-my-books
-           on-image-saved
            error]}]
 
   (flutter/widget
@@ -204,7 +208,7 @@
                  .child
                  (material/CircularProgressIndicator))))
 
-              (book-card (nth books index) go-to-my-books on-image-saved))))
+              (book-card (nth books index) go-to-my-books))))
 
          (material/SliverGrid.builder
           .itemCount item-count
@@ -229,4 +233,4 @@
                .child
                (material/LinearProgressIndicator))
 
-              (book-card (nth books index) go-to-my-books on-image-saved)))))))))
+              (book-card (nth books index) go-to-my-books)))))))))

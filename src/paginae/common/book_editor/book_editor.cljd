@@ -1,32 +1,55 @@
-(ns paginae.add-book.add-book
+(ns paginae.common.book-editor.book-editor
   {:no-dynamic true}
-  (:require [cljd.flutter :as flutter]
-            ["package:flutter/material.dart" :as material]
-            ["package:flutter/foundation.dart" :as foundation]
-            [paginae.common.async :as async]
-            [paginae.image.utils :as img-utils]
-            [paginae.image.widget :as image]
-            [paginae.database :as db]
-            [paginae.add-book.reading-status :as reading-status]
-            [paginae.add-book.book-format :as book-format]
-            [paginae.add-book.book-form :as book-form]
-            ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
-            ["package:image_picker/image_picker.dart" :as image-picker]
-            [paginae.types.book :as book-type]
-            ["package:flutter/widgets.dart" :as widgets]))
+  (:require
+   ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
+   ["package:flutter/material.dart" :as material]
+   ["package:flutter/widgets.dart" :as widgets]
+   ["package:image_picker/image_picker.dart" :as image-picker]
+   [cljd.flutter :as flutter]
+   [paginae.common.async :as async]
+   [paginae.common.book-editor.book-format :as book-format]
+   [paginae.common.book-editor.form :as form]
+   [paginae.common.book-editor.reading-status :as reading-status]
+   [paginae.database :as db]
+   [paginae.image.utils :as img-utils]
+   [paginae.image.widget :as image]
+   [paginae.types.book :as book-type]))
+
+(defn- show-snackbar
+  "Show a snackbar in the given context with the given message"
+  [context
+   message]
+  (-> (material/ScaffoldMessenger.of context)
+      (.showSnackBar
+       (material/SnackBar
+        .content (material/Text message))))
+  nil)
+
+(defn- save-cover-and-notify
+  "Save the book cover after navigation has happened.
+   On failure a snackbar is shown"
+  [context
+   {:keys [id] :as book}
+   on-image-saved]
+  (let [cover-result (await (async/try-await #(img-utils/save-book-cover book)))]
+    (if (:ok cover-result)
+      (do
+        (on-image-saved)
+        (await (async/try-await #(db/set-book-has-cover id))))
+      (show-snackbar context (.-failedToSaveCover (app-l10n/AppLocalizations.of context))))))
 
 (defn- add-cover
   "Pick an image to use as cover"
   []
 
-  (let [picker (image-picker/ImagePicker.)
-        ^image-picker/XFile? picked-file (await (.pickImage picker
-                                                            .source image-picker/ImageSource.gallery
-                                                            .maxWidth 800
-                                                            .maxHeight 800
-                                                            .imageQuality 85))]
-    (when picked-file
-      (.-path picked-file))))
+  (let [picker (image-picker/ImagePicker.)]
+    (some-> (await
+             (.pickImage picker
+                         .source image-picker/ImageSource.gallery
+                         .maxWidth 800
+                         .maxHeight 800
+                         .imageQuality 85))
+            .-path)))
 
 (defn- ^material/PreferredSizeWidget app-bar
   "App bar"
@@ -38,6 +61,9 @@
         colorScheme (.-colorScheme (material/Theme.of context))]
 
     (material/AppBar
+     .title
+     (material/Text (.-addToLibrary locales))
+
      .centerTitle true
 
      .leading
@@ -77,7 +103,7 @@
         (material/WidgetStatePropertyAll
          (material/EdgeInsets.all 15))))])))
 
-(defn add-book-widget
+(defn editor-widget
   "Body widget on the add book screen"
   [{:keys [book-atom
            title-controller
@@ -85,11 +111,8 @@
            pages-controller]}]
 
   (flutter/widget
-   :get {{{:flds [background]} .-colorScheme
-          {:flds [headlineSmall]} .-textTheme} material/Theme}
+   :get {{{:flds [background]} .-colorScheme} material/Theme}
    :context context
-   :managed []
-   :let [locales (app-l10n/AppLocalizations.of context)]
 
    (material/Container
     .margin
@@ -110,21 +133,7 @@
     .spacing 20)
 
    .children
-   [;; Title
-    (material/Text
-     (.-addToLibrary locales)
-
-     .style
-     (.copyWith
-      headlineSmall
-
-      .fontWeight
-      material/FontWeight.bold)
-
-     .textAlign
-     material/TextAlign.center)
-
-    ;; Cover image
+   [;; Cover image
     (image/cover-image
      {:book @book-atom
       :placeholder-text (.-addCover (app-l10n/AppLocalizations.of context))
@@ -136,7 +145,7 @@
                       (swap! book-atom book-type/update-local-cover cover))))})
 
     ;; Form
-    (book-form/form-card
+    (form/form-card
      title-controller
      author-controller
      pages-controller)
@@ -147,30 +156,6 @@
     ;; Book formats
     (book-format/format-card book-atom)]))
 
-(defn- show-snackbar
-  "Show a snackbar in the given context with the given message"
-  [context
-   message]
-  (-> (material/ScaffoldMessenger.of context)
-      (.showSnackBar
-       (material/SnackBar
-        .content (material/Text message))))
-  nil)
-
-(defn- save-cover-and-notify
-  "Save the book cover after navigation has happened.
-   On failure a snackbar is shown"
-  [context
-   {:keys [id] :as book}
-   on-image-saved]
-  (let [cover-result (await (async/try-await #(img-utils/save-book-cover book)))]
-    (if (:ok cover-result)
-      (do
-        (on-image-saved)
-        (await (async/try-await #(db/set-book-has-cover id))))
-      (show-snackbar context
-                     "Failed to save cover"))))
-
 (defn- save-book
   "Validate and save book to database"
   [{:keys [^widgets/BuildContext context
@@ -179,7 +164,8 @@
            ^material/TextEditingController title-controller
            ^material/TextEditingController author-controller
            ^material/TextEditingController pages-controller
-           go-to-my-books
+           on-navigation
+           on-save
            on-image-saved]}]
   (when (not @saving)
     (reset! saving true)
@@ -197,25 +183,30 @@
                                            :title new-title
                                            :author new-author
                                            :pages (parse-long (.trim (.-text pages-controller)))
-                                           :has-cover? false))
-                  (let [insert-result (await (async/try-await #(db/insert-book @book-atom)))]
+                                           :has-cover? (:local-cover? @book-atom)))
+                  (let [insert-result (await (async/try-await #(on-save @book-atom)))]
                     (if (:ok insert-result)
                       (do
                         (when (.-mounted context)
-                          (go-to-my-books)
-                          (.pop (material/Navigator.of context)))
-                        (await (save-cover-and-notify context
-                                                      @book-atom
-                                                      on-image-saved)))
-                      (foundation/debugPrint
-                       (str "Failed to insert book: " (:error insert-result))))))))
+                          (on-navigation)
+                          (.pop (material/Navigator.of context) @book-atom))
+
+                        (when (:cover-uri @book-atom)
+                          (await (save-cover-and-notify context
+                                                        @book-atom
+                                                        on-image-saved))))
+
+                      (when (.-mounted context)
+                        (on-navigation)
+                        (.pop (material/Navigator.of context))))))))
       (finally
         (reset! saving false)))))
 
-(defn add-book-screen
-  [^book-type/Book book
-   go-to-my-books
-   on-image-saved]
+(defn book-editor
+  "Widget used for adding/editing a book"
+  [{:keys [book
+           on-navigation
+           on-save]}]
 
   (flutter/widget
    :watch [_book-val (atom book) :as book-atom
@@ -229,7 +220,8 @@
              pages-controller (material/TextEditingController
                                .text (str (:pages @book-atom)))]
 
-   :get [material/Navigator]
+   :get [material/Navigator
+         :data-revision]
 
    :context context
 
@@ -245,11 +237,13 @@
                                       :title-controller title-controller
                                       :author-controller author-controller
                                       :pages-controller pages-controller
-                                      :go-to-my-books go-to-my-books
-                                      :on-image-saved on-image-saved}))})
+                                      :on-navigation on-navigation
+                                      :on-save on-save
+                                      :on-image-saved (fn []
+                                                        (swap! data-revision inc))}))})
 
     .body
-    (add-book-widget {:book-atom book-atom
-                      :title-controller title-controller
-                      :author-controller author-controller
-                      :pages-controller pages-controller}))))
+    (editor-widget {:book-atom book-atom
+                    :title-controller title-controller
+                    :author-controller author-controller
+                    :pages-controller pages-controller}))))
