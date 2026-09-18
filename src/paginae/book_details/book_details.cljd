@@ -15,8 +15,8 @@
             [paginae.common.book-editor.book-editor :as book-editor]
             [paginae.common.confirm-delete-dialog :as common.confirm-dialog]
             [paginae.database :as db]
-            [paginae.image.utils :as img-utils]
-            [paginae.image.widget :as image]
+            [paginae.common.image.utils :as img-utils]
+            [paginae.common.image.widget :as image]
             [paginae.types.book :as book-type]))
 
 (defn- action-button

@@ -23,6 +23,7 @@
    offset ;; Offset of data to search
    unknown-str ;; String to use as placeholder when no data is provided
    no-response-str ;; String to return when no response
+   locale ;; 2-letter language code
    ]
 
   (let [uri (Uri/https
@@ -31,7 +32,8 @@
              {"q" (str "title: \"" query "\" OR author_name: \"" query "\" OR isbn: \"" query "\"")
               "fields" "author_name,title,cover_i,first_publish_year,key,cover_edition_key,number_of_pages_median"
               "limit" "20"
-              "offset" (str offset)})]
+              "offset" (str offset)
+              "lang" locale})]
 
     (letfn [(handle-error [error]
               (query-result/map->QueryResult
@@ -57,7 +59,8 @@
                       (let [^http/Response response
                             (await (.timeout (http/get uri)
                                              (Duration .seconds 10)))]
-                        (handle-response response)))))]
+                        (handle-response response)))))] 
+        (dart:core/print uri)
         (async/fallback
          result
          (fn [_error]

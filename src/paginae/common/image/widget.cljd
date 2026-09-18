@@ -1,9 +1,8 @@
-(ns paginae.image.widget
+(ns paginae.common.image.widget
   {:no-dynamic true}
   (:require [cljd.flutter :as flutter]
             ["package:flutter/material.dart" :as material]
-            [paginae.image.utils :as img-utils]
-            ["package:dotted_border/dotted_border.dart" :as dotted]
+            [paginae.common.image.utils :as img-utils]
             ["dart:io" :as io]
             ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]))
 
@@ -53,25 +52,30 @@
       (.withOpacity onSurfaceVariant 0.7)))]))
 
 (defn- bordered-wrapper
-  "Wrapper widget for dotted border"
+  "Wrapper widget for a bordered child"
   [child]
 
   (flutter/widget
    :get {{{:flds [onSurface]} .-colorScheme} material/Theme}
 
-   (dotted/DottedBorder
-    .child child
+   (material/Container
 
-    .options
-    (dotted/RoundedRectDottedBorderOptions
-     .radius (material/Radius.circular 16)
-     .color onSurface
-     .dashPattern [10.0 5.0]
-     .strokeWidth 2.0))))
+    .decoration
+    (material/BoxDecoration
+     .border
+     (material/Border.all
+      .width 2.0
+      .color onSurface)
+
+     .borderRadius
+     (material/BorderRadiusGeometry.circular 16)))
+
+   .child
+   child))
 
 (defn- clickable-wrapper
   "Wrapper for when the cover is clickable"
-  [on-click 
+  [on-click
    child]
   (material/InkWell
    .onTap on-click
@@ -88,6 +92,8 @@
 
   (flutter/widget
    :context context
+   :get [:data-revision]
+   :watch [revision data-revision]
    :let [locales (app-l10n/AppLocalizations.of context)
 
          img-width (or width 140)
@@ -110,6 +116,8 @@
            (and local-path (not-empty local-path))
            (material/Image.file
             (io/File. local-path)
+
+            .key (material/ValueKey revision)
 
             .width img-width
 

@@ -256,7 +256,7 @@
             }
         }
     },
-    "activityReadToPage": "Read for {time} • Reached page {pages}",
+    "activityReadToPage": "Read for {time}\nReached page {pages}",
     "@activityReadToPage": {
         "description": "Activity description when reading time and reached page are shown",
         "placeholders": {
@@ -268,7 +268,7 @@
             }
         }
     },
-    "activityReadToPercent": "Read for {time} • Reached {percentage}%",
+    "activityReadToPercent": "Read for {time}\nReached {percentage}%",
     "@activityReadToPercent": {
         "description": "Activity description when reading time and reached percentage are shown",
         "placeholders": {

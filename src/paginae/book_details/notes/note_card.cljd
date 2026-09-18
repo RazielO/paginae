@@ -20,8 +20,9 @@
            ^material/TextEditingController note-controller]}]
 
   (flutter/widget
-   :let [locales (app-l10n/AppLocalizations.of context)]
-   :get {{{:flds [labelLarge bodyLarge]} .-textTheme
+   :let [locale (material/Localizations.localeOf context)
+         locales (app-l10n/AppLocalizations.of context)]
+   :get {{{:flds [labelLarge bodyLarge labelMedium]} .-textTheme
           {:flds [secondary onSurface]} .-colorScheme} material/Theme}
    :get [:data-revision]
    :key (:id note)
@@ -60,13 +61,12 @@
 
        .style
        (.copyWith labelLarge
-
                   .color secondary))
 
       ;; Note's date
       (material/Text
        (.format
-        (intl/DateFormat.yMMMd)
+        (intl/DateFormat.yMMMd (.toString locale))
         (:created-at note))
 
        .style
@@ -88,7 +88,8 @@
 
     ;; Actions
     (material/Row
-     .spacing 10
+     .mainAxisAlignment
+     material/MainAxisAlignment.end
 
      .children
      [;; Edit button
@@ -109,7 +110,7 @@
           (.toUpperCase (.-edit locales))
 
           .style
-          labelLarge)])
+          labelMedium)])
 
        .onPressed
        (fn []
@@ -138,7 +139,7 @@
           (.toUpperCase (.-share locales))
 
           .style
-          labelLarge)])
+          labelMedium)])
 
        .onPressed
        (fn []
@@ -167,7 +168,7 @@
 
           .style
           (.copyWith
-           labelLarge
+           labelMedium
 
            .color
            material/Colors.red))])

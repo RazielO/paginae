@@ -5,7 +5,7 @@
             ["package:flutter/material.dart" :as material]
             [cljd.flutter :as flutter]
             [paginae.book-details.book-details :as book-details]
-            [paginae.image.widget :as image]
+            [paginae.common.image.widget :as image]
             [paginae.theme :as theme]))
 
 (defn- reading-book-card

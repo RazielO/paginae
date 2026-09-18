@@ -11,8 +11,8 @@
    [paginae.common.book-editor.form :as form]
    [paginae.common.book-editor.reading-status :as reading-status]
    [paginae.database :as db]
-   [paginae.image.utils :as img-utils]
-   [paginae.image.widget :as image]
+   [paginae.common.image.utils :as img-utils]
+   [paginae.common.image.widget :as image]
    [paginae.types.book :as book-type]))
 
 (defn- show-snackbar
@@ -26,8 +26,8 @@
   nil)
 
 (defn- save-cover-and-notify
-  "Save the book cover after navigation has happened.
-   On failure a snackbar is shown"
+  "Save the book cover before navigating away, so the cover file is on disk
+   by the time the library renders. On failure a snackbar is shown"
   [context
    {:keys [id] :as book}
    on-image-saved]
@@ -187,14 +187,14 @@
                   (let [insert-result (await (async/try-await #(on-save @book-atom)))]
                     (if (:ok insert-result)
                       (do
-                        (when (.-mounted context)
-                          (on-navigation)
-                          (.pop (material/Navigator.of context) @book-atom))
-
                         (when (:cover-uri @book-atom)
                           (await (save-cover-and-notify context
                                                         @book-atom
-                                                        on-image-saved))))
+                                                        on-image-saved)))
+
+                        (when (.-mounted context)
+                          (on-navigation)
+                          (.pop (material/Navigator.of context) @book-atom)))
 
                       (when (.-mounted context)
                         (on-navigation)

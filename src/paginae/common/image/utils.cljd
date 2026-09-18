@@ -1,10 +1,11 @@
-(ns paginae.image.utils
+(ns paginae.common.image.utils
   {:no-dynamic true}
   (:require ["package:path_provider/path_provider.dart" :as path-provider]
             ["package:path/path.dart" :as path]
             ["package:image/image.dart" :as img]
             ["dart:io" :as io]
             ["package:flutter/foundation.dart" :as foundation]
+            ["package:flutter/painting.dart" :as painting]
             ["dart:async" :as async]))
 
 (defonce image-directory-path (atom nil))
@@ -75,10 +76,13 @@
                    (read-local-image-bytes (:cover-uri book))
                    ;; remote image
                    (download-image-bytes (:cover-uri book))))]
-      (await (resize-and-save-image bytes image-dest)))))
+      (await (resize-and-save-image bytes image-dest))
+      ;; Drop the cached decode so widgets showing cover-path(id) re-read the new file
+      (await (.evict (painting/FileImage (io/File. image-dest)))))))
 
 
 (defn delete-cover
   "Delete a book's cover from the filesystem"
   [book-id]
-  (await (.delete (io/File (cover-path book-id)))))
+  (await (.delete (io/File (cover-path book-id))))
+  (await (.evict (painting/FileImage (io/File. (cover-path book-id))))))

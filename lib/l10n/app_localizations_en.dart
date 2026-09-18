@@ -201,12 +201,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String activityReadToPage(String time, int pages) {
-    return 'Read for $time • Reached page $pages';
+    return 'Read for $time\nReached page $pages';
   }
 
   @override
   String activityReadToPercent(String time, String percentage) {
-    return 'Read for $time • Reached $percentage%';
+    return 'Read for $time\nReached $percentage%';
   }
 
   @override

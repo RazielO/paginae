@@ -243,7 +243,7 @@
               activities-table
               .where "book_id = ?"
               .whereArgs [book-id]
-              .orderBy "date DESC"))
+              .orderBy "date ASC"))
      (map activity-type/from-db-entry))))
 
 (defn insert-book-activity

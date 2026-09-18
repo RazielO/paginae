@@ -20,11 +20,16 @@
            total-atom
            offset-atom
            has-more
-           error-atom]}]
+           error-atom
+           locale]}]
   (when (not @loading-more)
     (reset! loading-more true)
 
-    (let [result (await (query/query-books query @offset-atom unknown-str no-response-str))]
+    (let [result (await (query/query-books query
+                                           @offset-atom 
+                                           unknown-str 
+                                           no-response-str
+                                           locale))]
       (when-not (:error result)
         (swap! books-atom into (:data result))
         (reset! total-atom (:total result))
@@ -66,6 +71,7 @@
            _loading (atom false) :as loading-atom]
 
    :let [locales (app-l10n/AppLocalizations.of context)
+         locale (material/Localizations.localeOf context)
          portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)]
 
 
@@ -93,7 +99,8 @@
                                               :total-atom total-atom
                                               :offset-atom offset-atom
                                               :has-more has-more
-                                              :error-atom error-atom}))
+                                              :error-atom error-atom
+                                              :locale (.toString locale)}))
 
                                (cond
                                  (and (> 300 offset) @show-fab)
@@ -177,7 +184,8 @@
                                                                        :total-atom total-atom
                                                                        :offset-atom offset-atom
                                                                        :has-more has-more
-                                                                       :error-atom error-atom})
+                                                                       :error-atom error-atom
+                                                                       :locale (.toString locale)})
                                                           (reset! loading-atom false)))
                                         :text @query-atom
                                         :scanning scanning

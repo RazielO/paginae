@@ -5,7 +5,7 @@
             [cljd.flutter :as flutter]
             [paginae.common.book-editor.book-editor :as book-editor]
             [paginae.database :as db]
-            [paginae.image.widget :as image]
+            [paginae.common.image.widget :as image]
             [paginae.theme :as theme]
             [paginae.types.book-search-result :as book-search-result]
             [paginae.types.book :as book-type]))

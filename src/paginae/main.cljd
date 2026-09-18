@@ -7,7 +7,7 @@
             [paginae.home.home :as home]
             [paginae.my-books.my-books :as my-books]
             [paginae.journal.journal :as journal]
-            [paginae.image.utils :as img-utils]
+            [paginae.common.image.utils :as img-utils]
             ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
             ["package:material_symbols_icons/symbols.dart" :as symbols]))
 

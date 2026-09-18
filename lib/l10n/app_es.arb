@@ -1,8 +1,8 @@
 {
     "activityReachedPage": "Llegaste a la página {pages}",
     "activityReachedPercent": "Llegaste al {percentage}%",
-    "activityReadToPage": "Leíste durante {time} • Llegaste a la página {pages}",
-    "activityReadToPercent": "Leiste durante {time} • Llegaste al {percentage}%",
+    "activityReadToPage": "Leíste durante {time}\nLlegaste a la página {pages}",
+    "activityReadToPercent": "Leiste durante {time}\nLlegaste al {percentage}%",
     "activitySection": "Actividad",
     "addCover": "Añadir Portada",
     "addNote": "Añadir una nota",

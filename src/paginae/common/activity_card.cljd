@@ -5,7 +5,7 @@
    ["package:flutter/material.dart" :as material]
    ["package:intl/intl.dart" :as intl]
    [cljd.flutter :as flutter]
-   [paginae.image.widget :as image]
+   [paginae.common.image.widget :as image]
    [paginae.types.activity :as activity-type]))
 
 (defn activity-card
@@ -22,6 +22,10 @@
          activity (:activity data)]
 
    (material/Card)
+
+   .child
+   (material/Padding
+    .padding (material/EdgeInsets.all 5))
 
    .child
    (material/ConstrainedBox
@@ -66,6 +70,11 @@
           (intl/DateFormat.Hm (.toString locale))
           (:date activity)))
 
+        .textAlign
+        (if with-cover?
+          material/TextAlign.start
+          material/TextAlign.center)
+
         .style
         (.copyWith
          labelLarge
@@ -92,6 +101,11 @@
        ;; Activity
        (material/Text
         (activity-type/activity-string (:activity data) (:book data) locales)
+
+        .textAlign
+        (if with-cover?
+          material/TextAlign.start
+          material/TextAlign.center)
 
         .softWrap
         true
