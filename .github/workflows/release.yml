@@ -11,6 +11,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    env:
+      PUB_CACHE: ${{ github.workspace }}/.pub-cache
 
     steps:
       - name: Checkout code
