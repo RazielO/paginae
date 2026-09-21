@@ -10,7 +10,8 @@
    [paginae.book-details.activity-dialog :as book-details.activity-dialog]
    [paginae.book-details.timer.reading-session :as reading-session]
    [paginae.database :as db]
-   [paginae.theme :as theme]))
+   [paginae.theme :as theme]
+   [paginae.types.activity :as activity-type]))
 
 (defn elapsed-seconds
   "Calculate the seconds that have passed since a given time"
@@ -153,7 +154,6 @@
   (flutter/widget
    :context context
    :managed [note-controller (material/TextEditingController)
-             progress-controller (material/TextEditingController)
              timer-atom (atom nil) :dispose pause-timer
              running-atom (atom (:running session)) :dispose nil
              start-time-atom (atom (:started-at session)) :dispose nil
@@ -213,17 +213,17 @@
        (fn []
          (let [data (await (book-details.activity-dialog/add-activity-dialog
                             {:context context
-                             :controller progress-controller
+                             :activity (assoc
+                                        (activity-type/new-activity (:id book))
+                                        :reading-time (when start-time
+                                                        (if @running-atom
+                                                          (+ elapsed-time (elapsed-seconds start-time))
+                                                          elapsed-time)))
                              :book book
                              :on-confirm
-                             (fn [progress]
+                             (fn [activity]
                                (await
-                                (db/insert-book-activity
-                                 {:book-id (:id book)
-                                  :progress progress
-                                  :reading-time (if (nil? start-time)
-                                                  nil
-                                                  (+ elapsed-time (elapsed-seconds start-time)))})))}))] 
+                                (db/insert-book-activity activity)))}))]
            (when (and data (.-mounted context))
              (reading-session/delete-session)
              (.pop (widgets/Navigator.of context) data)))))])

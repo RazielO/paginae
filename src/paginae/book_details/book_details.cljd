@@ -17,7 +17,8 @@
             [paginae.database :as db]
             [paginae.common.image.utils :as img-utils]
             [paginae.common.image.widget :as image]
-            [paginae.types.book :as book-type]))
+            [paginae.types.book :as book-type]
+            [paginae.types.activity :as activity-type]))
 
 (defn- action-button
   "Pill button for actions"
@@ -193,8 +194,7 @@
            notes (db/get-book-notes (:id book)) :default [] :refresh-on revision
            activities (db/get-book-activities (:id book)) :default [] :refresh-on revision
            _checked-session? (atom nil) :as checked-session]
-   :managed [note-controller (material/TextEditingController)
-             activity-controller (material/TextEditingController)]
+   :managed [note-controller (material/TextEditingController)]
 
    (do
      (.addPostFrameCallback
@@ -290,13 +290,12 @@
                           (fn []
                             (let [data (await (book-details.activity-dialog/add-activity-dialog
                                                {:context context
-                                                :controller activity-controller
+                                                :activity (activity-type/new-activity (:id book))
                                                 :book book
                                                 :on-confirm
-                                                (fn [progress]
+                                                (fn [activity]
                                                   (await
-                                                   (db/insert-book-activity {:book-id (:id book)
-                                                                             :progress progress})))}))]
+                                                   (db/insert-book-activity activity)))}))]
                               (when data
                                 (swap! book-atom #(book-type/update-current-progress % data))
                                 (swap! data-revision inc))))

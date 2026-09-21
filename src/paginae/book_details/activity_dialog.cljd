@@ -4,13 +4,15 @@
    ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
    ["package:flutter/material.dart" :as material]
    ["package:flutter/widgets.dart" :as widgets]
+   ["package:intl/intl.dart" :as intl]
    [cljd.flutter :as flutter]
-   [paginae.common.number-input :as common.number-input]))
+   [paginae.common.number-input :as common.number-input]
+   [paginae.types.activity :as activity-type]))
 
 (defn add-activity-dialog
   "Dialog that permits the addition of a reading session"
   [{:keys [context
-           ^material/TextEditingController controller
+           ^activity-type/Activity activity
            book
            on-confirm]}]
 
@@ -27,8 +29,30 @@
             text-theme (.-textTheme theme)
             pages (:pages book)
             has-pages? (not (nil? pages))]
-      :watch [as-pages? (atom has-pages?) :as as-pages]
-      :get {{{:flds [surfaceVariant]} .-colorScheme} material/Theme}
+
+      :watch [as-pages? (atom has-pages?) :as as-pages
+              _date (atom (or (:date activity) (dart:core/DateTime.now))) :as date-atom]
+
+      :get {{{:flds [surfaceVariant]} .-colorScheme
+             {:flds [labelMedium titleLarge]} .-textTheme} material/Theme}
+
+      :managed [hour-controller (material/TextEditingController
+                                 .text (when-let [time (:reading-time activity)]
+                                         (str (.round (/ time 3600)))))
+
+                minute-controller (material/TextEditingController
+                                   .text (when-let [time (:reading-time activity)]
+                                           (str (.round (/ (mod time 3600) 60)))))
+
+                second-controller (material/TextEditingController
+                                   .text (when-let [time (:reading-time activity)]
+                                           (str (mod time 60))))
+
+                progress-controller (material/TextEditingController
+                                     .text (when-let [progress (:progress activity)]
+                                             (if as-pages?
+                                               (* pages progress)
+                                               (* 100.0 progress))))]
 
       (material/Dialog)
 
@@ -49,11 +73,11 @@
         (.-setReadingProgress locales)
 
         .style
-        (.-titleLarge text-theme))
+        titleLarge)
 
        ;; Input
        (material/Row
-        .spacing 10
+        .spacing 5
 
         .children
         [;; Text input
@@ -65,14 +89,14 @@
              {:lower-limit 1
               :upper-limit pages
               :label (.-currentPage locales)
-              :controller controller
+              :controller progress-controller
               :locales locales
               :background-color surfaceVariant})
             (common.number-input/float-input-field
              {:lower-limit 0.1
               :upper-limit 100.0
               :label (.-currentPercentage locales)
-              :controller controller
+              :controller progress-controller
               :locales locales
               :background-color surfaceVariant})))
 
@@ -92,6 +116,80 @@
 
            (material/Text "%"))])
 
+       ;; Time changer
+       (material/Text
+        (.toUpperCase "Reading Time")
+
+        .style
+        labelMedium)
+
+       (material/Row
+        .spacing 5
+
+        .children
+        [(material/Flexible
+          .child
+          (common.number-input/integer-input-field
+           {:lower-limit 0
+            :upper-limit 99
+            :label "hh"
+            :controller hour-controller
+            :locales locales
+            :background-color surfaceVariant}))
+
+         (material/Text
+          ":"
+
+          .style
+          titleLarge)
+
+         (material/Flexible
+          .child
+          (common.number-input/integer-input-field
+           {:lower-limit 0
+            :upper-limit 99
+            :label "mm"
+            :controller minute-controller
+            :locales locales
+            :background-color surfaceVariant}))
+
+         (material/Text
+          ":"
+
+          .style
+          titleLarge)
+
+         (material/Flexible
+          .child
+          (common.number-input/integer-input-field
+           {:lower-limit 0
+            :upper-limit 59
+            :label "ss"
+            :controller second-controller
+            :locales locales
+            :background-color surfaceVariant}))])
+
+       ;; Date changer
+       (material/FilledButton
+
+        .child
+        (material/Text
+         (.format
+          (intl/DateFormat.yMMMd
+           (.toString (material/Localizations.localeOf dialog-context)))
+          @date-atom))
+
+        .onPressed
+        (fn []
+          (let [date (await
+                      (material/showDatePicker
+                       .context context
+                       .initialDate @date-atom
+                       .firstDate (dart:core/DateTime 1900)
+                       .lastDate (dart:core/DateTime 2100)))]
+            (when date
+              (reset! date-atom date)))))
+
        ;; Buttons
        (material/Row
         .mainAxisAlignment material/MainAxisAlignment.end
@@ -109,7 +207,6 @@
 
           .onPressed
           (fn []
-            (.-text! controller "")
             (.pop (widgets/Navigator.of dialog-context))))
 
          ;; Save button
@@ -128,11 +225,36 @@
 
           .onPressed
           (fn []
-            (let [value (parse-double (.trim (.-text controller)))]
+            (let [value (parse-double (.trim (.-text progress-controller)))]
               (when (and value (pos? value))
                 (let [progress (if as-pages?
                                  (/ value pages)
-                                 (/ value 100.0))]
-                  (await (on-confirm progress))
-                  (.-text! controller "")
-                  (.pop (widgets/Navigator.of dialog-context) progress))))))])]))))
+                                 (/ value 100.0))
+
+                      seconds (parse-long
+                               (if (empty? (.-text second-controller))
+                                 "0"
+                                 (.-text second-controller)))
+                      minutes (parse-long
+                               (if (empty? (.-text minute-controller))
+                                 "0"
+                                 (.-text minute-controller)))
+
+                      hours (parse-long
+                             (if (empty? (.-text hour-controller))
+                               "0"
+                               (.-text hour-controller)))
+
+                      reading-time (+ seconds (* 60 minutes) (* 3600 hours))
+
+                      new-activity (assoc activity
+                                          :progress progress
+                                          :reading-time (if (zero? reading-time)
+                                                          nil
+                                                          reading-time)
+                                          :date @date-atom)
+                      result (await (on-confirm new-activity))]
+
+
+                  (.pop (widgets/Navigator.of dialog-context)
+                        (or result progress)))))))])]))))

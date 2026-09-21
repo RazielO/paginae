@@ -11,6 +11,12 @@
             date
             created-at])
 
+(defn new-activity
+  [book-id]
+  (map->Activity
+   {:book-id book-id
+    :date (dart:core/DateTime.now)}))
+
 (defn from-db-entry
   "Convert a db entry into an Activity"
   [entry]
@@ -28,8 +34,9 @@
   {"book_id" (:book-id activity)
    "reading_time" (:reading-time activity)
    "progress" (:progress activity)
-   "date" (or (:date activity)
-              (.toIso8601String (.toUtc (dart:core/DateTime.now))))})
+   "date" (.toIso8601String
+           (.toUtc
+            ^dart:core/DateTime (or (:date activity) (dart:core/DateTime.now))))})
 
 (defn activity-string
   "Create a string representation for the activity"
