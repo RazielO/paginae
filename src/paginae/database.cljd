@@ -246,6 +246,35 @@
               .orderBy "date ASC"))
      (map activity-type/from-db-entry))))
 
+(defn- recompute-book-progress
+  "Update the book's current_progress and status to match the
+   most recently dated activity. Return the new progress, or nil
+   when the book has no activities."
+  [^sqlite/Transaction transaction
+   book-id]
+  (let [latest
+        (first
+         (await
+          (.query transaction
+                  activities-table
+                  .columns ["progress"]
+                  .where "book_id = ?"
+                  .whereArgs [book-id]
+                  .orderBy "date DESC, id DESC"
+                  .limit 1)))]
+    (when latest
+      (let [progress (get latest "progress")]
+        (await
+         (.update transaction
+                  books-table
+                  {"current_progress" progress
+                   "status" (if (book-type/done-progress? progress)
+                              "done"
+                              "reading")}
+                  .where "id = ?"
+                  .whereArgs [book-id]))
+        progress))))
+
 (defn insert-book-activity
   "Insert a new activity on a book and update its progress
    to the progress of the most recently dated activity"
@@ -258,28 +287,46 @@
         (.insert transaction
                  activities-table
                  (activity-type/to-db-map activity)))
-       (let [latest
-             (first
-              (await
-               (.query transaction
-                       activities-table
-                       .columns ["progress"]
-                       .where "book_id = ?"
-                       .whereArgs [(:book-id activity)]
-                       .orderBy "date DESC, id DESC"
-                       .limit 1)))]
-         (when latest
-           (let [progress (get latest "progress")]
-             (await
-              (.update transaction
-                       books-table
-                       {"current_progress" progress
-                        "status" (if (book-type/done-progress? progress)
-                                   "done"
-                                   "reading")}
-                       .where "id = ?"
-                       .whereArgs [(:book-id activity)]))
-             progress)))))))
+       (recompute-book-progress transaction (:book-id activity))))))
+
+(defn update-book-activity
+  "Update an activity and recompute the book progress"
+  [activity]
+  (let [db (await (get-db))]
+    (.transaction
+     db
+     (fn [^sqlite/Transaction transaction]
+       (await
+        (.update transaction
+                 activities-table
+                 (activity-type/to-db-map activity)
+                 .where "id = ?"
+                 .whereArgs [(:id activity)]))
+       (recompute-book-progress transaction (:book-id activity))))))
+
+(defn delete-book-activity
+  "Delete an activity and recompute the book progress.
+   When no activities remain, the progress is reset to 0."
+  [activity-id
+   book-id]
+  (let [db (await (get-db))]
+    (.transaction
+     db
+     (fn [^sqlite/Transaction transaction]
+       (await
+        (.delete transaction
+                 activities-table
+                 .where "id = ?"
+                 .whereArgs [activity-id]))
+       (or (recompute-book-progress transaction book-id)
+           (do (await
+                (.update transaction
+                         books-table
+                         {"current_progress" 0.0
+                          "status" "reading"}
+                         .where "id = ?"
+                         .whereArgs [book-id]))
+               0.0))))))
 
 
 (defn- get-activities

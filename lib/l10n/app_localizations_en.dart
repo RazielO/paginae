@@ -292,6 +292,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readingTimer => 'Reading Timer';
 
   @override
+  String get removeActivityTitle => 'Do you want to remove this activity?';
+
+  @override
   String get removeNoteTitle => 'Do you want to remove this note?';
 
   @override
@@ -409,4 +412,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readingSessions => 'Reading sessions';
+
+  @override
+  String get activityReadingTime => 'Reading Time';
+
+  @override
+  String get deleteBook => 'Delete book';
+
+  @override
+  String get shareContentsHint => 'Shareable text';
 }

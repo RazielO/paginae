@@ -55,4 +55,5 @@
          (fn [_context idx]
            (when (< idx (count activities))
              (let [entry (nth activities idx)]
-               (common.activity-card/activity-card entry true))))))]))))
+               (common.activity-card/activity-card {:data entry
+                                                    :with-cover? true}))))))]))))

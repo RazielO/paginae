@@ -4,16 +4,21 @@
    ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
    ["package:flutter/material.dart" :as material]
    ["package:intl/intl.dart" :as intl]
+   ["package:material_symbols_icons/symbols.dart" :as symbols]
    [cljd.flutter :as flutter]
    [paginae.common.image.widget :as image]
    [paginae.types.activity :as activity-type]))
 
 (defn activity-card
-  "Card for displaying a reading activity"
-  [data
-   with-cover?]
+  "Card for displaying a reading activity.
+   Pass :on-edit and/or :on-delete in the options map
+   to show an actions row."
+  [{:keys [data
+           with-cover?
+           on-edit
+           on-delete]}]
   (flutter/widget
-   :get {{{:flds [bodyLarge titleMedium labelLarge]} .-textTheme
+   :get {{{:flds [bodyLarge titleMedium labelLarge labelMedium]} .-textTheme
           {:flds [onSurface]} .-colorScheme} material/Theme}
    :context context
    :let [locale (material/Localizations.localeOf context)
@@ -37,7 +42,7 @@
     .spacing 10)
 
    .children
-   [ ;; Cover image
+   [;; Cover image
     (flutter/widget
      :when with-cover?
 
@@ -60,27 +65,27 @@
 
       .children
       [;; Read date
-       (material/Text
-        (str
-         (.format
-          (intl/DateFormat.yMMMd (.toString locale))
-          (:date activity))
-         " "
-         (.format
-          (intl/DateFormat.Hm (.toString locale))
-          (:date activity)))
-
-        .textAlign
-        (if with-cover?
-          material/TextAlign.start
-          material/TextAlign.center)
-
-        .style
-        (.copyWith
-         labelLarge
-
-         .color
-         (.withOpacity onSurface 0.7)))
+       ;; (material/Text
+       ;;  (str
+       ;;   (.format
+       ;;    (intl/DateFormat.yMMMd (.toString locale))
+       ;;    (:date activity))
+       ;;   " "
+       ;;   (.format
+       ;;    (intl/DateFormat.Hm (.toString locale))
+       ;;    (:date activity)))
+       ;; 
+       ;;  .textAlign
+       ;;  (if with-cover?
+       ;;    material/TextAlign.start
+       ;;    material/TextAlign.center)
+       ;; 
+       ;;  .style
+       ;;  (.copyWith
+       ;;   labelLarge
+       ;; 
+       ;;   .color
+       ;;   (.withOpacity onSurface 0.7)))
 
        (material/SizedBox
         .height
@@ -111,4 +116,60 @@
         true
 
         .style
-        bodyLarge)]))]))
+        bodyLarge)
+
+       ;; Actions
+       (flutter/widget
+        :when (or on-edit on-delete)
+
+        (material/Row
+         .mainAxisAlignment material/MainAxisAlignment.center
+
+         .children
+         [(when on-edit
+            (material/TextButton
+
+             .child
+             (material/Row
+              .spacing 5
+
+              .children
+              [(material/Icon
+                symbols/Symbols.edit
+
+                .color
+                onSurface)
+
+               (material/Text
+                (.toUpperCase (.-edit locales))
+
+                .style
+                labelMedium)])
+
+             .onPressed on-edit))
+
+          (when on-delete
+            (material/TextButton
+
+             .child
+             (material/Row
+              .spacing 5
+
+              .children
+              [(material/Icon
+                symbols/Symbols.delete
+
+                .color
+                material/Colors.red)
+
+               (material/Text
+                (.toUpperCase (.-delete locales))
+
+                .style
+                (.copyWith
+                 labelMedium
+
+                 .color
+                 material/Colors.red))])
+
+             .onPressed on-delete))]))]))]))

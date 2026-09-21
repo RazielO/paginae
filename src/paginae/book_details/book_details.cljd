@@ -159,9 +159,7 @@
         1.0)
 
        .tooltip
-       (if (:favorite @book-atom)
-         (.-unsetFavorite locales)
-         (.-setFavorite locales))
+       (.-deleteBook locales)
 
        .onPressed
        (fn []
@@ -351,7 +349,30 @@
                              .physics
                              (widgets/NeverScrollableScrollPhysics)
                              .children
-                             (map #(common.activity-card/activity-card
-                                    {:activity %
-                                     :book book}
-                                    false) activities))])))))))
+                             (map
+                              (fn [activity]
+                                (common.activity-card/activity-card
+                                 {:data {:activity activity
+                                         :book book}
+                                  :with-cover? false
+                                  :on-edit (fn []
+                                             (let [data (await (book-details.activity-dialog/add-activity-dialog
+                                                                {:context context
+                                                                 :activity activity
+                                                                 :book book
+                                                                 :on-confirm db/update-book-activity}))]
+                                               (when data
+                                                 (swap! book-atom (fn [b] (book-type/update-current-progress b data)))
+                                                 (swap! data-revision inc))))
+                                  :on-delete (fn []
+                                               (common.confirm-dialog/confirm-delete-dialog
+                                                {:title (.-removeActivityTitle locales)
+                                                 :content ""
+                                                 :context context
+                                                 :on-confirm
+                                                 (fn []
+                                                   (let [progress (await (db/delete-book-activity (:id activity)
+                                                                                                  (:id book)))]
+                                                     (swap! book-atom (fn [b] (book-type/update-current-progress b progress)))
+                                                     (swap! data-revision inc)))}))}))
+                              activities))])))))))

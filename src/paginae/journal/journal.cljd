@@ -156,14 +156,15 @@
           (.-onSurface (.-colorScheme  theme))
           0.6)))]
 
-      (map #(common.activity-card/activity-card % true) day-activities))))
+      (map #(common.activity-card/activity-card {:data %
+                                                 :with-cover? true}) day-activities))))
 
 (defn journal-widget
   "Widget to show the reading activity"
   []
   (flutter/widget
    :context context
-   :get {{{:flds [headlineSmall]} .-textTheme} material/Theme} 
+   :get {{{:flds [headlineSmall]} .-textTheme} material/Theme}
    :bind {:selected-day-atom (atom (dart:core/DateTime.now))
           :focused-day-atom (atom (dart:core/DateTime.now))}
    :get [:selected-day-atom

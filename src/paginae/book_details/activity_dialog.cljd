@@ -50,9 +50,9 @@
 
                 progress-controller (material/TextEditingController
                                      .text (when-let [progress (:progress activity)]
-                                             (if as-pages?
-                                               (* pages progress)
-                                               (* 100.0 progress))))]
+                                             (str (if as-pages?
+                                                    (.round (* pages progress))
+                                                    (* 100.0 progress)))))]
 
       (material/Dialog)
 
@@ -118,7 +118,7 @@
 
        ;; Time changer
        (material/Text
-        (.toUpperCase "Reading Time")
+        (.toUpperCase (.-activityReadingTime locales))
 
         .style
         labelMedium)

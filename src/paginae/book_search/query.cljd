@@ -60,7 +60,6 @@
                             (await (.timeout (http/get uri)
                                              (Duration .seconds 10)))]
                         (handle-response response)))))] 
-        (dart:core/print uri)
         (async/fallback
          result
          (fn [_error]

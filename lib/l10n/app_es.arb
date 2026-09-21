@@ -67,6 +67,7 @@
     "readProgress": "Has leído {current} de {total} páginas",
     "reachedPercent": "Llegaste al {percent}%",
     "readingTimer": "Temporizador de lectura",
+    "removeActivityTitle": "¿Quieres eliminar esta actividad?",
     "removeNoteTitle": "¿Quieres eliminar esta nota?",
     "save": "Guardar",
     "saveNote": "Guardar nota",
@@ -317,5 +318,17 @@
     "readingSessions": "Sesiones de lectura",
     "@readingSessions": {
         "description": "Label for reading sessions on export"
+    },
+    "activityReadingTime": "Tiempo de lectura",
+    "@activityReadingTime": {
+        "description": "Label for the reading time inputs on the activity dialog"
+    },
+    "deleteBook": "Borrar libro",
+    "@deleteBook": {
+        "description": "Tooltip for the delete book action"
+    },
+    "shareContentsHint": "Texto para compartir",
+    "@shareContentsHint": {
+        "description": "Hint for the share dialog export contents field"
     }
 }

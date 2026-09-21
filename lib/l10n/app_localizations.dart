@@ -596,6 +596,12 @@ abstract class AppLocalizations {
   /// **'Reading Timer'**
   String get readingTimer;
 
+  /// Confirmation dialog title shown before removing an activity
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to remove this activity?'**
+  String get removeActivityTitle;
+
   /// Confirmation dialog title shown before removing a note
   ///
   /// In en, this message translates to:
@@ -803,6 +809,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reading sessions'**
   String get readingSessions;
+
+  /// Label for the reading time inputs on the activity dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Time'**
+  String get activityReadingTime;
+
+  /// Tooltip for the delete book action
+  ///
+  /// In en, this message translates to:
+  /// **'Delete book'**
+  String get deleteBook;
+
+  /// Hint for the share dialog export contents field
+  ///
+  /// In en, this message translates to:
+  /// **'Shareable text'**
+  String get shareContentsHint;
 }
 
 class _AppLocalizationsDelegate

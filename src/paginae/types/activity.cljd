@@ -12,6 +12,7 @@
             created-at])
 
 (defn new-activity
+  "Create a new Activity for a given book"
   [book-id]
   (map->Activity
    {:book-id book-id

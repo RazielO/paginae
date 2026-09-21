@@ -408,6 +408,10 @@
     "@readingTimer": {
         "description": "Action button label to open the reading timer"
     },
+    "removeActivityTitle": "Do you want to remove this activity?",
+    "@removeActivityTitle": {
+        "description": "Confirmation dialog title shown before removing an activity"
+    },
     "removeNoteTitle": "Do you want to remove this note?",
     "@removeNoteTitle": {
         "description": "Confirmation dialog title shown before removing a note"
@@ -597,5 +601,17 @@
     "readingSessions": "Reading sessions",
     "@readingSessions": {
         "description": "Label for reading sessions on export"
+    },
+    "activityReadingTime": "Reading Time",
+    "@activityReadingTime": {
+        "description": "Label for the reading time inputs on the activity dialog"
+    },
+    "deleteBook": "Delete book",
+    "@deleteBook": {
+        "description": "Tooltip for the delete book action"
+    },
+    "shareContentsHint": "Shareable text",
+    "@shareContentsHint": {
+        "description": "Hint for the share dialog export contents field"
     }
 }
