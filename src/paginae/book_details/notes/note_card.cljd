@@ -92,7 +92,35 @@
      material/MainAxisAlignment.end
 
      .children
-     [;; Edit button
+     [ ;; Share button
+      (material/TextButton
+
+       .child
+       (material/Row
+        .spacing 5
+
+        .children
+        [(material/Icon
+          symbols/Symbols.share
+
+          .color
+          onSurface)
+
+         (material/Text
+          (.toUpperCase (.-share locales))
+
+          .style
+          labelMedium)])
+
+       .onPressed
+       (fn []
+         (.share share_plus/SharePlus.instance
+                 (share_plus/ShareParams.
+                  .text
+                  (.shareNoteText locales book-name (:contents note))))
+         nil))
+
+      ;; Edit button
       (material/TextButton
 
        .child
@@ -120,34 +148,6 @@
              (await (db/update-book-note
                      (note-type/update-contents note new-contents)))
              (swap! data-revision inc)))))
-
-      ;; Share button
-      (material/TextButton
-
-       .child
-       (material/Row
-        .spacing 5
-
-        .children
-        [(material/Icon
-          symbols/Symbols.share
-
-          .color
-          onSurface)
-
-         (material/Text
-          (.toUpperCase (.-share locales))
-
-          .style
-          labelMedium)])
-
-       .onPressed
-       (fn []
-         (.share share_plus/SharePlus.instance
-                 (share_plus/ShareParams.
-                  .text
-                  (.shareNoteText locales book-name (:contents note))))
-         nil))
 
       ;; Delete button
       (material/TextButton

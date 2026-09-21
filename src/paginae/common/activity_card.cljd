@@ -5,6 +5,7 @@
    ["package:flutter/material.dart" :as material]
    ["package:intl/intl.dart" :as intl]
    ["package:material_symbols_icons/symbols.dart" :as symbols]
+   ["package:share_plus/share_plus.dart" :as share_plus]
    [cljd.flutter :as flutter]
    [paginae.common.image.widget :as image]
    [paginae.types.activity :as activity-type]))
@@ -65,27 +66,27 @@
 
       .children
       [;; Read date
-       ;; (material/Text
-       ;;  (str
-       ;;   (.format
-       ;;    (intl/DateFormat.yMMMd (.toString locale))
-       ;;    (:date activity))
-       ;;   " "
-       ;;   (.format
-       ;;    (intl/DateFormat.Hm (.toString locale))
-       ;;    (:date activity)))
-       ;; 
-       ;;  .textAlign
-       ;;  (if with-cover?
-       ;;    material/TextAlign.start
-       ;;    material/TextAlign.center)
-       ;; 
-       ;;  .style
-       ;;  (.copyWith
-       ;;   labelLarge
-       ;; 
-       ;;   .color
-       ;;   (.withOpacity onSurface 0.7)))
+       (material/Text
+        (str
+         (.format
+          (intl/DateFormat.yMMMd (.toString locale))
+          (:date activity))
+         " "
+         (.format
+          (intl/DateFormat.Hm (.toString locale))
+          (:date activity)))
+
+        .textAlign
+        (if with-cover?
+          material/TextAlign.start
+          material/TextAlign.center)
+
+        .style
+        (.copyWith
+         labelLarge
+
+         .color
+         (.withOpacity onSurface 0.7)))
 
        (material/SizedBox
         .height
@@ -126,7 +127,44 @@
          .mainAxisAlignment material/MainAxisAlignment.center
 
          .children
-         [(when on-edit
+         [      ;; Share button
+          (material/TextButton
+
+           .child
+           (material/Row
+            .spacing 5
+
+            .children
+            [(material/Icon
+              symbols/Symbols.share
+
+              .color
+              onSurface)
+
+             (material/Text
+              (.toUpperCase (.-share locales))
+
+              .style
+              labelMedium)])
+
+           .onPressed
+           (fn []
+             (let [date (.format
+                         (intl/DateFormat.yMMMMd (.toString locale))
+                         (:date activity))]
+               (.share share_plus/SharePlus.instance
+                       (share_plus/ShareParams.
+                        .text
+                        (if (:pages book)
+                          (str "On " date ", I reached page " (.round (* (:pages book) (:progress activity))) " of \"" (:title book) "\"")
+                          (str "On " date ", I reached "  (* 100 (:progress activity)) " of the way through \"" (:title book) "\"")
+                          )
+
+                        ;; (.shareActivityTest locales book-name (:contents note))
+                        )))
+             nil))
+
+          (when on-edit
             (material/TextButton
 
              .child
