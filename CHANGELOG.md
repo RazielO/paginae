@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.3] - 2026-09-21
+
+### Added
+
+- Activities can be edited, deleted and shared
+
+### Fixed
+
+- F-droid reproducible builds
+
 ## [1.1.2] - 2026-09-18
 
 ### Fixed
