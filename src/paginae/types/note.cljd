@@ -21,7 +21,7 @@
     :updated-at (.toLocal (dart:core/DateTime.parse (get entry "updated_at")))
     :created-at (.toLocal (dart:core/DateTime.parse (get entry "created_at")))}))
 
-(defn to-db-map
+(defn note->db-map
   "Convert a note to a map to insert into the database"
   [note]
   {"id" (:id note)
@@ -55,5 +55,5 @@
               (:updated-at note))]
 
     (if as-markdown?
-      (str date ":\n\n" (str/join "\n" (map #(str "> " %) (str/split-lines contents))))
+      (str date ":\n\n" (str/join "\n" (map (partial str "> ") (str/split-lines contents))))
       (str date ": \"" contents "\""))))

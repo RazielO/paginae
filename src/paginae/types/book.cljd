@@ -1,10 +1,10 @@
 (ns paginae.types.book
   {:no-dynamic true}
-  (:require ["package:uuid/uuid.dart" :as uuid]
+  (:require ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
+            ["package:uuid/uuid.dart" :as uuid]
             [clojure.string :as str]
             [paginae.types.activity :as activity-type]
-            [paginae.types.note :as note-type]
-            ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]))
+            [paginae.types.note :as note-type]))
 
 (defrecord Book
            [id
@@ -31,7 +31,7 @@
     :favorite false
     :has-cover? false}))
 
-(defn to-db-map
+(defn book->db-map
   "Convert a book to a map to store on the database"
   [book]
   {"id" (:id book)
@@ -159,8 +159,8 @@
   [book
    activities
    notes
-   ^app-l10n/AppLocalizations locales
-   as-markdown?]
+   {:keys [^app-l10n/AppLocalizations locales
+           as-markdown?]}]
   (let [title (if as-markdown?
                 (str "# " (:title book) "\n")
                 (str (.-bookTitle locales) ": " (:title book)))
@@ -198,7 +198,7 @@
 
     (str/join "\n"
               (filterv
-               #(not (nil? %))
+               some?
                [title
                 author
                 pages

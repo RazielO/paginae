@@ -131,18 +131,13 @@
    :bind {:filter-by (atom filter-by-value)}
    :get [:data-revision
          :filter-by]
-   :watch [filter filter-by
+   :watch [selected-filter filter-by
            refresh data-revision
 
-           books (cond
-                   (or (= :reset filter) (nil? filter))
-                   (db/get-all-books)
-
-                   (= :favorite filter)
-                   (db/get-favorite-books)
-
-                   :else
-                   (db/get-books-by-status filter)) :default [] :refresh-on refresh]
+           books (case selected-filter
+                  (:reset nil) (db/get-all-books)
+                  :favorite (db/get-favorite-books)
+                  (db/get-books-by-status selected-filter)) :default [] :refresh-on refresh]
 
    :let [portrait? (= (.-orientation (material/MediaQuery.of context)) material/Orientation.portrait)
          locales (app-l10n/AppLocalizations.of context)
@@ -184,7 +179,7 @@
        (material/Center)
 
        (material/Text
-        (case filter
+        (case selected-filter
           :favorite (.-noFavorites locales)
           :done (.-noFinished locales)
           :to-read (.-noToRead locales)

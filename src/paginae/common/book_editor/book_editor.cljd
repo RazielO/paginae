@@ -5,15 +5,15 @@
    ["package:flutter/material.dart" :as material]
    ["package:flutter/widgets.dart" :as widgets]
    ["package:image_picker/image_picker.dart" :as image-picker]
-   [cljd.flutter :as flutter]
-   [paginae.common.async :as async]
-   [paginae.common.book-editor.book-format :as book-format]
-   [paginae.common.book-editor.form :as form]
-   [paginae.common.book-editor.reading-status :as reading-status]
-   [paginae.database :as db]
-   [paginae.common.image.utils :as img-utils]
-   [paginae.common.image.widget :as image]
-   [paginae.types.book :as book-type]))
+[cljd.flutter :as flutter]
+    [paginae.common.async :as async]
+    [paginae.common.book-editor.book-format :as book-format]
+    [paginae.common.book-editor.form :as form]
+    [paginae.common.book-editor.reading-status :as reading-status]
+    [paginae.common.image.utils :as img-utils]
+    [paginae.common.image.widget :as image]
+    [paginae.database :as db]
+    [paginae.types.book :as book-type]))
 
 (defn- show-snackbar
   "Show a snackbar in the given context with the given message"
@@ -140,9 +140,8 @@
       :bordered? true
       :clickable? true
       :on-click (fn []
-                  (let [cover (await (add-cover))]
-                    (when cover
-                      (swap! book-atom book-type/update-local-cover cover))))})
+                  (when-let [cover (await (add-cover))]
+                    (swap! book-atom book-type/update-local-cover cover)))})
 
     ;; Form
     (form/form-card
@@ -167,7 +166,7 @@
            on-navigation
            on-save
            on-image-saved]}]
-  (when (not @saving)
+  (when-not @saving
     (reset! saving true)
     (try
       (let [new-title (.trim (.-text title-controller))

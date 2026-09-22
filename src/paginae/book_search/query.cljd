@@ -21,9 +21,9 @@
   "Query the Open Library to search for books"
   [query ;; Query to search
    offset ;; Offset of data to search
-   unknown-str ;; String to use as placeholder when no data is provided
-   no-response-str ;; String to return when no response
-   locale ;; 2-letter language code
+   {:keys [unknown-str ;; String to use as placeholder when no data is provided
+           no-response-str ;; String to return when no response
+           locale]} ;; 2-letter language code
    ]
 
   (let [uri (Uri/https
@@ -48,9 +48,9 @@
                   (query-result/map->QueryResult
                    {:total (get json "num_found")
                     :offset (get json "offset")
-                    :data (map #(book-search-result/book-from-query-result % unknown-str)
-                               (filter keep-book?
-                                       (get json "docs" [])))}))
+                    :data (->> (get json "docs" [])
+                               (filter keep-book?)
+                               (map #(book-search-result/book-from-query-result % unknown-str)))}))
                 (handle-error no-response-str)))]
 
       (let [result

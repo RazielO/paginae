@@ -14,11 +14,11 @@
             [paginae.common.activity-card :as common.activity-card]
             [paginae.common.book-editor.book-editor :as book-editor]
             [paginae.common.confirm-delete-dialog :as common.confirm-dialog]
-            [paginae.database :as db]
             [paginae.common.image.utils :as img-utils]
             [paginae.common.image.widget :as image]
-            [paginae.types.book :as book-type]
-            [paginae.types.activity :as activity-type]))
+            [paginae.database :as db]
+            [paginae.types.activity :as activity-type]
+            [paginae.types.book :as book-type]))
 
 (defn- action-button
   "Pill button for actions"
@@ -114,17 +114,16 @@
 
        .onPressed
        (fn []
-         (let [updated (await
-                        (.push
-                         (material/Navigator.of context)
-                         (#/(material/MaterialPageRoute Object)
-                          .builder
-                          (flutter/build
-                           (book-editor/book-editor {:book @book-atom
-                                                     :on-save db/update-book
-                                                     :on-navigation #()})))))]
-           (when updated
-             (reset! book-atom updated)))
+         (when-let [updated (await
+                              (.push
+                               (material/Navigator.of context)
+                               (#/(material/MaterialPageRoute Object)
+                                .builder
+                                (flutter/build
+                                 (book-editor/book-editor {:book @book-atom
+                                                           :on-save db/update-book
+                                                           :on-navigation #()})))))]
+           (reset! book-atom updated))
          nil))
 
       ;; Share button
@@ -167,7 +166,7 @@
           {:title ((.-deleteBookTitle locales) (:title @book-atom))
            :content ""
            :context context
-           :on-confirm (fn []
+:on-confirm (fn []
                          (let [deletion-result (await (db/delete-book (:id @book-atom)))]
                            (when deletion-result
                              (when (:has-cover? @book-atom)
@@ -200,14 +199,13 @@
       (fn [_]
         (when (and session (not @checked-session))
           (reset! checked-session true)
-          (let [result (await (.push navigator
-                                     (#/ (material/MaterialPageRoute Object)
-                                      .builder
-                                      (flutter/build
-                                       (book-details.reading-timer/reading-timer book session)))))]
-            (when result
-              (swap! book-atom #(book-type/update-current-progress % result))
-              (swap! data-revision inc))))))
+          (when-let [result (await (.push navigator
+                                          (#/ (material/MaterialPageRoute Object)
+                                           .builder
+                                           (flutter/build
+                                            (book-details.reading-timer/reading-timer book session)))))]
+(swap! book-atom #(book-type/update-current-progress % result))
+              (swap! data-revision inc)))))
 
      (material/Scaffold
       .appBar
@@ -271,14 +269,13 @@
           (action-button
            {:on-pressed
             (fn []
-              (let [result (await (.push navigator
-                                         (#/ (material/MaterialPageRoute Object)
-                                          .builder
-                                          (flutter/build
-                                           (book-details.reading-timer/reading-timer book nil)))))]
-                (when result
-                  (swap! book-atom #(book-type/update-current-progress % result))
-                  (swap! data-revision inc))))
+              (when-let [result (await (.push navigator
+                                              (#/ (material/MaterialPageRoute Object)
+                                               .builder
+                                               (flutter/build
+                                                (book-details.reading-timer/reading-timer book nil)))))]
+                (swap! book-atom #(book-type/update-current-progress % result))
+                (swap! data-revision inc)))
             :icon symbols/Symbols.timer
             :text (.-readingTimer locales)
             :background primary
@@ -286,17 +283,16 @@
           ;; Action button. Update progress
           (action-button {:on-pressed
                           (fn []
-                            (let [data (await (book-details.activity-dialog/add-activity-dialog
-                                               {:context context
-                                                :activity (activity-type/new-activity (:id book))
-                                                :book book
-                                                :on-confirm
-                                                (fn [activity]
-                                                  (await
-                                                   (db/insert-book-activity activity)))}))]
-                              (when data
-                                (swap! book-atom #(book-type/update-current-progress % data))
-                                (swap! data-revision inc))))
+                            (when-let [data (await (book-details.activity-dialog/add-activity-dialog
+                                                     {:context context
+                                                      :activity (activity-type/new-activity (:id book))
+                                                      :book book
+                                                      :on-confirm
+                                                      (fn [activity]
+                                                        (await
+                                                         (db/insert-book-activity activity)))}))]
+                              (swap! book-atom #(book-type/update-current-progress % data))
+                              (swap! data-revision inc)))
                           :icon symbols/Symbols.edit_note
                           :text (.-updateProgress locales)
                           :background secondary
@@ -304,12 +300,11 @@
           ;; Action button. Add note
           (action-button
            {:on-pressed (fn []
-                          (let [note (await (add-note-dialog/add-note-dialog
-                                             context
-                                             note-controller))]
-                            (when note
-                              (await (db/insert-book-note note (:id book)))
-                              (swap! data-revision inc))))
+                          (when-let [note (await (add-note-dialog/add-note-dialog
+                                                  context
+                                                  note-controller))]
+                            (await (db/insert-book-note note (:id book)))
+                            (swap! data-revision inc)))
             :icon symbols/Symbols.add
             :text (.-addNoteAction locales)
             :background tertiary
@@ -356,14 +351,13 @@
                                          :book book}
                                   :with-cover? false
                                   :on-edit (fn []
-                                             (let [data (await (book-details.activity-dialog/add-activity-dialog
+                                             (when-let [data (await (book-details.activity-dialog/add-activity-dialog
                                                                 {:context context
                                                                  :activity activity
                                                                  :book book
                                                                  :on-confirm db/update-book-activity}))]
-                                               (when data
-                                                 (swap! book-atom (fn [b] (book-type/update-current-progress b data)))
-                                                 (swap! data-revision inc))))
+                                               (swap! book-atom (fn [b] (book-type/update-current-progress b data)))
+                                               (swap! data-revision inc)))
                                   :on-delete (fn []
                                                (common.confirm-dialog/confirm-delete-dialog
                                                 {:title (.-removeActivityTitle locales)

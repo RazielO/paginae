@@ -142,12 +142,11 @@
 
        .onPressed
        (fn []
-         (.-text! note-controller (:contents note))
-         (let [new-contents (await (add-note-dialog/add-note-dialog context note-controller))]
-           (when new-contents
-             (await (db/update-book-note
-                     (note-type/update-contents note new-contents)))
-             (swap! data-revision inc)))))
+(.-text! note-controller (:contents note))
+       (when-let [new-contents (await (add-note-dialog/add-note-dialog context note-controller))]
+         (await (db/update-book-note
+                 (note-type/update-contents note new-contents)))
+         (swap! data-revision inc))))
 
       ;; Delete button
       (material/TextButton

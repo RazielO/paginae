@@ -149,7 +149,7 @@
     (await
      (.insert db
               "books"
-              (book-type/to-db-map book)))))
+              (book-type/book->db-map book)))))
 
 (defn update-book
   "Update a book in the database"
@@ -158,7 +158,7 @@
     (await
      (.update db
               books-table
-              (book-type/to-db-map book)
+              (book-type/book->db-map book)
               .where "id = ?"
               .whereArgs [(:id book)]))))
 
@@ -203,7 +203,7 @@
     (await
      (.update db
               notes-table
-              (note-type/to-db-map note)
+              (note-type/note->db-map note)
               .where "id = ?"
               .whereArgs [(:id note)]))))
 
@@ -286,7 +286,7 @@
        (await
         (.insert transaction
                  activities-table
-                 (activity-type/to-db-map activity)))
+                 (activity-type/activity->db-map activity)))
        (recompute-book-progress transaction (:book-id activity))))))
 
 (defn update-book-activity
@@ -299,7 +299,7 @@
        (await
         (.update transaction
                  activities-table
-                 (activity-type/to-db-map activity)
+                 (activity-type/activity->db-map activity)
                  .where "id = ?"
                  .whereArgs [(:id activity)]))
        (recompute-book-progress transaction (:book-id activity))))))

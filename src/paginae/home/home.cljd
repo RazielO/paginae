@@ -20,16 +20,14 @@
    session-check-atom]
   (reset! session-check-atom true)
   (when (await (reading-session/session-exist?))
-    (let [resolved (await (reading-session/resolve-on-open context))]
-      (when resolved
-        (let [book (await (db/get-book (:book-id resolved)))]
-          (if book
-            (.push navigator
-                   (#/(material/MaterialPageRoute Object)
-                    .builder
-                    (flutter/build
-                     (book-details/book-details book resolved))))
-            (reading-session/delete-session)))))))
+    (when-let [resolved (await (reading-session/resolve-on-open context))]
+      (if-let [book (await (db/get-book (:book-id resolved)))]
+        (.push navigator
+               (#/(material/MaterialPageRoute Object)
+                .builder
+                (flutter/build
+                 (book-details/book-details book resolved))))
+        (reading-session/delete-session)))))
 
 (defn home-widget
   "Widget that shows the home screen"
@@ -58,7 +56,7 @@
      (.addPostFrameCallback
       (widgets/WidgetsBinding.instance)
       (fn [_]
-        (when (not @session-check-atom)
+        (when-not @session-check-atom
           (resume-session! context navigator session-check-atom))))
 
 

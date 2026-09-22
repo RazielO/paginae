@@ -1,10 +1,10 @@
 (ns paginae.common.book-editor.book-format
   {:no-dynamic true}
-  (:require [cljd.flutter :as flutter]
+  (:require ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
             ["package:flutter/material.dart" :as material]
-            ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]
-            [paginae.types.book :as book]
-            [paginae.theme :as theme]))
+            [cljd.flutter :as flutter]
+            [paginae.theme :as theme]
+            [paginae.types.book :as book]))
 
 (defn- group-button
   "Button for selecting format"

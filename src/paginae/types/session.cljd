@@ -9,7 +9,7 @@
                     ^int updated-at
                     ^String book-id])
 
-(defn to-json
+(defn session->json
   "Convert the session object into a JSON"
   [^Session session]
   (convert/jsonEncode

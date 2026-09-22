@@ -28,7 +28,7 @@
             color-scheme (.-colorScheme theme)
             text-theme (.-textTheme theme)
             pages (:pages book)
-            has-pages? (not (nil? pages))]
+            has-pages? (some? pages)]
 
       :watch [as-pages? (atom has-pages?) :as as-pages
               _date (atom (or (:date activity) (dart:core/DateTime.now))) :as date-atom]
@@ -181,14 +181,13 @@
 
         .onPressed
         (fn []
-          (let [date (await
-                      (material/showDatePicker
-                       .context context
-                       .initialDate @date-atom
-                       .firstDate (dart:core/DateTime 1900)
-                       .lastDate (dart:core/DateTime 2100)))]
-            (when date
-              (reset! date-atom date)))))
+          (when-let [date (await
+                            (material/showDatePicker
+                             .context context
+                             .initialDate @date-atom
+                             .firstDate (dart:core/DateTime 1900)
+                             .lastDate (dart:core/DateTime 2100)))]
+            (reset! date-atom date))))
 
        ;; Buttons
        (material/Row
@@ -232,18 +231,12 @@
                                  (/ value 100.0))
 
                       seconds (parse-long
-                               (if (empty? (.-text second-controller))
-                                 "0"
-                                 (.-text second-controller)))
+                               (or (not-empty (.-text second-controller)) "0"))
                       minutes (parse-long
-                               (if (empty? (.-text minute-controller))
-                                 "0"
-                                 (.-text minute-controller)))
+                               (or (not-empty (.-text minute-controller)) "0"))
 
                       hours (parse-long
-                             (if (empty? (.-text hour-controller))
-                               "0"
-                               (.-text hour-controller)))
+                             (or (not-empty (.-text hour-controller)) "0"))
 
                       reading-time (+ seconds (* 60 minutes) (* 3600 hours))
 

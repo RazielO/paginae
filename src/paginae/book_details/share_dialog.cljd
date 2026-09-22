@@ -64,7 +64,8 @@
          .controller
          (material/TextEditingController
           .text
-          (book-type/export-text book activities notes locales as-markdown?))
+          (book-type/export-text book activities notes {:locales locales
+                                              :as-markdown? as-markdown?}))
 
          .readOnly true
 
@@ -143,5 +144,6 @@
             (.share share_plus/SharePlus.instance
                     (share_plus/ShareParams.
                      .text
-                     (book-type/export-text book activities notes locales as-markdown?)))
+                     (book-type/export-text book activities notes {:locales locales
+                                              :as-markdown? as-markdown?})))
             nil))])]))))

@@ -18,7 +18,7 @@
 
 (deftest to-db-roundtrip-test
   (testing "to-db-map omits created_at (DB supplies the default)"
-    (let [m (note/to-db-map (note/map->Note
+    (let [m (note/note->db-map (note/map->Note
                              {:id 1 :book-id "book-1" :contents "Great"}))]
       (is (= 1 (get m "id")))
       (is (= "book-1" (get m "book_id")))

@@ -82,7 +82,19 @@
   (flutter/widget
    :get {{{:flds [surface]} .-colorScheme} material/Theme}
    :context context
-   :let [locales (app-l10n/AppLocalizations.of context)]
+   :let [locales (app-l10n/AppLocalizations.of context)
+         tabs [{:title (.-bottomHome locales)
+                :icon symbols/Symbols.home
+                :tab :home}
+               {:title (.-bottomJournal locales)
+                :icon symbols/Symbols.book_ribbon
+                :tab :journal}
+               {:title (.-bottomLibrary locales)
+                :icon symbols/Symbols.library_books
+                :tab :my-books}
+               {:title (.-bottomAdd locales)
+                :icon symbols/Symbols.add
+                :tab :search}]]
 
    (material/SafeArea
     .child
@@ -99,29 +111,13 @@
       material/MainAxisAlignment.spaceAround
 
       .children
-      [(bottom-sheet-btn
-        {:title (.-bottomHome locales)
-         :icon symbols/Symbols.home
-         :active? (= :home current-tab)
-         :on-pressed #(change-tab :home)})
-
-       (bottom-sheet-btn
-        {:title (.-bottomJournal locales)
-         :icon symbols/Symbols.book_ribbon
-         :active? (= :journal current-tab)
-         :on-pressed #(change-tab :journal)})
-
-       (bottom-sheet-btn
-        {:title (.-bottomLibrary locales)
-         :icon symbols/Symbols.library_books
-         :active? (= :my-books current-tab)
-         :on-pressed #(change-tab :my-books)})
-
-       (bottom-sheet-btn
-        {:title (.-bottomAdd locales)
-         :icon symbols/Symbols.add
-         :active? (= :search current-tab)
-         :on-pressed #(change-tab :search)})])))))
+      (mapv (fn [{:keys [title icon tab]}]
+              (bottom-sheet-btn
+               {:title title
+                :icon icon
+                :active? (= tab current-tab)
+                :on-pressed (fn [] (change-tab tab))}))
+            tabs))))))
 
 (defn main-screen
   "Main screen scaffold"

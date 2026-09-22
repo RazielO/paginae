@@ -22,14 +22,14 @@
            has-more
            error-atom
            locale]}]
-  (when (not @loading-more)
+  (when-not @loading-more
     (reset! loading-more true)
 
     (let [result (await (query/query-books query
-                                           @offset-atom 
-                                           unknown-str 
-                                           no-response-str
-                                           locale))]
+                                           @offset-atom
+                                           {:unknown-str unknown-str
+                                            :no-response-str no-response-str
+                                            :locale locale}))]
       (when-not (:error result)
         (swap! books-atom into (:data result))
         (reset! total-atom (:total result))

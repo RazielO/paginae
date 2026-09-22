@@ -31,12 +31,12 @@
       (is (= 3600 (:reading-time a)))
       (is (= 0.25 (:progress a))))))
 
-(deftest to-db-map-test
+(deftest activity->db-map-test
   ;; NOTE: to-db-map always writes the current time as the date, ignoring
   ;; (:date activity). That is intended for the insert-only usage but is worth
   ;; documenting here (see todo R11).
   (testing "serializes fields and drops the id (DB autoincrements)"
-    (let [m (activity/to-db-map
+    (let [m (activity/activity->db-map
              (activity/map->Activity
               {:id 5 :book-id "book-1" :reading-time 3600 :progress 0.25}))]
       (is (= "book-1" (get m "book_id")))

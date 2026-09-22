@@ -126,7 +126,7 @@
    (material/Center)
 
    .child
-   (if (empty? books)
+   (if-not (seq books)
      ;; If no books, action to add one
      (material/Column
 

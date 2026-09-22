@@ -41,7 +41,7 @@
                    :current-progress 0.75
                    :favorite true
                    :has-cover? true)
-          m (book/to-db-map b)]
+          m (book/book->db-map b)]
       (is (= "reading" (get m "status")))
       (is (= "ebook" (get m "format")))
       (is (= 1 (get m "favorite")))

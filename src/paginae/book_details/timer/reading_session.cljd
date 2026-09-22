@@ -54,7 +54,7 @@
       (.remove prefs session-key)
       (.setString prefs
                   session-key
-                  (session-type/to-json session)))))
+                  (session-type/session->json session)))))
 
 
 (defn stale-running?
@@ -133,9 +133,8 @@
         book (await (db/get-book (:book-id session)))]
     (when book
       (if (stale-running? session)
-        (let [choice (await (ask-resume-discard context session))]
-          (when choice
-            (save-session (assoc choice :updated-at (now-in-seconds))))
+        (when-let [choice (await (ask-resume-discard context session))]
+          (save-session (assoc choice :updated-at (now-in-seconds)))
           choice)
         (do (when (:running session)
               (save-session (assoc session :updated-at (now-in-seconds))))

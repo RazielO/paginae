@@ -29,7 +29,7 @@
     :date (dart:core/DateTime.parse (get entry "date"))
     :created-at (dart:core/DateTime.parse (get entry "created_at"))}))
 
-(defn to-db-map
+(defn activity->db-map
   "Create a map from the activity"
   [activity]
   {"book_id" (:book-id activity)
@@ -44,8 +44,8 @@
   [activity
    book
    ^app-l10n/AppLocalizations locales]
-  (let [has-time? (not (nil? (:reading-time activity)))
-        has-pages? (not (nil? (:pages book)))
+  (let [has-time? (some? (:reading-time activity))
+        has-pages? (some? (:pages book))
         pages (.round (* (:progress activity) (or (:pages book) 0)))
         percentage (.toStringAsFixed (* 100 (:progress activity)) 2)
         seconds (or (:reading-time activity) 0)
@@ -71,8 +71,8 @@
   [activity
    book
    ^app-l10n/AppLocalizations locales]
-  (let [has-time? (not (nil? (:reading-time activity)))
-        has-pages? (not (nil? (:pages book)))
+  (let [has-time? (some? (:reading-time activity))
+        has-pages? (some? (:pages book))
         pages (.round (* (:progress activity) (or (:pages book) 0)))
         percentage (.toStringAsFixed (* 100 (:progress activity)) 2)
         seconds (or (:reading-time activity) 0)

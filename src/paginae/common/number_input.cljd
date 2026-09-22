@@ -16,10 +16,9 @@
   (flutter/widget
    :watch [int-text controller :> .-text]
    :let [int-val (parse-long int-text)
-         int-ok? (or (empty? int-text)
-                     (and int-val
-                          (>= int-val lower-limit)
-                          (<= int-val upper-limit)))]
+int-ok? (or (empty? int-text)
+                      (and int-val
+                           (<= lower-limit int-val upper-limit)))]
    (material/TextField
     .controller controller
 
@@ -87,8 +86,7 @@
                     (empty? float-text)
                     (and
                      float-val
-                     (>= float-val lower-limit)
-                     (<= float-val upper-limit)))]
+                     (<= lower-limit float-val upper-limit)))]
 
    (material/TextField
     .controller controller

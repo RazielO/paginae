@@ -5,12 +5,12 @@
    ["package:flutter/material.dart" :as material]
    ["package:flutter/widgets.dart" :as widgets]
    [cljd.flutter :as flutter]
-   [paginae.book-details.book-details :as book-details]
-   [paginae.common.badges :as badges]
-   [paginae.common.confirm-delete-dialog :as common.confirm-dialog]
-   [paginae.database :as db]
-   [paginae.common.image.utils :as img-utils]
-   [paginae.common.image.widget :as image]))
+[paginae.book-details.book-details :as book-details]
+    [paginae.common.badges :as badges]
+    [paginae.common.confirm-delete-dialog :as common.confirm-dialog]
+    [paginae.common.image.utils :as img-utils]
+    [paginae.common.image.widget :as image]
+    [paginae.database :as db]))
 
 (defn book-card
   "Card that contains a book"
@@ -31,12 +31,11 @@
        {:title ((.-deleteBookTitle locales) (:title book))
         :content ""
         :context context
-        :on-confirm (fn []
-                      (let [deletion-result (await (db/delete-book (:id book)))]
-                        (when deletion-result
-                          (when (:has-cover? book)
-                            (img-utils/delete-cover (:id book)))
-                          (refresh!))))}))
+:on-confirm (fn []
+                       (when (await (db/delete-book (:id book)))
+                         (when (:has-cover? book)
+                           (img-utils/delete-cover (:id book)))
+                         (refresh!)))}))
 
     .onTap (fn []
              (await
