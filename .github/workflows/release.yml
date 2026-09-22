@@ -41,8 +41,9 @@ jobs:
 
       - name: Install Android NDK (flutter_zxing FFI)
         run: |
+          FLUTTER_SDK=${FLUTTER_ROOT:-$FLUTTER_HOME}
           NDK_VERSION=$(grep -oE 'val ndkVersion: String = "[0-9.]+"' \
-            "$FLUTTER_HOME/packages/flutter_tools/gradle/src/main/kotlin/FlutterExtension.kt" \
+            "$FLUTTER_SDK/packages/flutter_tools/gradle/src/main/kotlin/FlutterExtension.kt" \
             | grep -oE '[0-9.]+')
           sdkmanager "ndk;$NDK_VERSION"
 
