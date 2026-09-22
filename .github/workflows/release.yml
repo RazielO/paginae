@@ -39,6 +39,13 @@ jobs:
           flutter-version: '3.47.2'
           cache: true
 
+      - name: Install Android NDK (flutter_zxing FFI)
+        run: |
+          NDK_VERSION=$(grep -oE 'val ndkVersion: String = "[0-9.]+"' \
+            "$FLUTTER_HOME/packages/flutter_tools/gradle/src/main/kotlin/FlutterExtension.kt" \
+            | grep -oE '[0-9.]+')
+          sdkmanager "ndk;$NDK_VERSION"
+
       - name: Get Flutter dependencies
         run: flutter pub get
 

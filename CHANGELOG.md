@@ -5,6 +5,7 @@
 ### Added
 
 - Activities can be edited, deleted and shared
+- Replaced `mobile_scanner` with `flutter_zxin`
 
 ### Fixed
 

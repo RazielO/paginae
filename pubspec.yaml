@@ -15,7 +15,7 @@ dependencies:
   http: ^1.6.0
 
   # Barcode reader
-  mobile_scanner: ^7.4.2
+  flutter_zxing: ^3.0.1
 
   # Material symbols
   material_symbols_icons: ^4.2960.0

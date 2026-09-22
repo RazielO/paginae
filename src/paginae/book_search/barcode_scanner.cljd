@@ -2,7 +2,7 @@
   {:no-dynamic true}
   (:require [cljd.flutter :as flutter]
             ["package:flutter/material.dart" :as material]
-            ["package:mobile_scanner/mobile_scanner.dart" :as scanner]
+            ["package:flutter_zxing/flutter_zxing.dart" :as scanner]
             ["package:material_symbols_icons/symbols.dart" :as symbols]
             ["package:cljd_paginae/l10n/app_localizations.dart" :as app-l10n]))
 
@@ -57,11 +57,13 @@
       .height 300
 
       .child
-      (scanner/MobileScanner
-       .onDetect
-       (fn [capture]
-         (let [barcodes (.-barcodes ^scanner/BarcodeCapture capture)
-               barcode (first barcodes)]
-           (when barcode
-             (reset! query-atom (.-rawValue ^scanner/Barcode barcode))
-             (reset! scanning false)))))))]))
+      (scanner/ReaderWidget
+       .onScan
+       (fn [result]
+         (let [result ^scanner/Code result]
+           (reset! query-atom (.-text result))
+           (reset! scanning false)))
+       .showFlashlight false
+       .showGallery false
+       .showToggleCamera false
+       .cropPercent 0)))]))
