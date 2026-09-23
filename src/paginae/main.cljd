@@ -145,55 +145,55 @@
     theme/dark-theme
 
     .themeMode
-    material/ThemeMode.dark
+    material/ThemeMode.dark)
 
-    .home
-    (material/Scaffold
+   .home
+   (material/Scaffold
 
-     .body
-     (material/Container
+    .bottomNavigationBar
+    (bottom-sheet
+     tab
+     (fn [new-tab]
+       (when (= new-tab :my-books)
+         (reset! filter-atom nil))
 
-      .margin
-      (material/EdgeInsets.only
-       .top 10
-       .left 20
-       .right 20)
+       (reset! current-tab new-tab))))
 
-      .child
-      (case tab
-        :home (home/home-widget
-               {:go-to-add #(reset! current-tab :search)
-                :go-to-journal #(reset! current-tab :journal)
-                :go-to-reading-shelf (fn []
-                                       (reset! filter-atom :reading)
-                                       (reset! current-tab :my-books))
-                :go-to-to-read-shelf (fn []
-                                       (reset! filter-atom :to-read)
-                                       (reset! current-tab :my-books))
-                :go-to-done-shelf (fn []
-                                    (reset! filter-atom :done)
+   .body
+   (material/Container
+
+    .margin
+    (material/EdgeInsets.only
+     .top 10
+     .left 20
+     .right 20))
+
+   .child
+   (case tab
+     :home (home/home-widget
+            {:go-to-add #(reset! current-tab :search)
+             :go-to-journal #(reset! current-tab :journal)
+             :go-to-reading-shelf (fn []
+                                    (reset! filter-atom :reading)
                                     (reset! current-tab :my-books))
-                :go-to-favorite-shelf (fn []
-                                        (reset! filter-atom :favorite)
-                                        (reset! current-tab :my-books))})
+             :go-to-to-read-shelf (fn []
+                                    (reset! filter-atom :to-read)
+                                    (reset! current-tab :my-books))
+             :go-to-done-shelf (fn []
+                                 (reset! filter-atom :done)
+                                 (reset! current-tab :my-books))
+             :go-to-favorite-shelf (fn []
+                                     (reset! filter-atom :favorite)
+                                     (reset! current-tab :my-books))})
 
-        :journal (journal/journal-widget)
+     :journal (journal/journal-widget)
 
-        :my-books (my-books/my-books-widget books-filter)
+     :my-books (my-books/my-books-widget books-filter)
 
-        :search (book-search/book-search-widget
-                 {:go-to-my-books (fn []
-                                    (reset! filter-atom nil)
-                                    (reset! current-tab :my-books))})))
-
-     .bottomNavigationBar
-     (bottom-sheet
-      tab
-      (fn [new-tab]
-        (when (= new-tab :my-books)
-          (reset! filter-atom nil))
-
-        (reset! current-tab new-tab)))))))
+     :search (book-search/book-search-widget
+              {:go-to-my-books (fn []
+                                 (reset! filter-atom nil)
+                                 (reset! current-tab :my-books))}))))
 
 (defn main
   "App entry point"

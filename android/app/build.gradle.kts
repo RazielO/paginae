@@ -49,7 +49,17 @@ android {
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
+        
+            // Enable code shrinking to reduce APK size
+            isMinifyEnabled = true
+            isShrinkResources = true
         }
+    }
+
+    // Strip Google proprietary block from APK
+    dependenciesInfo {
+            includeInApk = false
+            includeInBundle = false
     }
 }
 

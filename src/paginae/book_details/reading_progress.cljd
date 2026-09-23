@@ -72,10 +72,11 @@
      ;; Done text
      (material/Text (.-finishedBookMessage locales) .style bodyLarge)
      ;; Current progress text
-     (when-let [pages (:pages book)]
+     (if-let [pages (:pages book)]
        (material/Text
         (.readProgress locales (.floor (* pages (:current-progress book))) pages)
-        .style bodyLarge)))))
+        .style bodyLarge)
+       (material/SizedBox.shrink)))))
 
 (defn- start-reading-button
   "Icon button to mark a book's status as currently reading"
@@ -84,6 +85,7 @@
    :get {{{:flds [titleLarge]} .-textTheme} material/Theme}
    :context context
    :let [locales (app-l10n/AppLocalizations.of context)]
+
    (material/Column
     .spacing 10)
 

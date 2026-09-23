@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.3] - 2026-09-21
+## [1.1.3] - 2026-09-22
 
 ### Added
 
@@ -10,6 +10,7 @@
 ### Fixed
 
 - F-droid reproducible builds
+- Removed Google's proprietary block from APK
 
 ## [1.1.2] - 2026-09-18
 

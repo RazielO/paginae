@@ -109,7 +109,7 @@
                                  (and (<= 300 offset) (not @show-fab))
                                  (reset! show-fab true))))]
                (.addListener controller handler)
-               controller)]
+               controller) :refresh-on :never]
 
 
 
@@ -125,82 +125,82 @@
             .duration (dart:core/Duration .milliseconds 400)
 
             .curve animation/Curves.easeInOut))
-       ()))
+       ())))
 
-    .body
-    (material/Container
+   .body
+   (material/Container
 
-     .decoration
-     (material/BoxDecoration
-      .color background)
+    .decoration
+    (material/BoxDecoration
+     .color background))
 
-     .child
-     (material/CustomScrollView
-      .controller scroll-controller
+   .child
+   (material/CustomScrollView
+    .controller scroll-controller
 
-      .slivers
-      [;; App bar
-       (material/SliverAppBar
-        .pinned portrait?
+    .slivers
+    [;; App bar
+     (material/SliverAppBar
+      .pinned portrait?
 
-        .floating true
+      .floating true
 
-        .flexibleSpace
-        (material/Center
-         .child
-         (material/Text
-          (.-searchTitle locales)
+      .flexibleSpace
+      (material/Center
+       .child
+       (material/Text
+        (.-searchTitle locales)
 
-          .textAlign
-          material/TextAlign.center
+        .textAlign
+        material/TextAlign.center
 
-          .style
-          (.copyWith
-           headlineSmall
+        .style
+        (.copyWith
+         headlineSmall
 
-           .fontWeight
-           material/FontWeight.bold))))
+         .fontWeight
+         material/FontWeight.bold))))
 
-       ;; Either search or barcode scanner
+     ;; Either search or barcode scanner
+     (material/SliverToBoxAdapter
+      .child
+      (if scanning?
+        (barcode-scanner/barcode-scanner scanning
+                                         query-atom)
+
+        (search-widget/search-widget {:on-submitted (fn [text]
+                                                      (let [locales (app-l10n/AppLocalizations.of context)]
+                                                        (reset! loading-atom true)
+                                                        (reset! query-atom text)
+                                                        (reset! books-atom [])
+                                                        (reset! offset-atom 0)
+                                                        (reset! total-atom nil)
+                                                        (reset! error-atom nil)
+                                                        (load-books {:query text
+                                                                     :loading-more loading-more
+                                                                     :unknown-str (.-unknown locales)
+                                                                     :no-response-str (.-noServerResponse locales)
+                                                                     :books-atom books-atom
+                                                                     :total-atom total-atom
+                                                                     :offset-atom offset-atom
+                                                                     :has-more has-more
+                                                                     :error-atom error-atom
+                                                                     :locale (.toString locale)})
+                                                        (reset! loading-atom false)))
+                                      :text @query-atom
+                                      :scanning scanning
+                                      :go-to-my-books go-to-my-books})))
+
+     (if (and (not scanning?)
+              (seq query))
+       (book-list/book-list {:books @books-atom
+                             :total-books @total-atom
+                             :loading? (nil? @total-atom)
+                             :as-list? portrait?
+                             :loading-more loading-more
+                             :go-to-my-books go-to-my-books
+                             :error error})
        (material/SliverToBoxAdapter
         .child
-        (if scanning?
-          (barcode-scanner/barcode-scanner scanning
-                                           query-atom)
-
-          (search-widget/search-widget {:on-submitted (fn [text]
-                                                        (let [locales (app-l10n/AppLocalizations.of context)]
-                                                          (reset! loading-atom true)
-                                                          (reset! query-atom text)
-                                                          (reset! books-atom [])
-                                                          (reset! offset-atom 0)
-                                                          (reset! total-atom nil)
-                                                          (reset! error-atom nil)
-                                                          (load-books {:query text
-                                                                       :loading-more loading-more
-                                                                       :unknown-str (.-unknown locales)
-                                                                       :no-response-str (.-noServerResponse locales)
-                                                                       :books-atom books-atom
-                                                                       :total-atom total-atom
-                                                                       :offset-atom offset-atom
-                                                                       :has-more has-more
-                                                                       :error-atom error-atom
-                                                                       :locale (.toString locale)})
-                                                          (reset! loading-atom false)))
-                                        :text @query-atom
-                                        :scanning scanning
-                                        :go-to-my-books go-to-my-books})))
-
-       (if (and (not scanning?)
-                (seq query))
-         (book-list/book-list {:books @books-atom
-                               :total-books @total-atom
-                               :loading? (nil? @total-atom)
-                               :as-list? portrait?
-                               :loading-more loading-more
-                               :go-to-my-books go-to-my-books
-                               :error error})
-         (material/SliverToBoxAdapter
-          .child
-          (material/Container)))])))))
+        (material/Container)))])))
 
