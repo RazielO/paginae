@@ -51,8 +51,12 @@ jobs:
         run: flutter pub get
 
       # F-DROID COMPATIBILITY: Strip build IDs from C++ modules
-      - name: Remove build id
-        run: sed -i -e 's/-Wl,/-Wl,--build-id=none,/' ${{ steps.flutter-action.outputs.PUB-CACHE-PATH }}/hosted/pub.dev/jni-*/src/CMakeLists.txt
+      - name: Remove build IDs from JNI
+        run: |
+          find "$PUB_CACHE/hosted/pub.dev" \
+            -path 'jni-*/src/CMakeLists.txt' \
+            -print \
+            -exec sed -i 's/-Wl,/-Wl,--build-id=none,/' {} +
 
       - name: Run tests
         run: clojure -M:cljd:test test
