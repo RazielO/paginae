@@ -47,8 +47,9 @@
     (.containsKey prefs session-key)))
 
 (defn save-session
-  "Persist the session for a book. When session is nil, remove it."
-  [^session-type/Session session]
+  "Persist the session for a book. When session is nil, remove it.
+   Accepts either a Session record or a plain map."
+  [session]
   (let [prefs (await (sp/SharedPreferences.getInstance))]
     (if (nil? session)
       (.remove prefs session-key)
@@ -131,11 +132,13 @@
 
   (let [session (await (load-session))
         book (await (db/get-book (:book-id session)))]
-    (when book
+    (if book
       (if (stale-running? session)
         (when-let [choice (await (ask-resume-discard context session))]
           (save-session (assoc choice :updated-at (now-in-seconds)))
           choice)
         (do (when (:running session)
               (save-session (assoc session :updated-at (now-in-seconds))))
-            session)))))
+            session))
+      (do (delete-session)
+          nil))))

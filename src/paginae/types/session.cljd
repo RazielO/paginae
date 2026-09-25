@@ -10,8 +10,9 @@
                     ^String book-id])
 
 (defn session->json
-  "Convert the session object into a JSON"
-  [^Session session]
+  "Convert the session object into a JSON.
+   Accepts either a Session record or a plain map."
+  [session]
   (convert/jsonEncode
    {"started-at" (:started-at session)
     "accumulated" (:accumulated session)

@@ -17,6 +17,20 @@
     (let [s (session-type/from-json "{\"started-at\": 1700000000, \"accumulated\": 300, \"running\": false, \"updated-at\": 1700000100, \"book-id\": \"book-1\"}")]
       (is (false? (:running s))))))
 
+(deftest serialize-test
+  (testing "serializes the plain map the timer writes, and round-trips"
+    (let [m {:started-at 1700000000
+             :accumulated 300
+             :running true
+             :updated-at 1700000100
+             :book-id "book-1"}
+          s (session-type/from-json (session-type/session->json m))]
+      (is (= 1700000000 (:started-at s)))
+      (is (= 300 (:accumulated s)))
+      (is (true? (:running s)))
+      (is (= 1700000100 (:updated-at s)))
+      (is (= "book-1" (:book-id s))))))
+
 (defn- stale-window
   "The configured staleness window in seconds (3 hours)."
   []
