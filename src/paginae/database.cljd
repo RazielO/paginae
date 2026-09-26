@@ -27,6 +27,22 @@
                        (str/split sql #";"))]
     (.execute db stmt)))
 
+(defn- normalize-timestamps
+  "Reformat legacy naive-UTC timestamps ('YYYY-MM-DD HH:MM:SS') into the
+   canonical ISO-8601 UTC form ('...T...Z') so DateTime.parse treats them
+   as UTC. Idempotent: already-canonical values are left untouched."
+  [^sqlite/Database db]
+  (doseq [[table column] [["activities" "date"]
+                          ["activities" "created_at"]
+                          ["books" "created_at"]
+                          ["books" "updated_at"]
+                          ["notes" "created_at"]
+                          ["notes" "updated_at"]]]
+    (.execute db
+              (str "UPDATE " table
+                   " SET " column " = replace(" column ", ' ', 'T') || 'Z'"
+                   " WHERE " column " NOT LIKE '%Z'"))))
+
 (defn ^dart:async/Future load-schema
   "Load the SQL schema"
   []
@@ -43,7 +59,7 @@
      (sqlite/openDatabase
       db-path
 
-      .version 1
+      .version 2
 
       .onConfigure
       (fn [^sqlite/Database db]
@@ -52,7 +68,11 @@
       .onCreate
       (fn [^sqlite/Database db _version]
         (let [schema (await (load-schema))]
-          (await (run-schema db schema))))))))
+          (await (run-schema db schema))))
+
+      .onUpgrade
+      (fn [^sqlite/Database db _old-version _new-version]
+        (normalize-timestamps db))))))
 
 (defonce db-instance
   (atom nil))
@@ -371,12 +391,12 @@
   (get-activities nil [] n))
 
 (defn get-activities-by-month
-  "Get the activities in a month"
+  "Get the activities in a month. Bounds are the local start of the month
+   expressed as UTC instants, matching how activity dates are stored."
   [month
    year]
-  (let [date-format (intl/DateFormat. "yyyy-MM-dd")
-        start-date (.format date-format (intl/DateTime. year month 1))
-        end-date (.format date-format (intl/DateTime. year (inc month) 1))]
+  (let [start-date (.toIso8601String (.toUtc (intl/DateTime. year month 1)))
+        end-date (.toIso8601String (.toUtc (intl/DateTime. year (inc month) 1)))]
     (get-activities
      "activities.date >= ? AND activities.date < ?"
      [start-date end-date]

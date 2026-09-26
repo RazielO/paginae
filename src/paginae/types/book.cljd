@@ -43,7 +43,8 @@
    "current_progress" (:current-progress book)
    "favorite" (if (:favorite book) 1 0)
    "has_cover" (if (:has-cover? book) 1 0)
-   "updated_at" (.toIso8601String (.toUtc (dart:core/DateTime.now)))})
+   "updated_at" (.toIso8601String (.toUtc ^dart:core/DateTime (or (:updated-at book) (dart:core/DateTime.now))))
+   "created_at" (.toIso8601String (.toUtc ^dart:core/DateTime (or (:created-at book) (dart:core/DateTime.now))))})
 
 (defn from-db-entry
   "Convert a db entry into a Book"

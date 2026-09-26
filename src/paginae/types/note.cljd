@@ -27,8 +27,8 @@
   {"id" (:id note)
    "book_id" (:book-id note)
    "contents" (:contents note)
-   "updated_at" (.toIso8601String (.toUtc (dart:core/DateTime.now)))
-   "created_at" (.toIso8601String (.toUtc (dart:core/DateTime.now)))})
+   "updated_at" (.toIso8601String (.toUtc ^dart:core/DateTime (or (:updated-at note) (dart:core/DateTime.now))))
+   "created_at" (.toIso8601String (.toUtc ^dart:core/DateTime (or (:created-at note) (dart:core/DateTime.now))))})
 
 (defn insert-db-map
   "Convert a note to a map to insert into the database"

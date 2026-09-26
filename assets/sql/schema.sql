@@ -10,8 +10,8 @@ CREATE TABLE books (
     current_progress REAL DEFAULT 0.0,
     favorite INTEGER DEFAULT 0,
     has_cover INTEGER DEFAULT 0,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+    created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
 );
 
 CREATE TABLE activities (
@@ -19,8 +19,8 @@ CREATE TABLE activities (
     book_id TEXT NOT NULL,
     reading_time INTEGER,
     progress REAL,
-    date TEXT DEFAULT CURRENT_TIMESTAMP,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    date TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+    created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
     FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE
 );
 
@@ -28,7 +28,7 @@ CREATE TABLE notes (
     id INTEGER NOT NULL PRIMARY KEY,
     book_id TEXT NOT NULL,
     contents TEXT NOT NULL,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+    created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
     FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE
 );
