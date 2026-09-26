@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4] - 2026-09-26
+
+### Fixed
+
+- Reading session was not being saved
+- Dates were inconsistent
+
 ## [1.1.3] - 2026-09-22
 
 ### Added
