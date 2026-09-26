@@ -92,8 +92,8 @@ flutter:
 
     - family: NotoSerif
       fonts:
-        - asset: assets/fonts/NotoSerif-VariableFont_wdth,wght.ttf
-        - asset: assets/fonts/NotoSerif-Italic-VariableFont_wdth,wght.ttf
+        - asset: assets/fonts/NotoSerif-VariableFont_wght.ttf
+        - asset: assets/fonts/NotoSerif-Italic-VariableFont_wght.ttf
           style: italic
 
   assets:
