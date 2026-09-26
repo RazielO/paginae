@@ -21,11 +21,11 @@
 (deftest from-db-join-entry-test
   (testing "maps a joined row (activity_id key)"
     (let [a (activity/from-db-entry {"activity_id" 5
-                                          "book_id" "book-1"
-                                          "reading_time" 3600
-                                          "progress" 0.25
-                                          "date" "2024-01-02T10:20:30.000"
-                                          "created_at" "2024-01-02T10:20:30.000"})]
+                                     "book_id" "book-1"
+                                     "reading_time" 3600
+                                     "progress" 0.25
+                                     "date" "2024-01-02T10:20:30.000"
+                                     "created_at" "2024-01-02T10:20:30.000"})]
       (is (= 5 (:id a)))
       (is (= "book-1" (:book-id a)))
       (is (= 3600 (:reading-time a)))
@@ -56,14 +56,14 @@
                                         "date" (get stored "date")
                                         "created_at" (get stored "created_at")})]
       (is (.endsWith ^dart:core/String (get stored "date") "Z") "stored date is UTC ISO-8601")
-      (is (false? (.-isUtc (:date back))) "read back as local")
-      (is (= (.millisecondsSinceEpoch (:date a))
-             (.millisecondsSinceEpoch (:date back))) "instant survives the round trip")))
+      (is (false? (.-isUtc ^dart:core/DateTime (:date back))) "read back as local")
+      (is (= (.-millisecondsSinceEpoch ^dart:core/DateTime (:date a))
+             (.-millisecondsSinceEpoch ^dart:core/DateTime (:date back))) "instant survives the round trip")))
 
   (testing "reads a UTC row as local without shifting the instant"
     (let [row {"book_id" "book-1"
                "date" "2024-01-02T21:30:00.000Z"
                "created_at" "2024-01-02T21:30:00.000Z"}
           a (activity/from-db-entry row)]
-      (is (false? (.-isUtc (:date a))))
-      (is (= 1704231000000 (.millisecondsSinceEpoch (:date a)))))))
+      (is (false? (.-isUtc ^dart:core/DateTime (:date a))))
+      (is (= 1704231000000 (.-millisecondsSinceEpoch ^dart:core/DateTime(:date a)))))))
